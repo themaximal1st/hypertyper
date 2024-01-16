@@ -1,27 +1,86 @@
-import React, { useState } from "react";
+import Cytoscape from "cytoscape";
+import fcose from "cytoscape-fcose";
+Cytoscape.use(fcose);
+
+import React, { useState, useEffect } from "react";
 import CytoscapeComponent from "react-cytoscapejs";
 
-export default class App extends React.Component {
-    constructor() {
-        super();
-        console.log("COMPONENT DID MOUNT");
-        this.state = {
-            layout: { name: "circle" },
-            data: [
-                { data: { id: "a", label: "a" } },
-                { data: { id: "b", label: "b" } },
-                { data: { id: "c", label: "c" } },
-                { data: { source: "a", target: "b" } }
-            ]
-        };
+function Hypergraph({ data, layout }) {
+    console.log("DATA", data, layout);
+    return (
+        <CytoscapeComponent
+            global="my_cy"
+            elements={data}
+            layout={layout}
+            className="w-full h-full"
+            maxZoom={2.5}
+            stylesheet={[
+                {
+                    selector: "node",
+                    style: {
+                        width: 20,
+                        height: 20,
+                        backgroundColor: "#999",
+                        label: "data(label)",
+                        "font-size": "11px"
+                    }
+                },
+                {
+                    selector: "edge",
+                    style: {
+                        width: 3,
+                        "line-color": "#DDD"
+                    }
+                }
+            ]}
+        />
+    );
+}
+
+export default function App() {
+    const layout = {
+        name: "fcose",
+        quality: "proof",
+        randomize: false
+        // gravity: 1,
+        // initialEnergyOnIncremental: 1
+    };
+
+    const [data, setData] = useState([
+        { data: { id: "a", label: "a" } },
+        { data: { id: "b", label: "b" } },
+        { data: { id: "c", label: "c" } },
+        { data: { source: "a", target: "b" } }
+    ]);
+
+    useEffect(() => {
+        update();
+    }, [data]);
+
+    function add() {
+        const node = String(Math.random());
+        setData([
+            ...data,
+            { data: { id: node, label: node } },
+            { data: { source: "a", target: node } }
+        ]);
     }
 
-    componentDidMount() {
-        console.log("DID MOUNT");
-        console.log(window.my_cy);
-        this.renderHypergraphLayout();
+    function update() {
+        console.log("UPDATE");
+        window.my_cy.layout(layout).run();
     }
 
+    return (
+        <div className="w-full h-screen">
+            <button onClick={add}>Add</button>
+            <button onClick={update}>Update</button>
+            <Hypergraph data={data} layout={layout} />;
+        </div>
+    );
+}
+
+export class App1 extends React.Component {
     updateHypergraph() {
         // this.state.data.push({
         //     data: { id: "d", label: "d" }
@@ -46,41 +105,13 @@ export default class App extends React.Component {
         window.my_cy.layout(this.state.layout).run();
     }
 
-    renderHypergraph() {
+    render() {
         return (
-            <div className="w-full h-full">
+            <div className="w-full h-screen">
                 <button onClick={this.updateHypergraph.bind(this)}>Update</button>
-                <CytoscapeComponent
-                    global="my_cy"
-                    elements={this.state.data}
-                    className="w-full h-full"
-                    maxZoom={2.5}
-                    stylesheet={[
-                        {
-                            selector: "node",
-                            style: {
-                                width: 20,
-                                height: 20,
-                                backgroundColor: "#999",
-                                label: "data(label)",
-                                "font-size": "11px"
-                            }
-                        },
-                        {
-                            selector: "edge",
-                            style: {
-                                width: 3,
-                                "line-color": "#DDD"
-                            }
-                        }
-                    ]}
-                />
+                <Hypergraph data={this.state.data} />
             </div>
         );
-    }
-
-    render() {
-        return <div className="w-full h-screen">{this.renderHypergraph()}</div>;
     }
 }
 /*
