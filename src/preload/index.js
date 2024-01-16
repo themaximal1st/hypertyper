@@ -2,9 +2,6 @@ import { contextBridge, ipcRenderer } from "electron";
 
 const api = {
     nodes: {
-        add: (symbol) => {
-            return ipcRenderer.invoke("nodes.add", symbol);
-        },
         all: () => {
             return ipcRenderer.invoke("nodes.all");
         }
@@ -17,6 +14,9 @@ const api = {
     hypergraph: {
         all: () => {
             return ipcRenderer.invoke("hypergraph.all");
+        },
+        add: (obj) => {
+            return ipcRenderer.invoke("hypergraph.add", obj);
         }
     }
 };

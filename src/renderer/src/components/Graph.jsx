@@ -43,19 +43,15 @@ Graph.fromHypergraph = function (data) {
     for (const edge of data) {
         let lastNode = null;
         for (const node of edge) {
-            let id = node;
-            if (lastNode) {
-                id = `${lastNode}-${node}`;
-            }
-            results.push({ data: { id, label: node } });
+            results.push({ data: { id: node, label: node } });
 
             if (lastNode) {
                 results.push({
-                    data: { source: lastNode, target: id }
+                    data: { source: lastNode, target: node }
                 });
             }
 
-            lastNode = id;
+            lastNode = node;
         }
     }
     return results;

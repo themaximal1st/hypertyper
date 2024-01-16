@@ -7,9 +7,10 @@ import Layout from "./components/Layout";
 export default function App() {
     const [data, setData] = useState([]);
     const [layout, setLayout] = useState({
-        name: "fcose",
-        quality: "proof",
-        randomize: false
+        name: "cose-bilkent"
+        // name: "fcose",
+        // quality: "proof",
+        // randomize: false
     });
 
     useEffect(() => {
@@ -27,18 +28,21 @@ export default function App() {
 
     async function reload() {
         const data = await window.api.hypergraph.all();
+        console.log("DATA", data);
         setData(Graph.fromHypergraph(data));
     }
 
-    async function handleAddNode(symbol) {
-        setData([...data, { data: { id: symbol, label: symbol } }]);
-        await window.api.nodes.add(symbol);
-        // reload();
+    // TODO: Do incremental layout updates
+    // TODO: By adding graph as you add the node, the graph is less janky
+    // TODO: See what else is out there...what am I missing?
+    async function handleAdd(obj) {
+        await window.api.hypergraph.add(obj);
+        reload();
     }
 
     return (
         <div className="w-full h-screen">
-            <EditorBox addNode={handleAddNode} />
+            <EditorBox add={handleAdd} />
             <Graph data={data} layout={layout} />;
             <Layout setLayout={setLayout} />
         </div>

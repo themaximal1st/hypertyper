@@ -4,9 +4,12 @@ export default class HyperType {
     }
 
     async add(input) {
-        console.log("ADDING", input);
-        const node = await this.hypergraph.add(input);
-        return node.symbol;
+        const obj = await this.hypergraph.add(input);
+        if (obj.symbols) {
+            return obj.symbols;
+        }
+
+        return obj.symbol;
     }
 
     // TODO: does a proxy make sense here?

@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function EditorBox({ addNode, addEdge }) {
+export default function EditorBox({ add }) {
     const [hyperedge, setHyperedge] = useState([]);
     const [input, setInput] = useState("");
 
     async function handleSubmit(e) {
         e.preventDefault();
-        const symbol = input;
+        if (input === "" && hyperedge.length > 1) {
+            const edge = hyperedge;
+            setHyperedge([]);
+            await add(edge);
+            return;
+        }
+
+        const value = input;
         setInput("");
-        setHyperedge([...hyperedge, symbol]);
-        addNode(symbol);
+        setHyperedge([...hyperedge, value]);
+        await add(value);
     }
 
     return (
