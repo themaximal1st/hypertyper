@@ -5,7 +5,8 @@ export default class HyperType {
 
     async add(input) {
         console.log("ADDING", input);
-        return await this.hypergraph.add(input);
+        const node = await this.hypergraph.add(input);
+        return node.symbol;
     }
 
     // TODO: does a proxy make sense here?
