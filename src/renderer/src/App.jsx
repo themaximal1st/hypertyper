@@ -32,12 +32,32 @@ export default function App() {
         setData(Graph.fromHypergraph(data));
     }
 
+    function incrementalAddEdgeToHypergraph(hyperedge) {
+        let lastNode = null;
+        const graph = [];
+        for (const node of hyperedge) {
+            graph.push({ data: { id: node, label: node } });
+            if (lastNode) {
+                graph.push({ data: { source: lastNode, target: node } });
+            }
+            lastNode = node;
+        }
+
+        return graph;
+    }
+
+    // Clear context when creating a new node...then bring in relevant background nodes/edges as needed
+    // Keep track of hypergraph when adding, don't always clear it away....
+
+    // TODO: It's not a hypergraph viewer, it's a hyperedge viewer (for now)
+    // TODO: There's always context (either a node or a hyperedge), and that context disconnects the hyperedges into their own strands. This detangles the hypergraph
+
     // TODO: Do incremental layout updates
     // TODO: By adding graph as you add the node, the graph is less janky
     // TODO: See what else is out there...what am I missing?
     async function handleAdd(obj) {
+        setData(incrementalAddEdgeToHypergraph(obj));
         await window.api.hypergraph.add(obj);
-        reload();
     }
 
     return (

@@ -14,7 +14,8 @@ export default function Graph({ data, layout }) {
             elements={data}
             layout={layout}
             className="w-full h-full"
-            maxZoom={2.5}
+            minZoom={0.1}
+            maxZoom={5}
             stylesheet={[
                 {
                     selector: "node",

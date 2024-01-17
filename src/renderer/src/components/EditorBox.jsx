@@ -6,17 +6,17 @@ export default function EditorBox({ add }) {
 
     async function handleSubmit(e) {
         e.preventDefault();
-        if (input === "" && hyperedge.length > 1) {
-            const edge = hyperedge;
+
+        if (input === "") {
             setHyperedge([]);
-            await add(edge);
+            setInput("");
             return;
         }
 
-        const value = input;
+        const current = [...hyperedge, input];
+        setHyperedge(current);
         setInput("");
-        setHyperedge([...hyperedge, value]);
-        await add(value);
+        await add(current);
     }
 
     return (
