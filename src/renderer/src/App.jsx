@@ -15,6 +15,15 @@ export default class App extends React.Component {
         };
     }
 
+    componentDidMount() {
+        window.api.hypergraph.all().then((hyperedges) => {
+            const hypergraph = this.hyperedgesToGraph(hyperedges);
+            this.setState({ hypergraph }, async () => {
+                this.layout();
+            });
+        });
+    }
+
     get data() {
         return Object.values(this.state.hypergraph);
     }
@@ -27,10 +36,21 @@ export default class App extends React.Component {
         window.ht_cy.layout(this.state.layout).run();
     }
 
-    async onBuildHyperEdge(hyperedge) {
-        const hypergraph = this.state.hypergraph;
+    hyperedgesToGraph(hyperedges) {
+        let hypergraph = {};
+        for (const hyperedge of hyperedges) {
+            hypergraph = {
+                ...hypergraph,
+                ...this.hyperedgeToGraph(hyperedge)
+            };
+        }
+        return hypergraph;
+    }
 
-        let edge = [];
+    hyperedgeToGraph(hyperedge) {
+        console.log("HYPEREDGE", hyperedge);
+        const hypergraph = {};
+        const edge = [];
         for (const node of hyperedge) {
             const prev_id = edge.join("-");
 
@@ -43,9 +63,25 @@ export default class App extends React.Component {
                 hypergraph[edge_id] = { data: { id: edge_id, source: prev_id, target: id } };
             }
         }
+        console.log("HYPERGRAPH", hypergraph);
 
-        this.setState({ hypergraph }, this.layout.bind(this));
+        return hypergraph;
     }
+
+    async onBuildHyperEdge(hyperedge) {
+        const hypergraph = {
+            ...this.state.hypergraph,
+            ...this.hyperedgeToGraph(hyperedge)
+        };
+
+        this.setState({ hypergraph }, async () => {
+            this.layout();
+            await window.api.hypergraph.add(hyperedge);
+        });
+    }
+
+    // TODO: Click on a node...add it to the hyperedge...update the context
+    // TODO: Hit escape...clear input. Hit escape against, clear context.
 
     render() {
         return (

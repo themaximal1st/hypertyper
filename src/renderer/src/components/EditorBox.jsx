@@ -1,8 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function EditorBox({ onSubmit }) {
     const [hyperedge, setHyperedge] = useState([]);
     const [input, setInput] = useState("");
+
+    function handleKeyDown(event) {
+        if (event.key === "Backspace" || event.key === "Escape") {
+            if (input === "") {
+                setHyperedge(hyperedge.slice(0, -1));
+            }
+        }
+    }
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -35,6 +43,7 @@ export default function EditorBox({ onSubmit }) {
                         <input
                             type="text"
                             value={input}
+                            onKeyDown={handleKeyDown}
                             onChange={(e) => {
                                 setInput(e.target.value);
                             }}
