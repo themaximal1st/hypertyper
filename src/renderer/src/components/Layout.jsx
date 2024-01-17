@@ -9,9 +9,9 @@ const layouts = [
     "fcose"
 ];
 
-export default function Layout({ setLayout }) {
+export default function Layout({ setLayout, setScratchMode }) {
     return (
-        <div className="absolute z-20 bottom-0 left-0 flex cursor-pointer text-sm text-gray-500">
+        <div className="absolute z-20 bottom-0 left-0 flex cursor-pointer text-sm text-gray-500 w-full">
             {layouts.map((layout) => (
                 <a
                     key={layout}
@@ -24,6 +24,17 @@ export default function Layout({ setLayout }) {
                     {layout}
                 </a>
             ))}
+            <div className="grow"></div>
+            <a
+                key="clear-context"
+                className="p-2 hover:text-gray-800"
+                onClick={(e) => {
+                    e.preventDefault();
+                    setScratchMode(false);
+                }}
+            >
+                all
+            </a>
         </div>
     );
 }

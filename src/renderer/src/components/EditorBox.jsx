@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function EditorBox({ add }) {
+export default function EditorBox({ add, setScratchMode }) {
     const [hyperedge, setHyperedge] = useState([]);
     const [input, setInput] = useState("");
 
@@ -11,20 +11,27 @@ export default function EditorBox({ add }) {
             setHyperedge([]);
             setInput("");
             return;
+        } else if (hyperedge.length > 0) {
+            setScratchMode(true);
+            const current = [...hyperedge, input];
+            setHyperedge(current);
+            setInput("");
+            await add(current); // replace
+        } else if (input.length > 0) {
+            setScratchMode(true);
+            const current = input;
+            setHyperedge([current]);
+            setInput("");
+            await add(current);
         }
-
-        const current = [...hyperedge, input];
-        setHyperedge(current);
-        setInput("");
-        await add(current);
     }
 
     return (
         <div className="absolute inset-0 pointer-events-none z-20">
             <div className="flex justify-center items-start gap-4 mt-4">
-                {hyperedge.map((item) => (
+                {hyperedge.map((item, i) => (
                     <div
-                        key={item}
+                        key={`${item}-${i}`}
                         className="bg-white border-r p-2 rounded-lg pointer-events-auto opacity-100"
                     >
                         {item}
