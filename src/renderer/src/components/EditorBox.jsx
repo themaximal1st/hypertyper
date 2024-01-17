@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function EditorBox({ add }) {
+export default function EditorBox({ onSubmit }) {
     const [hyperedge, setHyperedge] = useState([]);
     const [input, setInput] = useState("");
 
@@ -11,16 +11,11 @@ export default function EditorBox({ add }) {
             setHyperedge([]);
             setInput("");
             return;
-        } else if (hyperedge.length > 0) {
+        } else {
             const current = [...hyperedge, input];
             setHyperedge(current);
             setInput("");
-            await add(current); // replace
-        } else if (input.length > 0) {
-            const current = input;
-            setHyperedge([current]);
-            setInput("");
-            await add(current);
+            await onSubmit(current); // replace
         }
     }
 

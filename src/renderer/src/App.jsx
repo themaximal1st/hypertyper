@@ -8,28 +8,55 @@ export default class App extends React.Component {
     constructor() {
         super();
         this.state = {
-            boom: "boom",
             layout: {
                 name: "fcose"
             },
-            data: []
+            hypergraph: []
         };
+    }
+
+    get data() {
+        return Object.values(this.state.hypergraph);
     }
 
     onSelectNode(symbol) {
         console.log("SELECTED NODE AT SYMBOL", symbol);
     }
 
+    layout() {
+        window.ht_cy.layout(this.state.layout).run();
+    }
+
+    async onBuildHyperEdge(hyperedge) {
+        const hypergraph = this.state.hypergraph;
+
+        let edge = [];
+        for (const node of hyperedge) {
+            const prev_id = edge.join("-");
+
+            edge.push(node);
+            let id = edge.join("-");
+
+            hypergraph[id] = { data: { id, label: node } };
+            if (edge.length > 1) {
+                const edge_id = `${id}-edge`;
+                hypergraph[edge_id] = { data: { id: edge_id, source: prev_id, target: id } };
+            }
+        }
+
+        this.setState({ hypergraph }, this.layout.bind(this));
+    }
+
     render() {
         return (
             <div className="w-full h-screen">
-                <EditorBox />
+                <EditorBox onSubmit={this.onBuildHyperEdge.bind(this)} />
                 <Graph
-                    data={this.state.data}
+                    data={this.data}
                     layout={this.state.layout}
                     onSelectNode={this.onSelectNode.bind(this)}
                 />
-                ;{/* <Layout setLayout={setLayout} setScratchMode={setScratchMode} /> */}
+                {/* <Layout setLayout={setLayout} setScratchMode={setScratchMode} /> */}
             </div>
         );
     }
