@@ -4,6 +4,38 @@ import EditorBox from "./components/EditorBox";
 import Graph from "./components/Graph";
 import Layout from "./components/Layout";
 
+export default class App extends React.Component {
+    constructor() {
+        super();
+        this.state = {
+            boom: "boom",
+            layout: {
+                name: "fcose"
+            },
+            data: []
+        };
+    }
+
+    onSelectNode(symbol) {
+        console.log("SELECTED NODE AT SYMBOL", symbol);
+    }
+
+    render() {
+        return (
+            <div className="w-full h-screen">
+                <EditorBox />
+                <Graph
+                    data={this.state.data}
+                    layout={this.state.layout}
+                    onSelectNode={this.onSelectNode.bind(this)}
+                />
+                ;{/* <Layout setLayout={setLayout} setScratchMode={setScratchMode} /> */}
+            </div>
+        );
+    }
+}
+
+/*
 export default function App() {
     console.log("LOADING");
 
@@ -29,11 +61,6 @@ export default function App() {
     }, [data]);
 
     useEffect(() => {
-        console.log("RESET SCRATCH MODE");
-        setScratchHypergraph({});
-    }, [scratchMode]);
-
-    useEffect(() => {
         console.log("START");
         reload();
     }, []);
@@ -48,6 +75,10 @@ export default function App() {
         const data = await window.api.hypergraph.all();
         console.log("RELOAD DATA", data.length);
         addToHypergraph(data);
+    }
+
+    function handleSelectNode(symbol) {
+        console.log("SELECTED NODE AT SYMBOL", symbol);
     }
 
     function addToHypergraph(obj) {
@@ -88,25 +119,6 @@ export default function App() {
             setHypergraph(newHypergraph);
             setScratchHypergraph(newScratchHypergraph);
         }
-        /* const newHypergraph = { ...hypergraph };
-
-        let lastNode = null;
-        for (const hyperedge of hyperedges) {
-            for (const node of hyperedge) {
-                newHypergraph[node] = { data: { id: node, label: node } };
-
-                if (lastNode) {
-                    newHypergraph[`${lastNode}-${node}`] = {
-                        data: { source: lastNode, target: node }
-                    };
-                }
-
-                lastNode = node;
-            }
-        }
-
-        setHypergraph(newHypergraph);
-        */
     }
 
     // Clear context when creating a new node...then bring in relevant background nodes/edges as needed
@@ -120,15 +132,25 @@ export default function App() {
     // TODO: By adding graph as you add the node, the graph is less janky
     // TODO: See what else is out there...what am I missing?
     async function handleAdd(obj) {
+        // TODO: juse use setState so that you can use callbacks?
+
+        if (!scratchMode) {
+            // TODO: why isnt this working?
+            console.log("SCRATCH MODE");
+            setScratchHypergraph({});
+            setScratchMode(true);
+        }
         addToHypergraph(obj);
-        await window.api.hypergraph.add(obj);
+        // await window.api.hypergraph.add(obj);
     }
 
     return (
         <div className="w-full h-screen">
-            <EditorBox add={handleAdd} setScratchMode={setScratchMode} />
-            <Graph data={data} layout={layout} />;
+            <EditorBox add={handleAdd} />
+            <Graph data={data} layout={layout} onSelectNode={handleSelectNode} />;
             <Layout setLayout={setLayout} setScratchMode={setScratchMode} />
         </div>
     );
 }
+
+*/

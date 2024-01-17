@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function EditorBox({ add, setScratchMode }) {
+export default function EditorBox({ add }) {
     const [hyperedge, setHyperedge] = useState([]);
     const [input, setInput] = useState("");
 
@@ -12,13 +12,11 @@ export default function EditorBox({ add, setScratchMode }) {
             setInput("");
             return;
         } else if (hyperedge.length > 0) {
-            setScratchMode(true);
             const current = [...hyperedge, input];
             setHyperedge(current);
             setInput("");
             await add(current); // replace
         } else if (input.length > 0) {
-            setScratchMode(true);
             const current = input;
             setHyperedge([current]);
             setInput("");

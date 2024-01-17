@@ -7,10 +7,17 @@ Cytoscape.use(COSEBilkent);
 
 import CytoscapeComponent from "react-cytoscapejs";
 
-export default function Graph({ data, layout }) {
+export default function Graph({ data, layout, onSelectNode }) {
     return (
         <CytoscapeComponent
             global="ht_cy"
+            cy={(cy) => {
+                console.log("CY", cy);
+                cy.on("select", "node", (e) => {
+                    onSelectNode(e.target.id());
+                });
+            }}
+            autolock={false}
             elements={data}
             layout={layout}
             className="w-full h-full"
