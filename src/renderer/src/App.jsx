@@ -12,6 +12,7 @@ export default class App extends React.Component {
 
         this.state = {
             input: "",
+            hyperedgeIndex: -1,
             hyperedge: [],
             hypergraph: [],
             layout: {
@@ -34,18 +35,47 @@ export default class App extends React.Component {
 
     handleKeyPress(event) {
         this.inputRef.current.focus();
-        if (event.key === "Enter") {
-            const input = this.state.input;
-            this.setState({ input: "", hyperedge: [...this.state.hyperedge, input] });
+
+        if (this.state.hyperedgeIndex === -1) {
+            if (event.key === "Enter" && this.state.input.length > 0) {
+                const input = this.state.input;
+                this.setState({
+                    input: "",
+                    hyperedge: [...this.state.hyperedge, input],
+                    hyperedgeIndex: -1
+                });
+            }
+        } else {
+            this.setState({ hyperedgeIndex: -1 });
         }
     }
 
     handleKeyDown(event) {
+        if (event.key === "ArrowUp") {
+            this.inputRef.current.blur();
+            this.setState({ hyperedgeIndex: this.state.hyperedge.length - 1 });
+        } else if (event.key === "ArrowDown") {
+            this.inputRef.current.focus();
+            this.setState({ hyperedgeIndex: -1 });
+        } else if (event.key === "ArrowLeft" && this.state.hyperedgeIndex > -1) {
+            this.cycleHyperedgeIndex("left");
+        } else if (event.key === "ArrowRight" && this.state.hyperedgeIndex > -1) {
+            this.cycleHyperedgeIndex("right");
+        } else if (event.key === "Backspace" && this.state.hyperedgeIndex > -1) {
+            const hyperedge = [...this.state.hyperedge];
+            hyperedge.splice(this.state.hyperedgeIndex, 1);
+            this.setState({ hyperedge }, () => {
+                this.cycleHyperedgeIndex("left");
+            });
+        }
+
+        /*
         if (event.key === "Backspace" || event.key === "Escape") {
             if (!event.repeat && this.state.input === "") {
                 this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
             }
         }
+        */
     }
 
     render() {
@@ -53,8 +83,18 @@ export default class App extends React.Component {
             <div className="h-screen w-full flex flex-col relative p-4">
                 <div className="text-xl text-center h-12 flex gap-4 justify-center items-center p-4">
                     {this.state.hyperedge.map((item, i) => {
+                        const classes = [];
+                        if (this.state.hyperedgeIndex === i) {
+                            classes.push("border-2 border-red-500");
+                        } else {
+                            classes.push("border-2 border-gray-100");
+                        }
+
                         return (
-                            <div className="bg-gray-100 rounded-lg p-2" key={`${item}-${i}`}>
+                            <div
+                                className={`bg-gray-100 rounded-lg p-2 ${classes.join(" ")}`}
+                                key={`${item}-${i}`}
+                            >
                                 {item}
                             </div>
                         );
@@ -73,6 +113,33 @@ export default class App extends React.Component {
                 </div>
             </div>
         );
+    }
+
+    // utils
+    cycleHyperedgeIndex(direction, callback = null) {
+        if (this.state.hyperedgeIndex == -1) {
+            throw new Error("cannot cycle hypergraph index when disabled");
+        }
+
+        console.log("DIRECTION", direction);
+
+        if (direction === "left") {
+            let index = this.state.hyperedgeIndex - 1;
+            if (index < 0) {
+                index = this.state.hyperedge.length - 1;
+            }
+
+            this.setState({ hyperedgeIndex: index }, callback);
+        } else if (direction === "right") {
+            let index = this.state.hyperedgeIndex + 1;
+            if (index > this.state.hyperedge.length - 1) {
+                index = 0;
+            }
+
+            this.setState({ hyperedgeIndex: index }, callback);
+        } else {
+            throw new Error("invalid direction, must be left/right");
+        }
     }
 }
 
