@@ -5,6 +5,79 @@ import Graph from "./components/Graph";
 import Layout from "./components/Layout";
 
 export default class App extends React.Component {
+    constructor(props) {
+        super(props);
+
+        this.inputRef = React.createRef();
+
+        this.state = {
+            input: "",
+            hyperedge: [],
+            hypergraph: [],
+            layout: {
+                name: "cose-bilkent",
+                padding: 75
+            }
+        };
+    }
+
+    componentDidMount() {
+        console.log("STATE", this.state);
+        document.addEventListener("keydown", this.handleKeyDown.bind(this));
+        document.addEventListener("keypress", this.handleKeyPress.bind(this));
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener("keydown", this.handleKeyDown.bind(this));
+        document.removeEventListener("keypress", this.handleKeyPress.bind(this));
+    }
+
+    handleKeyPress(event) {
+        this.inputRef.current.focus();
+        if (event.key === "Enter") {
+            const input = this.state.input;
+            this.setState({ input: "", hyperedge: [...this.state.hyperedge, input] });
+        }
+    }
+
+    handleKeyDown(event) {
+        if (event.key === "Backspace" || event.key === "Escape") {
+            if (!event.repeat && this.state.input === "") {
+                this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
+            }
+        }
+    }
+
+    render() {
+        return (
+            <div className="h-screen w-full flex flex-col relative p-4">
+                <div className="text-xl text-center h-12 flex gap-4 justify-center items-center p-4">
+                    {this.state.hyperedge.map((item, i) => {
+                        return (
+                            <div className="bg-gray-100 rounded-lg p-2" key={`${item}-${i}`}>
+                                {item}
+                            </div>
+                        );
+                    })}
+                </div>
+                <br />
+                <div className="text-5xl text-center">
+                    <input
+                        type="text"
+                        autoFocus
+                        className="opacity-0 focus:opacity-100 outline-none p-4 text-center bg-transparent"
+                        ref={this.inputRef}
+                        value={this.state.input}
+                        onChange={(e) => this.setState({ input: e.target.value })}
+                    />
+                </div>
+            </div>
+        );
+    }
+}
+
+/*
+export default class App extends React.Component {
     constructor() {
         super();
         this.state = {
@@ -113,11 +186,6 @@ export default class App extends React.Component {
         this.setState({ hypergraph }, async () => {
             this.layout();
         });
-        /*
-        if (this.state.hyperedge[this.state.hyperedge.length - 1] === symbol) {
-            this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) }, this.layout.bind(this));
-        }
-        */
     }
 
     layout() {
@@ -187,6 +255,7 @@ export default class App extends React.Component {
         );
     }
 }
+*/
 
 /*
 export default function App() {
