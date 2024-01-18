@@ -1,13 +1,13 @@
 import { useState } from "react";
 
-export default function EditorBox({ onSubmit }) {
-    const [hyperedge, setHyperedge] = useState([]);
+export default function EditorBox({ onSubmit, hyperedge, setHyperedge }) {
     const [input, setInput] = useState("");
 
     function handleKeyDown(event) {
         if (event.key === "Backspace" || event.key === "Escape") {
             if (input === "") {
                 setHyperedge(hyperedge.slice(0, -1));
+                event.preventDefault();
             }
         }
     }

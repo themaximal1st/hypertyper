@@ -8,28 +8,116 @@ export default class App extends React.Component {
     constructor() {
         super();
         this.state = {
+            hyperedge: [],
+            hypergraph: [],
             layout: {
-                name: "fcose"
-            },
-            hypergraph: []
+                name: "cose-bilkent",
+                padding: 75
+            }
         };
     }
 
     componentDidMount() {
+        window.ht_cy.on("select", "node", (e) => {
+            this.onSelectNode(e.target.id());
+        });
+
+        window.ht_cy.on("cxttap", "node", (e) => {
+            this.onRemoveNode(e.target.id());
+        });
+
         window.api.hypergraph.all().then((hyperedges) => {
             const hypergraph = this.hyperedgesToGraph(hyperedges);
             this.setState({ hypergraph }, async () => {
                 this.layout();
             });
         });
+
+        document.addEventListener("keydown", this.handleKeyDown.bind(this));
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener("keydown", this.handleKeyDown.bind(this));
+    }
+
+    // TODO: Move this from EditorBox to App...needs input moved here
+    handleKeyDown(event) {
+        // if (event.key === "Backspace" || event.key === "Escape") {
+        //     if (input === "") {
+        //         setHyperedge(hyperedge.slice(0, -1));
+        //     }
+        // }
     }
 
     get data() {
-        return Object.values(this.state.hypergraph);
+        if (this.state.hyperedge.length > 0) {
+            return Object.values(this.search());
+        } else {
+            return Object.values(this.state.hypergraph);
+        }
     }
 
-    onSelectNode(symbol) {
+    search() {
+        const hypergraph = {};
+
+        const keys = [];
+        const edge = [];
+        for (const node of this.state.hyperedge) {
+            edge.push(node);
+            const id = edge.join("-");
+            keys.push(id);
+
+            if (edge.length > 1) {
+                keys.push(`${id}-edge`);
+            }
+        }
+
+        for (const key of Object.keys(this.state.hypergraph)) {
+            for (const k of keys) {
+                // hacky
+                if (key.indexOf(k) !== -1) {
+                    hypergraph[key] = this.state.hypergraph[key];
+                    if (key.indexOf("edge") !== -1) {
+                        const parent = hypergraph[key].data.source;
+                        hypergraph[parent] = this.state.hypergraph[parent];
+                    }
+                }
+            }
+        }
+
+        return hypergraph;
+    }
+
+    handleHyperedgeChange(hyperedge) {
+        this.setState({ hyperedge }, this.layout.bind(this));
+    }
+
+    setLayout(layout) {
+        this.setState({ layout }, this.layout.bind(this));
+    }
+
+    onSelectNode(node) {
+        const symbol = this.state.hypergraph[node].data.label;
+        console.log(symbol);
+        this.setState({ hyperedge: [...this.state.hyperedge, symbol] }, this.layout.bind(this));
         console.log("SELECTED NODE AT SYMBOL", symbol);
+    }
+
+    onRemoveNode(node) {
+        const data = this.state.hypergraph[node].data;
+        console.log("REMOVE", data);
+
+        const hypergraph = { ...this.state.hypergraph };
+        delete hypergraph[data.id];
+
+        this.setState({ hypergraph }, async () => {
+            this.layout();
+        });
+        /*
+        if (this.state.hyperedge[this.state.hyperedge.length - 1] === symbol) {
+            this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) }, this.layout.bind(this));
+        }
+        */
     }
 
     layout() {
@@ -48,7 +136,6 @@ export default class App extends React.Component {
     }
 
     hyperedgeToGraph(hyperedge) {
-        console.log("HYPEREDGE", hyperedge);
         const hypergraph = {};
         const edge = [];
         for (const node of hyperedge) {
@@ -63,7 +150,6 @@ export default class App extends React.Component {
                 hypergraph[edge_id] = { data: { id: edge_id, source: prev_id, target: id } };
             }
         }
-        console.log("HYPERGRAPH", hypergraph);
 
         return hypergraph;
     }
@@ -86,13 +172,17 @@ export default class App extends React.Component {
     render() {
         return (
             <div className="w-full h-screen">
-                <EditorBox onSubmit={this.onBuildHyperEdge.bind(this)} />
+                <EditorBox
+                    onSubmit={this.onBuildHyperEdge.bind(this)}
+                    hyperedge={this.state.hyperedge}
+                    setHyperedge={this.handleHyperedgeChange.bind(this)}
+                />
                 <Graph
                     data={this.data}
                     layout={this.state.layout}
                     onSelectNode={this.onSelectNode.bind(this)}
                 />
-                {/* <Layout setLayout={setLayout} setScratchMode={setScratchMode} /> */}
+                <Layout setLayout={this.setLayout.bind(this)} />
             </div>
         );
     }

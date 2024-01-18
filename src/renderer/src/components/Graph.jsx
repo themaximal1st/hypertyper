@@ -11,12 +11,6 @@ export default function Graph({ data, layout, onSelectNode }) {
     return (
         <CytoscapeComponent
             global="ht_cy"
-            cy={(cy) => {
-                console.log("CY", cy);
-                cy.on("select", "node", (e) => {
-                    onSelectNode(e.target.id());
-                });
-            }}
             autolock={false}
             elements={data}
             layout={layout}
@@ -35,10 +29,19 @@ export default function Graph({ data, layout, onSelectNode }) {
                     }
                 },
                 {
+                    selector: ":selected",
+                    style: {
+                        backgroundColor: "#333"
+                    }
+                },
+                {
                     selector: "edge",
                     style: {
                         width: 3,
-                        "line-color": "#DDD"
+                        "line-color": "#DDD",
+                        "target-arrow-color": "#DDD",
+                        "target-arrow-shape": "triangle",
+                        "curve-style": "bezier"
                     }
                 }
             ]}
