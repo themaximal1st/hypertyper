@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 
-import EditorBox from "./components/EditorBox";
 import Graph from "./components/Graph";
 import Layout from "./components/Layout";
 
@@ -22,10 +21,26 @@ export default class App extends React.Component {
         };
     }
 
+    get data() {
+        if (this.state.hyperedge.length > 0) {
+            return Object.values(this.search());
+        } else {
+            return Object.values(this.state.hypergraph);
+        }
+    }
+
     componentDidMount() {
-        console.log("STATE", this.state);
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
         document.addEventListener("keypress", this.handleKeyPress.bind(this));
+
+        window.api.hypergraph.all().then((hyperedges) => {
+            this.update(hyperedges);
+        });
+
+        window.ht_cy.on("resize", (e) => {
+            console.log("RESIZE...RUN LAYOUT");
+            this.layout();
+        });
     }
 
     componentWillUnmount() {
@@ -33,17 +48,23 @@ export default class App extends React.Component {
         document.removeEventListener("keypress", this.handleKeyPress.bind(this));
     }
 
+    async addCurrentInputToEdge() {
+        const hyperedge = [...this.state.hyperedge, this.state.input];
+        this.setState({
+            input: "",
+            hyperedge,
+            hyperedgeIndex: -1
+        });
+
+        await window.api.hypergraph.add(hyperedge);
+    }
+
     handleKeyPress(event) {
         this.inputRef.current.focus();
 
         if (this.state.hyperedgeIndex === -1) {
             if (event.key === "Enter" && this.state.input.length > 0) {
-                const input = this.state.input;
-                this.setState({
-                    input: "",
-                    hyperedge: [...this.state.hyperedge, input],
-                    hyperedgeIndex: -1
-                });
+                this.addCurrentInputToEdge();
             }
         } else {
             this.setState({ hyperedgeIndex: -1 });
@@ -51,15 +72,9 @@ export default class App extends React.Component {
     }
 
     handleKeyDown(event) {
-        if (event.key === "ArrowUp") {
-            this.inputRef.current.blur();
-            this.setState({ hyperedgeIndex: this.state.hyperedge.length - 1 });
-        } else if (event.key === "ArrowDown") {
-            this.inputRef.current.focus();
-            this.setState({ hyperedgeIndex: -1 });
-        } else if (event.key === "ArrowLeft" && this.state.hyperedgeIndex > -1) {
+        if (event.key === "ArrowLeft") {
             this.cycleHyperedgeIndex("left");
-        } else if (event.key === "ArrowRight" && this.state.hyperedgeIndex > -1) {
+        } else if (event.key === "ArrowRight") {
             this.cycleHyperedgeIndex("right");
         } else if (event.key === "Backspace" && this.state.hyperedgeIndex > -1) {
             const hyperedge = [...this.state.hyperedge];
@@ -68,60 +83,120 @@ export default class App extends React.Component {
                 this.cycleHyperedgeIndex("left");
             });
         }
+    }
 
-        /*
-        if (event.key === "Backspace" || event.key === "Escape") {
-            if (!event.repeat && this.state.input === "") {
-                this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
-            }
-        }
-        */
+    handleSelectNode(node) {
+        console.log("SELECT NODE");
+    }
+
+    update(hyperedges) {
+        console.log(hyperedges);
+        const hypergraph = this.hyperedgesToGraph(hyperedges);
+        this.setState({ hypergraph }, () => {
+            this.layout();
+        });
+    }
+
+    incrementalUpdate(edge) {
+        const hyperedge = this.hyperedgeToGraph(edge);
+        const hypergraph = { ...this.state.hypergraph, ...hyperedge };
+        console.log(hypergraph);
+        this.setState({ hypergraph }, () => {
+            this.layout();
+        });
+    }
+
+    layout() {
+        window.ht_cy.layout(this.state.layout).run();
     }
 
     render() {
         return (
-            <div className="h-screen w-full flex flex-col relative p-4">
-                <div className="text-xl text-center h-12 flex gap-4 justify-center items-center p-4">
-                    {this.state.hyperedge.map((item, i) => {
-                        const classes = [];
-                        if (this.state.hyperedgeIndex === i) {
-                            classes.push("border-2 border-red-500");
-                        } else {
-                            classes.push("border-2 border-gray-100");
-                        }
+            <div className="h-screen w-full flex flex-col">
+                <div className="absolute flex z-20 p-1 gap-2 items-center">
+                    {this.state.hyperedge
+                        .map((item, i) => {
+                            const classes = [];
+                            if (this.state.hyperedgeIndex === i) {
+                                classes.push("bg-gray-200");
+                            } else {
+                                classes.push("");
+                            }
 
-                        return (
-                            <div
-                                className={`bg-gray-100 rounded-lg p-2 ${classes.join(" ")}`}
-                                key={`${item}-${i}`}
-                            >
-                                {item}
-                            </div>
-                        );
-                    })}
-                </div>
-                <br />
-                <div className="text-5xl text-center">
+                            return (
+                                <div
+                                    className={`rounded-md p-2 ${classes.join(" ")}`}
+                                    key={`${item}-${i}`}
+                                >
+                                    {item}
+                                </div>
+                            );
+                        })
+                        .reduce((accu, elem) => {
+                            return accu === null ? [elem] : [...accu, " → ", elem];
+                        }, null)}
+                    {this.state.hyperedge.length > 0 && <div>→</div>}
                     <input
                         type="text"
                         autoFocus
-                        className="opacity-0 focus:opacity-100 outline-none p-4 text-center bg-transparent"
+                        placeholder="..."
+                        className="outline-none rounded-lg p-2 bg-transparent"
                         ref={this.inputRef}
                         value={this.state.input}
                         onChange={(e) => this.setState({ input: e.target.value })}
                     />
                 </div>
+                <Graph data={this.data} layout={this.state.layout} />
             </div>
         );
     }
 
+    search() {
+        return Object.values(this.state.hypergraph);
+    }
+
     // utils
     cycleHyperedgeIndex(direction, callback = null) {
+        if (direction !== "left" && direction !== "right") {
+            throw new Error("invalid direction, must be left/right");
+        }
+
+        let blur = true;
+
+        let hyperedgeIndex = this.state.hyperedgeIndex;
+        if (this.state.hyperedgeIndex === -1) {
+            if (direction === "left") {
+                hyperedgeIndex = this.state.hyperedge.length - 1;
+            } else if (direction === "right") {
+                hyperedgeIndex = 0;
+            }
+        } else {
+            if (direction === "left") {
+                hyperedgeIndex = this.state.hyperedgeIndex - 1;
+                if (hyperedgeIndex < 0) {
+                    hyperedgeIndex = -1;
+                    blur = false;
+                }
+            } else if (direction === "right") {
+                hyperedgeIndex = this.state.hyperedgeIndex + 1;
+                if (hyperedgeIndex > this.state.hyperedge.length - 1) {
+                    hyperedgeIndex = -1;
+                    blur = false;
+                }
+            }
+        }
+
+        if (blur) {
+            this.inputRef.current.blur();
+        } else {
+            this.inputRef.current.focus();
+        }
+        this.setState({ hyperedgeIndex }, callback);
+
+        /*
         if (this.state.hyperedgeIndex == -1) {
             throw new Error("cannot cycle hypergraph index when disabled");
         }
-
-        console.log("DIRECTION", direction);
 
         if (direction === "left") {
             let index = this.state.hyperedgeIndex - 1;
@@ -140,6 +215,37 @@ export default class App extends React.Component {
         } else {
             throw new Error("invalid direction, must be left/right");
         }
+        */
+    }
+
+    hyperedgesToGraph(hyperedges) {
+        let hypergraph = {};
+        for (const hyperedge of hyperedges) {
+            hypergraph = {
+                ...hypergraph,
+                ...this.hyperedgeToGraph(hyperedge)
+            };
+        }
+        return hypergraph;
+    }
+
+    hyperedgeToGraph(hyperedge) {
+        const hypergraph = {};
+        const edge = [];
+        for (const node of hyperedge) {
+            const prev_id = edge.join("-");
+
+            edge.push(node);
+            let id = edge.join("-");
+
+            hypergraph[id] = { data: { id, label: node } };
+            if (edge.length > 1) {
+                const edge_id = `${id}-edge`;
+                hypergraph[edge_id] = { data: { id: edge_id, source: prev_id, target: id } };
+            }
+        }
+
+        return hypergraph;
     }
 }
 

@@ -7,7 +7,7 @@ Cytoscape.use(COSEBilkent);
 
 import CytoscapeComponent from "react-cytoscapejs";
 
-export default function Graph({ data, layout, onSelectNode }) {
+export default function Graph({ data, layout }) {
     return (
         <CytoscapeComponent
             global="ht_cy"
@@ -48,22 +48,3 @@ export default function Graph({ data, layout, onSelectNode }) {
         />
     );
 }
-
-Graph.fromHypergraph = function (data) {
-    const results = [];
-    for (const edge of data) {
-        let lastNode = null;
-        for (const node of edge) {
-            results.push({ data: { id: node, label: node } });
-
-            if (lastNode) {
-                results.push({
-                    data: { source: lastNode, target: node }
-                });
-            }
-
-            lastNode = node;
-        }
-    }
-    return results;
-};
