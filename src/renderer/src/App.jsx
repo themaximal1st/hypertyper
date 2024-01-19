@@ -50,13 +50,17 @@ export default class App extends React.Component {
 
     async addCurrentInputToEdge() {
         const hyperedge = [...this.state.hyperedge, this.state.input];
-        this.setState({
-            input: "",
-            hyperedge,
-            hyperedgeIndex: -1
-        });
-
-        await window.api.hypergraph.add(hyperedge);
+        this.setState(
+            {
+                input: "",
+                hyperedge,
+                hyperedgeIndex: -1
+            },
+            async () => {
+                this.incrementalUpdate(hyperedge);
+                await window.api.hypergraph.add(hyperedge);
+            }
+        );
     }
 
     handleKeyPress(event) {
@@ -82,6 +86,10 @@ export default class App extends React.Component {
             this.setState({ hyperedge }, () => {
                 this.cycleHyperedgeIndex("left");
             });
+        } else if (event.key === "Backspace" && this.state.hyperedgeIndex === -1) {
+            if (!event.repeat && this.state.input === "") {
+                this.cycleHyperedgeIndex("left");
+            }
         }
     }
 
@@ -100,7 +108,6 @@ export default class App extends React.Component {
     incrementalUpdate(edge) {
         const hyperedge = this.hyperedgeToGraph(edge);
         const hypergraph = { ...this.state.hypergraph, ...hyperedge };
-        console.log(hypergraph);
         this.setState({ hypergraph }, () => {
             this.layout();
         });
