@@ -1,9 +1,9 @@
 // CRAWL A GRAPH FORWARDS AND BACKWARDS
+// TODO: Should be able to edit existing hyperedge nodes
 
 import React from "react";
 
 import Graph from "./components/Graph";
-// import Layout from "./components/Layout";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -29,6 +29,16 @@ export default class App extends React.Component {
         } else {
             return Object.values(this.state.hypergraph);
         }
+    }
+
+    get autocomplete() {
+        const data = new Set();
+        for (const value of Object.values(this.state.hypergraph)) {
+            if (value.data.label) {
+                data.add(value.data.label);
+            }
+        }
+        return Array.from(data);
     }
 
     componentDidMount() {
@@ -66,9 +76,8 @@ export default class App extends React.Component {
     }
 
     handleKeyPress(event) {
-        this.inputRef.current.focus();
-
         if (this.state.hyperedgeIndex === -1) {
+            this.inputRef.current.focus();
             if (event.key === "Enter" && this.state.input.length > 0) {
                 this.addCurrentInputToEdge();
             }
@@ -132,12 +141,15 @@ export default class App extends React.Component {
                             }
 
                             return (
-                                <div
-                                    className={`rounded-md p-2 ${classes.join(" ")}`}
+                                <a
+                                    onClick={(e) => {
+                                        this.setState({ hyperedgeIndex: i });
+                                    }}
+                                    className={`rounded-md p-2 cursor-pointer ${classes.join(" ")}`}
                                     key={`${item}-${i}`}
                                 >
                                     {item}
-                                </div>
+                                </a>
                             );
                         })
                         .reduce((accu, elem) => {
@@ -151,8 +163,16 @@ export default class App extends React.Component {
                         className="outline-none rounded-lg p-2 bg-transparent"
                         ref={this.inputRef}
                         value={this.state.input}
+                        list="suggestions"
+                        autoComplete="false"
                         onChange={(e) => this.setState({ input: e.target.value })}
                     />
+
+                    <datalist id="suggestions" className="flex flex-col gap-2 absolute">
+                        {this.autocomplete.map((item) => (
+                            <option key={item} value={item} />
+                        ))}
+                    </datalist>
                 </div>
                 <Graph data={this.data} layout={this.state.layout} />
             </div>
@@ -160,6 +180,16 @@ export default class App extends React.Component {
     }
 
     search() {
+        /*
+        const edge = this.state.hyperedge;
+        console.log("EDGE", edge);
+
+        const hypergraph = {};
+        for (const obj of Object.values(this.state.hypergraph)) {
+            console.log("OBJ", obj);
+        }
+
+        */
         return Object.values(this.state.hypergraph);
     }
 
