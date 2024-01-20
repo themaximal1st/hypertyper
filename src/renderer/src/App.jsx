@@ -32,6 +32,7 @@ export default class App extends React.Component {
     }
 
     get autocomplete() {
+        return [];
         const data = new Set();
         for (const value of Object.values(this.state.hypergraph)) {
             if (value.data.label) {
@@ -76,6 +77,7 @@ export default class App extends React.Component {
     }
 
     handleKeyPress(event) {
+        /*
         if (this.state.hyperedgeIndex === -1) {
             this.inputRef.current.focus();
             if (event.key === "Enter" && this.state.input.length > 0) {
@@ -84,13 +86,36 @@ export default class App extends React.Component {
         } else {
             this.setState({ hyperedgeIndex: -1 });
         }
+        */
     }
 
     handleKeyDown(event) {
         if (event.key === "ArrowLeft") {
-            this.cycleHyperedgeIndex("left");
+            window.ht_cy.panBy({ x: 50 });
         } else if (event.key === "ArrowRight") {
-            this.cycleHyperedgeIndex("right");
+            window.ht_cy.panBy({ x: -50 });
+        } else if (event.key === "ArrowUp") {
+            if (event.shiftKey) {
+                const zoom = window.ht_cy.zoom();
+                window.ht_cy.zoom({
+                    level: zoom + 0.1,
+                    renderedPosition: { x: window.ht_cy.width() / 2, y: window.ht_cy.height() / 2 }
+                });
+            } else {
+                window.ht_cy.panBy({ y: 50 });
+            }
+        } else if (event.key === "ArrowDown") {
+            if (event.shiftKey) {
+                const zoom = window.ht_cy.zoom();
+                window.ht_cy.zoom({
+                    level: zoom - 0.1,
+                    renderedPosition: { x: window.ht_cy.width() / 2, y: window.ht_cy.height() / 2 }
+                });
+            } else {
+                window.ht_cy.panBy({ y: -50 });
+            }
+        }
+        /*
         } else if (event.key === "Backspace" && this.state.hyperedgeIndex > -1) {
             const hyperedge = [...this.state.hyperedge];
             hyperedge.splice(this.state.hyperedgeIndex, 1);
@@ -103,6 +128,7 @@ export default class App extends React.Component {
                 this.cycleHyperedgeIndex("left");
             }
         }
+        */
     }
 
     handleSelectNode(node) {

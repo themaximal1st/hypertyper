@@ -1,3 +1,5 @@
+import fs from "fs";
+
 export default class HyperType {
     constructor(hypergraph) {
         this.hypergraph = hypergraph;
@@ -41,11 +43,24 @@ export default class HyperType {
                 service: "modeldeployer",
                 model: "24007ff9-b61e-4ab9-95d1-66a2e15c71d6",
                 temperature: 0.1
+            },
+            parse: {
+                delimiter: " -> "
             }
         };
 
-        const hypergraph = new Hypergraph(options);
+        const file = "/Users/brad/Projects/hypertyper/resources/smaller_data";
+        const contents = fs.readFileSync(file, "utf8");
 
-        return new HyperType(hypergraph);
+        try {
+            const hypergraph = await Hypergraph.parse(contents, options);
+            console.log("BOOM");
+            console.log(hypergraph);
+            const hypertype = new HyperType(hypergraph);
+            return hypertype;
+        } catch (e) {
+            console.log("ERROR");
+            console.log(e);
+        }
     }
 }
