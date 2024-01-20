@@ -1,5 +1,5 @@
 import React from "react";
-import ForceGraph3D from "3d-force-graph";
+import ForceGraph2D from "2d-force-graph";
 import SpriteText from "three-spritetext";
 
 function genRandomTree(N = 5, reverse = false) {
@@ -10,15 +10,23 @@ function genRandomTree(N = 5, reverse = false) {
             { id: 3, name: "HyperText", color: "blue" },
             { id: 4, name: "Tim Berners-Lee", color: "red" },
             { id: 5, name: "invented", color: "red" },
-            { id: 6, name: "WWW", color: "red" }
+            { id: 6, name: "WWW", color: "red" },
+
+            { id: 7, name: "Steve Jobs", color: "green" },
+            { id: 8, name: "invented", color: "green" },
+            { id: 9, name: "iPhone", color: "green" },
+            { id: 10, name: "", color: "red" }
         ],
         links: [
             { source: 1, target: 2, color: "blue" },
             { source: 2, target: 3, color: "blue" },
             { source: 4, target: 5, color: "red" },
             { source: 5, target: 6, color: "red" },
-            { source: 2, target: 5, color: "black" },
-            { source: 5, target: 2, color: "black" }
+            { source: 7, target: 8, color: "green" },
+            { source: 8, target: 9, color: "green" },
+            { source: 10, target: 2, color: "black" },
+            { source: 10, target: 5, color: "black" },
+            { source: 10, target: 8, color: "black" }
         ]
     };
 }
@@ -36,6 +44,7 @@ export default class App extends React.Component {
     }
 
     get data() {
+        return genRandomTree();
         const graphData = { nodes: [], links: [] };
         for (const hyperedge of this.state.hypergraph) {
             const edge = [];
@@ -63,21 +72,25 @@ export default class App extends React.Component {
             }
         }
 
+        // connect nodes by name that have different ids
+        for (const node of graphData.nodes) {
+            const otherNodes = graphData.nodes.filter(
+                (n) => n.name === node.name && n.id !== node.id
+            );
+            for (const otherNode of otherNodes) {
+                graphData.links.push({
+                    source: node.id,
+                    target: otherNode.id,
+                    color: "black"
+                });
+            }
+        }
+
         return graphData;
     }
 
     getColorForSymbol(symbol) {
-        const available = [
-            "blue",
-            "red",
-            "green",
-            "yellow",
-            "purple",
-            "orange",
-            "pink",
-            "brown",
-            "black"
-        ];
+        const available = ["blue", "red", "green", "purple", "orange", "brown", "black"];
 
         // random
         return available[Math.floor(Math.random() * available.length)];
