@@ -49,8 +49,10 @@ export default class HyperType {
             }
         };
 
-        const file = "/Users/brad/Projects/hypertyper/resources/smaller_data";
-        const contents = fs.readFileSync(file, "utf8");
+        const file = "/Users/brad/Projects/loom/data/data";
+        // const contents = fs.readFileSync(file, "utf8").split("\n").slice(0, 600).join("\n");
+        // const contents = fs.readFileSync(file, "utf8");
+        const contents = "";
 
         try {
             const hypergraph = await Hypergraph.parse(contents, options);
