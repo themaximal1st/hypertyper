@@ -25,6 +25,7 @@
         "cytoscape-fcose": "^2.2.0",
         "electron-updater": "^6.1.1",
         "react-cytoscapejs": "^2.0.0",
+        "react-force-graph-2d": "^1.25.3",
         "react-force-graph-3d": "^1.24.1",
         "three": "^0.160.0",
         "three-spritetext": "^1.8.1"

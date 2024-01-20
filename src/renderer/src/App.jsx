@@ -1,5 +1,6 @@
 import React from "react";
-import ForceGraph2D from "2d-force-graph";
+import ForceGraph3D from "react-force-graph-3d";
+// import ForceGraph2D from "react-force-graph-2d";
 import SpriteText from "three-spritetext";
 
 function genRandomTree(N = 5, reverse = false) {
@@ -26,7 +27,8 @@ function genRandomTree(N = 5, reverse = false) {
             { source: 8, target: 9, color: "green" },
             { source: 10, target: 2, color: "black" },
             { source: 10, target: 5, color: "black" },
-            { source: 10, target: 8, color: "black" }
+            { source: 10, target: 8, color: "black" },
+            { source: 1, target: 4, color: "black" }
         ]
     };
 }
@@ -96,54 +98,25 @@ export default class App extends React.Component {
         return available[Math.floor(Math.random() * available.length)];
     }
 
-    componentDidMount() {
-        this.createGraph();
-    }
-
-    componentWillUnmount() {
-        // Clean up the graph to avoid memory leaks
-        if (this.graph) {
-            this.graph._destructor();
-        }
-    }
-
-    createGraph = () => {
-        const data = this.data;
-        const a1 = new ForceGraph3D();
-        console.log("A1");
-        console.log(a1);
-        const a2 = a1(this.graphContainer, { backgroundColor: "#ffffff" });
-        console.log("A2");
-        console.log(a2);
-
-        this.graph = a2
-            .backgroundColor("#ffffff")
-            .linkColor((link) => {
-                return link.color || "black";
-            })
-            // .nodeVisibility(true)
-            .nodeThreeObject((node) => {
-                console.log("NODE THREE");
-                const sprite = new SpriteText(node.name);
-                sprite.color = node.color;
-                sprite.textHeight = 8;
-                return sprite;
-            })
-            .linkDirectionalArrowLength(3.5)
-            .linkDirectionalArrowRelPos(1)
-            .linkCurvature(0.25)
-            .graphData(data);
-    };
-
     render() {
         return (
             <>
                 <input className="absolute z-20"></input>
-                <div
-                    className="w-full h-screen"
-                    ref={(el) => {
-                        this.graphContainer = el;
-                    }} // Reference to the container div
+                <ForceGraph3D
+                    graphData={this.data}
+                    backgroundColor="#ffffff"
+                    linkColor={(link) => {
+                        return link.color || "black";
+                    }}
+                    nodeThreeObject={(node) => {
+                        const sprite = new SpriteText(node.name);
+                        sprite.color = node.color;
+                        sprite.textHeight = 8;
+                        return sprite;
+                    }}
+                    linkDirectionalArrowLength={3.5}
+                    linkDirectionalArrowRelPos={1}
+                    linkCurvature={0.25}
                 />
             </>
         );
