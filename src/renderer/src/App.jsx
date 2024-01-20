@@ -96,6 +96,7 @@ export default class App extends React.Component {
             hyperedge.splice(this.state.hyperedgeIndex, 1);
             this.setState({ hyperedge }, () => {
                 this.cycleHyperedgeIndex("left");
+                this.layout();
             });
         } else if (event.key === "Backspace" && this.state.hyperedgeIndex === -1) {
             if (!event.repeat && this.state.input === "") {
@@ -180,17 +181,17 @@ export default class App extends React.Component {
     }
 
     search() {
-        /*
-        const edge = this.state.hyperedge;
-        console.log("EDGE", edge);
-
+        const keys = Object.keys(this.hyperedgeToGraph(this.state.hyperedge));
         const hypergraph = {};
-        for (const obj of Object.values(this.state.hypergraph)) {
-            console.log("OBJ", obj);
+        for (const node of Object.keys(this.state.hypergraph)) {
+            for (const key of keys) {
+                if (node.indexOf(key) !== -1) {
+                    hypergraph[node] = this.state.hypergraph[node];
+                }
+            }
         }
 
-        */
-        return Object.values(this.state.hypergraph);
+        return Object.values(hypergraph);
     }
 
     // utils
