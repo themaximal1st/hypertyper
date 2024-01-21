@@ -1,117 +1,176 @@
+// TODO: add nodes dynamically
+// TODO: do some graph simplification. only create connection node if more than 1 connection or if it ends in what would be a connection node
+
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
-// import ForceGraph2D from "react-force-graph-2d";
 import SpriteText from "three-spritetext";
 
-function genRandomTree(N = 5, reverse = false) {
-    return {
-        nodes: [
-            { id: 1, name: "Ted Nelson", color: "blue" },
-            { id: 2, name: "invented", color: "blue" },
-            { id: 3, name: "HyperText", color: "blue" },
-            { id: 4, name: "Tim Berners-Lee", color: "red" },
-            { id: 5, name: "invented", color: "red" },
-            { id: 6, name: "WWW", color: "red" },
+const colorPalette = [
+    "#ef4444",
+    "#f97316",
+    "#f59e0b",
+    "#84cc16",
+    "#22c55e",
+    "#10b981",
+    "#14b8a6",
+    "#06b6d4",
+    "#0ea5e9",
+    "#3b82f6",
+    "#6366f1",
+    "#8b5cf6",
+    "#a855f7",
+    "#d946ef",
+    "#ec4899",
+    "#f43f5e"
+];
+function stringToColor(str, colors = colorPalette) {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
 
-            { id: 7, name: "Steve Jobs", color: "green" },
-            { id: 8, name: "invented", color: "green" },
-            { id: 9, name: "iPhone", color: "green" },
-            { id: 10, name: "", color: "red" }
-        ],
-        links: [
-            { source: 1, target: 2, color: "blue" },
-            { source: 2, target: 3, color: "blue" },
-            { source: 4, target: 5, color: "red" },
-            { source: 5, target: 6, color: "red" },
-            { source: 7, target: 8, color: "green" },
-            { source: 8, target: 9, color: "green" },
-            { source: 10, target: 2, color: "black" },
-            { source: 10, target: 5, color: "black" },
-            { source: 10, target: 8, color: "black" },
-            { source: 1, target: 4, color: "black" }
-        ]
-    };
+    // Use the modulo operator to map the hash to an index within the colors array
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
 }
 
 export default class App extends React.Component {
     constructor(props) {
         super(props);
+        this.graphRef = React.createRef();
         this.state = {
+            isConnected: true,
             colors: [],
             hypergraph: [
                 ["Ted Nelson", "invented", "HyperText"],
-                ["Tim Berners-Lee", "invented", "WWW"]
+                ["HyperText", "influenced", "WWW"],
+                ["Tim Berners-Lee", "invented", "WWW"],
+                ["Tim Berners-Lee", "author", "Weaving the Web"],
+                ["Ted Nelson", "author", "Lib Machines"],
+                ["Ted Nelson", "invented", "HyperMedia"],
+                ["Ted Nelson", "invented", "Xanadu"],
+                ["Ted Nelson", "invented", "ZigZag"],
+                ["Vannevar Bush", "invented", "Memex"],
+                ["Vannevar Bush", "author", "As We May Think"]
             ]
         };
     }
 
+    componentDidMount() {
+        this.graphRef.current.d3Force("link").distance((link) => {
+            return link.length || 30;
+        });
+    }
+
     get data() {
-        return genRandomTree();
-        const graphData = { nodes: [], links: [] };
-        for (const hyperedge of this.state.hypergraph) {
+        return this.hypergraphToForceGraph(this.state.hypergraph);
+    }
+
+    hypergraphToForceGraph(hypergraph) {
+        const symbols = {};
+        const nodes = {};
+        const links = {};
+
+        for (const hyperedge of hypergraph) {
             const edge = [];
             let lastId = null;
-            const color = this.getColorForSymbol(hyperedge[0]);
-            for (const node of hyperedge) {
-                edge.push(node);
+            for (const symbol of hyperedge) {
+                edge.push(symbol);
                 const id = edge.join("-");
-
-                graphData.nodes.push({
-                    id,
-                    name: node,
-                    color
-                });
+                const textHeight = edge.length === 1 ? 12 : 8;
+                const color = stringToColor(edge[0]);
+                nodes[id] = { id, name: symbol, color, textHeight };
 
                 if (edge.length > 1) {
-                    graphData.links.push({
-                        source: lastId,
-                        target: id,
-                        color
-                    });
+                    links[`${lastId}-${id}-link`] = { source: lastId, target: id, color };
+                }
+
+                if (this.state.isConnected) {
+                    if (!symbols[symbol]) {
+                        symbols[symbol] = new Set();
+                    }
+
+                    symbols[symbol].add(id);
+
+                    if (symbols[symbol].size > 1) {
+                        const connectorId = `${symbol}-connector`;
+
+                        if (!nodes[connectorId]) {
+                            nodes[connectorId] = { id: connectorId };
+                        }
+
+                        for (const otherId of Array.from(symbols[symbol])) {
+                            links[`${connectorId}-${otherId}-link`] = {
+                                source: connectorId,
+                                target: otherId,
+                                length: 1
+                            };
+                        }
+                    }
                 }
 
                 lastId = id;
             }
         }
 
-        // connect nodes by name that have different ids
-        for (const node of graphData.nodes) {
-            const otherNodes = graphData.nodes.filter(
-                (n) => n.name === node.name && n.id !== node.id
-            );
-            for (const otherNode of otherNodes) {
-                graphData.links.push({
-                    source: node.id,
-                    target: otherNode.id,
-                    color: "black"
-                });
-            }
-        }
-
-        return graphData;
-    }
-
-    getColorForSymbol(symbol) {
-        const available = ["blue", "red", "green", "purple", "orange", "brown", "black"];
-
-        // random
-        return available[Math.floor(Math.random() * available.length)];
+        return { nodes: Object.values(nodes), links: Object.values(links) };
     }
 
     render() {
         return (
             <>
                 <input className="absolute z-20"></input>
+                <div className="absolute top-0 right-0 p-2 flex gap-4 z-20">
+                    <a
+                        onClick={(e) => this.setState({ isConnected: !this.state.isConnected })}
+                        className="cursor-pointer opacity-50 hover:opacity-100 transition-all"
+                    >
+                        {!this.state.isConnected && (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-6 h-6"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"
+                                />
+                            </svg>
+                        )}
+                        {this.state.isConnected && (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-6 h-6"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
+                                />
+                            </svg>
+                        )}
+                    </a>
+                </div>
                 <ForceGraph3D
+                    ref={this.graphRef}
                     graphData={this.data}
+                    showNavInfo={false}
                     backgroundColor="#ffffff"
                     linkColor={(link) => {
-                        return link.color || "black";
+                        return "#333333";
                     }}
                     nodeThreeObject={(node) => {
                         const sprite = new SpriteText(node.name);
                         sprite.color = node.color;
-                        sprite.textHeight = 8;
+                        sprite.textHeight = node.textHeight || 8;
                         return sprite;
                     }}
                     linkDirectionalArrowLength={3.5}
