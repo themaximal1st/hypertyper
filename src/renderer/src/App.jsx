@@ -1,3 +1,5 @@
+// TODO: Need to do incremental updates to the graph. Currently it's just rebuilding the whole thing every time
+
 // TODO: add nodes dynamically
 // TODO: do some graph simplification. only create connection node if more than 1 connection or if it ends in what would be a connection node
 
@@ -40,30 +42,57 @@ export default class App extends React.Component {
         this.graphRef = React.createRef();
         this.state = {
             isConnected: true,
+            input: "",
+            hyperedge: [],
             colors: [],
+
+            data: { nodes: [], links: [] },
+
             hypergraph: [
-                ["Ted Nelson", "invented", "HyperText"],
-                ["HyperText", "influenced", "WWW"],
-                ["Tim Berners-Lee", "invented", "WWW"],
-                ["Tim Berners-Lee", "author", "Weaving the Web"],
-                ["Ted Nelson", "author", "Lib Machines"],
-                ["Ted Nelson", "invented", "HyperMedia"],
-                ["Ted Nelson", "invented", "Xanadu"],
-                ["Ted Nelson", "invented", "ZigZag"],
-                ["Vannevar Bush", "invented", "Memex"],
-                ["Vannevar Bush", "author", "As We May Think"]
+                // ["Ted Nelson", "invented", "HyperText"],
+                // ["HyperText", "influenced", "WWW"],
+                // ["Tim Berners-Lee", "invented", "WWW"],
+                // ["Tim Berners-Lee", "author", "Weaving the Web"],
+                // ["Ted Nelson", "author", "Lib Machines"],
+                // ["Ted Nelson", "invented", "HyperMedia"],
+                // ["Ted Nelson", "invented", "Xanadu"],
+                // ["Ted Nelson", "invented", "ZigZag"],
+                // ["Vannevar Bush", "invented", "Memex"],
+                // ["Vannevar Bush", "author", "As We May Think"]
             ]
         };
     }
 
     componentDidMount() {
         this.graphRef.current.d3Force("link").distance((link) => {
-            return link.length || 30;
+            return link.length || 50;
+        });
+
+        const data = this.hypergraphToForceGraph(this.state.hypergraph);
+
+        this.setState({
+            data
         });
     }
 
-    get data() {
-        return this.hypergraphToForceGraph(this.state.hypergraph);
+    positionForNode(id) {
+        // for (const node of this.state.data.nodes) {
+        //     if (node.id === id) {
+        //         return { fx: node.x, fy: node.y, fz: node.z };
+        //     }
+        // }
+
+        return {};
+    }
+
+    positionForLink(id) {
+        // for (const link of this.state.data.links) {
+        //     if (link.id === id) {
+        //         return { fx: link.x, fy: link.y, fz: link.z };
+        //     }
+        // }
+
+        return {};
     }
 
     hypergraphToForceGraph(hypergraph) {
@@ -74,15 +103,20 @@ export default class App extends React.Component {
         for (const hyperedge of hypergraph) {
             const edge = [];
             let lastId = null;
+
             for (const symbol of hyperedge) {
                 edge.push(symbol);
                 const id = edge.join("-");
                 const textHeight = edge.length === 1 ? 12 : 8;
                 const color = stringToColor(edge[0]);
-                nodes[id] = { id, name: symbol, color, textHeight };
+
+                const nodePosition = this.positionForNode(id);
+                nodes[id] = { id, name: symbol, color, textHeight, ...nodePosition };
 
                 if (edge.length > 1) {
-                    links[`${lastId}-${id}-link`] = { source: lastId, target: id, color };
+                    const linkId = `${lastId}-${id}-link`;
+                    const linkPosition = this.positionForLink(linkId);
+                    links[linkId] = { source: lastId, target: id, color, ...linkPosition };
                 }
 
                 if (this.state.isConnected) {
@@ -100,10 +134,13 @@ export default class App extends React.Component {
                         }
 
                         for (const otherId of Array.from(symbols[symbol])) {
-                            links[`${connectorId}-${otherId}-link`] = {
+                            const linkConnectorId = `${connectorId}-${otherId}-link`;
+                            const linkConnectorPosition = this.positionForLink(linkConnectorId);
+                            links[linkConnectorId] = {
                                 source: connectorId,
                                 target: otherId,
-                                length: 1
+                                length: 1,
+                                ...linkConnectorPosition
                             };
                         }
                     }
@@ -116,14 +153,51 @@ export default class App extends React.Component {
         return { nodes: Object.values(nodes), links: Object.values(links) };
     }
 
+    handleAddInput(e) {
+        e.preventDefault();
+        const input = this.state.input;
+        const hyperedge = [...this.state.hyperedge, input];
+        const hypergraph = this.state.hypergraph.filter((edge) => edge !== this.state.hyperedge);
+        hypergraph.push(hyperedge);
+        const data = this.hypergraphToForceGraph(hypergraph);
+        this.setState({
+            hyperedge,
+            hypergraph,
+            data,
+            input: ""
+        });
+    }
+
+    toggleIsConnected() {
+        this.setState({ isConnected: !this.state.isConnected }, () => {
+            this.setState({ data: this.hypergraphToForceGraph(this.state.hypergraph) });
+        });
+    }
+
     render() {
         return (
             <>
-                <input className="absolute z-20"></input>
+                <div className="absolute flex gap-4 z-20">
+                    {this.state.hyperedge.map((symbol, i) => {
+                        return (
+                            <div key={i} className="bg-gray-50 p-2 rounded-sm">
+                                {symbol}
+                            </div>
+                        );
+                    })}
+                    <form onSubmit={this.handleAddInput.bind(this)}>
+                        <input
+                            autoFocus
+                            className="absolute z-20 bg-gray-50 p-2 rounded-sm outline-none"
+                            value={this.state.input}
+                            onChange={(e) => this.setState({ input: e.target.value })}
+                        ></input>
+                    </form>
+                </div>
                 <div className="absolute top-0 right-0 p-2 flex gap-4 z-20">
                     <a
-                        onClick={(e) => this.setState({ isConnected: !this.state.isConnected })}
-                        className="cursor-pointer opacity-50 hover:opacity-100 transition-all"
+                        onClick={this.toggleIsConnected.bind(this)}
+                        className="cursor-pointer opacity-50 hover:opacity-100 transition-all bg-gray-50 rounded-sm"
                     >
                         {!this.state.isConnected && (
                             <svg
@@ -161,7 +235,7 @@ export default class App extends React.Component {
                 </div>
                 <ForceGraph3D
                     ref={this.graphRef}
-                    graphData={this.data}
+                    graphData={this.state.data}
                     showNavInfo={false}
                     backgroundColor="#ffffff"
                     linkColor={(link) => {
@@ -173,6 +247,16 @@ export default class App extends React.Component {
                         sprite.textHeight = node.textHeight || 8;
                         return sprite;
                     }}
+                    /*
+                    onNodeDragEnd={(node) => {
+                        console.log("DRAG END");
+                        node.fx = node.x;
+                        node.fy = node.y;
+                        node.fz = node.z;
+                    }}
+                    */
+                    // warmupTicks={1000}
+                    // cooldownTicks={100}
                     linkDirectionalArrowLength={3.5}
                     linkDirectionalArrowRelPos={1}
                     linkCurvature={0.25}
