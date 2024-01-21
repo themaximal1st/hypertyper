@@ -49,9 +49,9 @@ export default class App extends React.Component {
             data: { nodes: [], links: [] },
 
             hypergraph: [
-                // ["Ted Nelson", "invented", "HyperText"],
-                // ["HyperText", "influenced", "WWW"],
-                // ["Tim Berners-Lee", "invented", "WWW"],
+                ["Ted Nelson", "invented", "HyperText"],
+                ["HyperText", "influenced", "WWW"]
+                // ["Tim Berners-Lee", "invented", "WWW"]
                 // ["Tim Berners-Lee", "author", "Weaving the Web"],
                 // ["Ted Nelson", "author", "Lib Machines"],
                 // ["Ted Nelson", "invented", "HyperMedia"],
@@ -75,26 +75,6 @@ export default class App extends React.Component {
         });
     }
 
-    positionForNode(id) {
-        // for (const node of this.state.data.nodes) {
-        //     if (node.id === id) {
-        //         return { fx: node.x, fy: node.y, fz: node.z };
-        //     }
-        // }
-
-        return {};
-    }
-
-    positionForLink(id) {
-        // for (const link of this.state.data.links) {
-        //     if (link.id === id) {
-        //         return { fx: link.x, fy: link.y, fz: link.z };
-        //     }
-        // }
-
-        return {};
-    }
-
     hypergraphToForceGraph(hypergraph) {
         const symbols = {};
         const nodes = {};
@@ -110,13 +90,11 @@ export default class App extends React.Component {
                 const textHeight = edge.length === 1 ? 12 : 8;
                 const color = stringToColor(edge[0]);
 
-                const nodePosition = this.positionForNode(id);
-                nodes[id] = { id, name: symbol, color, textHeight, ...nodePosition };
+                nodes[id] = { id, name: symbol, color, textHeight };
 
                 if (edge.length > 1) {
                     const linkId = `${lastId}-${id}-link`;
-                    const linkPosition = this.positionForLink(linkId);
-                    links[linkId] = { source: lastId, target: id, color, ...linkPosition };
+                    links[linkId] = { id: linkId, source: lastId, target: id, color };
                 }
 
                 if (this.state.isConnected) {
@@ -135,12 +113,11 @@ export default class App extends React.Component {
 
                         for (const otherId of Array.from(symbols[symbol])) {
                             const linkConnectorId = `${connectorId}-${otherId}-link`;
-                            const linkConnectorPosition = this.positionForLink(linkConnectorId);
                             links[linkConnectorId] = {
+                                id: linkConnectorId,
                                 source: connectorId,
                                 target: otherId,
-                                length: 1,
-                                ...linkConnectorPosition
+                                length: -10
                             };
                         }
                     }
@@ -150,7 +127,54 @@ export default class App extends React.Component {
             }
         }
 
-        return { nodes: Object.values(nodes), links: Object.values(links) };
+        return this.simplifyHypergraph({
+            nodes,
+            links
+        });
+    }
+
+    simplifyHypergraph(hypergraph) {
+        // const links = hypergraph.links;
+        console.log(hypergraph.links);
+
+        for (const node of Object.keys(hypergraph.nodes)) {
+            if (node.includes("-connector")) {
+                console.log("NODE", node);
+                const links = Object.values(hypergraph.links).filter((link) => {
+                    return link.source === node || link.target === node;
+                });
+
+                if (links.length === 2) {
+                    delete hypergraph.nodes[node];
+                    delete hypergraph.links[links[0].id];
+                    const node1 = hypergraph.nodes[links[0].target];
+                    console.log("NODE 1", node1);
+
+                    delete hypergraph.links[links[1].id];
+
+                    const target = links[1].target;
+                    const node2 = hypergraph.nodes[target];
+
+                    delete hypergraph.nodes[node2.id];
+                    for (const otherLink of Object.values(hypergraph.links)) {
+                        if (otherLink.source === node2.id || otherLink.target === node2.id) {
+                            delete hypergraph.links[otherLink.id];
+                            const newConnId = `${node1.id}-${otherLink.target}-link`;
+                            hypergraph.links[newConnId] = {
+                                id: newConnId,
+                                source: node1.id,
+                                target: otherLink.target
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        return {
+            nodes: Object.values(hypergraph.nodes),
+            links: Object.values(hypergraph.links)
+        };
     }
 
     handleAddInput(e) {
@@ -239,7 +263,7 @@ export default class App extends React.Component {
                     showNavInfo={false}
                     backgroundColor="#ffffff"
                     linkColor={(link) => {
-                        return "#333333";
+                        return link.color || "#333333";
                     }}
                     nodeThreeObject={(node) => {
                         const sprite = new SpriteText(node.name);
@@ -247,17 +271,12 @@ export default class App extends React.Component {
                         sprite.textHeight = node.textHeight || 8;
                         return sprite;
                     }}
-                    /*
-                    onNodeDragEnd={(node) => {
-                        console.log("DRAG END");
-                        node.fx = node.x;
-                        node.fy = node.y;
-                        node.fz = node.z;
+                    linkDirectionalArrowLength={(link) => {
+                        if (link.length < 0) {
+                            return 0;
+                        }
+                        return 5;
                     }}
-                    */
-                    // warmupTicks={1000}
-                    // cooldownTicks={100}
-                    linkDirectionalArrowLength={3.5}
                     linkDirectionalArrowRelPos={1}
                     linkCurvature={0.25}
                 />
