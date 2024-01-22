@@ -1,40 +1,7 @@
-// TODO: Need to do incremental updates to the graph. Currently it's just rebuilding the whole thing every time
-
-// TODO: add nodes dynamically
-// TODO: do some graph simplification. only create connection node if more than 1 connection or if it ends in what would be a connection node
-
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import SpriteText from "three-spritetext";
-
-const colorPalette = [
-    "#ef4444",
-    "#f97316",
-    "#f59e0b",
-    "#84cc16",
-    "#22c55e",
-    "#10b981",
-    "#14b8a6",
-    "#06b6d4",
-    "#0ea5e9",
-    "#3b82f6",
-    "#6366f1",
-    "#8b5cf6",
-    "#a855f7",
-    "#d946ef",
-    "#ec4899",
-    "#f43f5e"
-];
-function stringToColor(str, colors = colorPalette) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-
-    // Use the modulo operator to map the hash to an index within the colors array
-    const index = Math.abs(hash) % colors.length;
-    return colors[index];
-}
+import { stringToColor } from "./utils";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -51,14 +18,6 @@ export default class App extends React.Component {
             hypergraph: [
                 ["Ted Nelson", "invented", "HyperText"],
                 ["HyperText", "influenced", "WWW"]
-                // ["Tim Berners-Lee", "invented", "WWW"]
-                // ["Tim Berners-Lee", "author", "Weaving the Web"],
-                // ["Ted Nelson", "author", "Lib Machines"],
-                // ["Ted Nelson", "invented", "HyperMedia"],
-                // ["Ted Nelson", "invented", "Xanadu"],
-                // ["Ted Nelson", "invented", "ZigZag"],
-                // ["Vannevar Bush", "invented", "Memex"],
-                // ["Vannevar Bush", "author", "As We May Think"]
             ]
         };
     }
@@ -70,9 +29,7 @@ export default class App extends React.Component {
 
         const data = this.hypergraphToForceGraph(this.state.hypergraph);
 
-        this.setState({
-            data
-        });
+        this.setState({ data });
     }
 
     hypergraphToForceGraph(hypergraph) {
@@ -81,65 +38,66 @@ export default class App extends React.Component {
         const links = {};
 
         for (const hyperedge of hypergraph) {
-            const edge = [];
-            let lastId = null;
-
-            for (const symbol of hyperedge) {
-                edge.push(symbol);
-                const id = edge.join("-");
-                const textHeight = edge.length === 1 ? 12 : 8;
-                const color = stringToColor(edge[0]);
-
-                nodes[id] = { id, name: symbol, color, textHeight };
-
-                if (edge.length > 1) {
-                    const linkId = `${lastId}-${id}-link`;
-                    links[linkId] = { id: linkId, source: lastId, target: id, color };
-                }
-
-                if (this.state.isConnected) {
-                    if (!symbols[symbol]) {
-                        symbols[symbol] = new Set();
-                    }
-
-                    symbols[symbol].add(id);
-
-                    if (symbols[symbol].size > 1) {
-                        const connectorId = `${symbol}-connector`;
-
-                        if (!nodes[connectorId]) {
-                            nodes[connectorId] = { id: connectorId };
-                        }
-
-                        for (const otherId of Array.from(symbols[symbol])) {
-                            const linkConnectorId = `${connectorId}-${otherId}-link`;
-                            links[linkConnectorId] = {
-                                id: linkConnectorId,
-                                source: connectorId,
-                                target: otherId,
-                                length: -10
-                            };
-                        }
-                    }
-                }
-
-                lastId = id;
-            }
+            this.processHyperedge(hyperedge, nodes, links, symbols);
         }
 
-        return this.simplifyHypergraph({
-            nodes,
-            links
-        });
+        return { nodes: Object.values(nodes), links: Object.values(links) };
     }
 
-    simplifyHypergraph(hypergraph) {
-        // const links = hypergraph.links;
-        console.log(hypergraph.links);
+    processHyperedge(hyperedge, nodes, links, symbols, isConnected) {
+        let lastId = null;
 
+        hyperedge.forEach((symbol) => {
+            const id = this.createNodeId(hyperedge, symbol); // Function to create a unique node ID
+            nodes[id] = this.createNode(symbol, id, hyperedge.length); // Create and store the node
+            const color = stringToColor(hyperedge[0]);
+
+            if (hyperedge.length > 1) {
+                // Create and store the link if it's not the first element in the hyperedge
+                if (lastId !== null) {
+                    links[this.createLinkId(lastId, id)] = this.createLink(lastId, id, color);
+                }
+                lastId = id;
+            }
+
+            if (isConnected) {
+                this.updateSymbolsAndCreateConnectors(symbol, id, symbols, nodes, links);
+            }
+        });
+
+        return { nodes, links };
+    }
+
+    createNodeId(hyperedge, currentSymbol) {
+        // Determine the position of the current symbol in the hyperedge
+        const index = hyperedge.indexOf(currentSymbol);
+        // Generate the node ID by joining the symbols up to the current one
+        return hyperedge.slice(0, index + 1).join("-");
+    }
+
+    createNode(symbol, id, edgeLength) {
+        const textHeight = edgeLength === 1 ? 12 : 8;
+        const color = stringToColor(id.split("-")[0]);
+        return { id, name: symbol, color, textHeight };
+    }
+
+    createLinkId(sourceId, targetId) {
+        return `${sourceId}-${targetId}-link`;
+    }
+
+    createLink(sourceId, targetId, color) {
+        return {
+            id: this.createLinkId(sourceId, targetId),
+            source: sourceId,
+            target: targetId,
+            color
+        };
+    }
+
+    /*
+    simplifyHypergraph(hypergraph) {
         for (const node of Object.keys(hypergraph.nodes)) {
             if (node.includes("-connector")) {
-                console.log("NODE", node);
                 const links = Object.values(hypergraph.links).filter((link) => {
                     return link.source === node || link.target === node;
                 });
@@ -148,7 +106,6 @@ export default class App extends React.Component {
                     delete hypergraph.nodes[node];
                     delete hypergraph.links[links[0].id];
                     const node1 = hypergraph.nodes[links[0].target];
-                    console.log("NODE 1", node1);
 
                     delete hypergraph.links[links[1].id];
 
@@ -176,6 +133,7 @@ export default class App extends React.Component {
             links: Object.values(hypergraph.links)
         };
     }
+    */
 
     handleAddInput(e) {
         e.preventDefault();
@@ -223,38 +181,8 @@ export default class App extends React.Component {
                         onClick={this.toggleIsConnected.bind(this)}
                         className="cursor-pointer opacity-50 hover:opacity-100 transition-all bg-gray-50 rounded-sm"
                     >
-                        {!this.state.isConnected && (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-6 h-6"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M9 9V4.5M9 9H4.5M9 9 3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5 5.25 5.25"
-                                />
-                            </svg>
-                        )}
-                        {this.state.isConnected && (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-6 h-6"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15"
-                                />
-                            </svg>
-                        )}
+                        {!this.state.isConnected && "Connect"}
+                        {this.state.isConnected && "Disconnect"}
                     </a>
                 </div>
                 <ForceGraph3D
