@@ -13,7 +13,7 @@ export default class Hyperedge {
     }
 
     get id() {
-        return this.nodes.map((node) => node.id).join("-");
+        return this.nodes.map((node) => node.symbol).join("-");
     }
 
     get data() {
@@ -42,5 +42,13 @@ export default class Hyperedge {
         }
 
         return this.createNode(this.symbols[index + 1], index + 1);
+    }
+
+    startNode() {
+        return this.nodes[0];
+    }
+
+    endNode() {
+        return this.nodes[this.nodes.length - 1];
     }
 }

@@ -12,4 +12,8 @@ export default class Hypergraph {
         const graphs = mergeGraphs(this.hyperedges.map((hyperedge) => hyperedge.data));
         return { nodes: Object.values(graphs.nodes), links: Object.values(graphs.links) };
     }
+
+    edgesWithEndSymbol(symbol) {
+        return this.hyperedges.filter((hyperedge) => hyperedge.endNode().symbol === symbol);
+    }
 }

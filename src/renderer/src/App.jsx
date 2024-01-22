@@ -16,7 +16,8 @@ export default class App extends React.Component {
                 ["Ted Nelson", "invented", "HyperText"],
                 ["Ted Nelson", "invented", "Xanadu"],
                 ["HyperText", "influenced", "WWW"],
-                ["HyperText", "influenced", "HTML"]
+                ["HyperText", "influenced", "HTML"],
+                ["HTML", "influenced", "WWW"]
             ],
             colors: [],
 
