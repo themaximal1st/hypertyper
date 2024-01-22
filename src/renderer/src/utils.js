@@ -29,10 +29,10 @@ export function stringToColor(str, colors = colorPalette) {
 }
 
 export function mergeGraphs(graphs) {
-    const graphData = { nodes: [], links: [] };
+    const graphData = { nodes: {}, links: {} };
     for (const graph of graphs) {
-        graphData.nodes = [...graphData.nodes, ...(graph.nodes || [])];
-        graphData.links = [...graphData.links, ...(graph.links || [])];
+        graphData.nodes = { ...graphData.nodes, ...(graph.nodes || {}) };
+        graphData.links = { ...graphData.links, ...(graph.links || {}) };
     }
 
     return graphData;

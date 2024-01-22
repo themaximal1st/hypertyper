@@ -1,5 +1,3 @@
-import { stringToColor } from "./utils";
-
 export default class Node {
     constructor(symbol, index, hyperedge) {
         this.symbol = symbol;
@@ -13,20 +11,21 @@ export default class Node {
     }
 
     get data() {
-        const graphData = { nodes: [], links: [] };
-        graphData.nodes.push({
+        const graphData = { nodes: {}, links: {} };
+        graphData.nodes[this.id] = {
             id: this.id,
             name: this.symbol,
             color: this.hyperedge.color,
             textHeight: 12
-        });
+        };
 
         if (this.isStart) {
             return graphData;
         }
 
         const parentNode = this.hyperedge.prevNode(this.index);
-        graphData.links.push(parentNode.link(this));
+        const link = parentNode.link(this);
+        graphData.links[link.id] = link;
 
         return graphData;
     }

@@ -14,7 +14,9 @@ export default class App extends React.Component {
             hyperedge: [],
             hypergraph: [
                 ["Ted Nelson", "invented", "HyperText"],
-                ["HyperText", "influenced", "WWW"]
+                ["Ted Nelson", "invented", "Xanadu"],
+                ["HyperText", "influenced", "WWW"],
+                ["HyperText", "influenced", "HTML"]
             ],
             colors: [],
 
@@ -23,7 +25,9 @@ export default class App extends React.Component {
     }
 
     reloadData() {
-        const hypergraph = new Hypergraph(this.state.hypergraph);
+        const hypergraph = new Hypergraph(this.state.hypergraph, {
+            isConnected: this.state.isConnected
+        });
         this.setState({ data: hypergraph.data });
     }
 
