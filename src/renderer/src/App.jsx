@@ -1,37 +1,32 @@
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 import SpriteText from "three-spritetext";
+import * as Three from "three";
 
 import Hypergraph from "./Hypergraph";
 
-// -1 = no depth
-// 0 = default depth
-// 1 = start and end connected
-// 2 = middle connected
-
+// TODO: [ ] Better depth UX
 // TODO: [ ] Animation spinner (auto spin if no mouse movement for 5s?)
-// TODO: [X] Start nodes
-// TODO: [X] End Nodes
-// TODO: [ ] Middle Nodes
-// TODO: get dynamic updates working well
+// TODO: [ ] get dynamic updates working well
 
 export default class App extends React.Component {
     constructor(props) {
         super(props);
         this.graphRef = React.createRef();
+        this.cameraPosition = { x: 0, y: 0, z: 0 };
         this.state = {
-            depth: 0,
+            depth: 3,
             input: "",
             hyperedge: [],
             hypergraph: [
                 ["Ted Nelson", "invented", "HyperText"],
+                ["Ted Nelson", "invented", "Xanadu"],
                 ["Tim Berners-Lee", "invented", "WWW"],
                 ["Vannevar Bush", "invented", "Memex"],
 
                 ["Tim Berners-Lee", "author", "Weaving the Web"],
                 ["Ted Nelson", "author", "Lib Machines"],
                 ["Ted Nelson", "invented", "HyperMedia"],
-                ["Ted Nelson", "invented", "Xanadu"],
                 ["Ted Nelson", "invented", "ZigZag"],
                 ["Vannevar Bush", "author", "As We May Think"],
                 ["HyperText", "influenced", "WWW"]
@@ -54,7 +49,101 @@ export default class App extends React.Component {
             return link.length || 50;
         });
 
+        console.log("CURRENT", this.graphRef.current);
+
         this.reloadData();
+
+        document.addEventListener("keydown", this.handleKeyDown.bind(this));
+        document.addEventListener("mousedown", this.handleMouseDown.bind(this));
+        document.addEventListener("mouseup", this.handleMouseUp.bind(this));
+
+        this.startAnimation();
+    }
+
+    handleMouseDown(e) {
+        if (this.mouseUpInterval) {
+            clearTimeout(this.mouseUpInterval);
+            this.mouseUpInterval = null;
+        }
+
+        this.isClicking = true;
+        // this.stopAnimation();
+    }
+
+    handleMouseUp(e) {
+        if (this.mouseUpInterval) return;
+
+        this.mouseUpInterval = setTimeout(() => {
+            this.isClicking = false;
+        }, 1000);
+    }
+
+    startAnimation() {
+        const initialPosition = this.graphRef.current.cameraPosition();
+        this.distance = Math.sqrt(Math.pow(-5, 2) + Math.pow(-500, 2)); // Set the initial distance
+        this.angle = Math.atan2(-5, -500); // Set the initial angle
+        this.initialY = initialPosition.y; // Store the initial Y-coordinate
+
+        const updateCameraPosition = () => {
+            if (this.isClicking) {
+                // Store the current position when starting to drag
+                const currentPos = this.graphRef.current.cameraPosition();
+                this.dragEndPosition = { x: currentPos.x, y: currentPos.y, z: currentPos.z };
+                return;
+            } else if (this.dragEndPosition) {
+                // Recalculate the angle and distance based on the position when dragging stopped
+                this.distance = Math.sqrt(
+                    Math.pow(this.dragEndPosition.x, 2) + Math.pow(this.dragEndPosition.z, 2)
+                );
+                this.angle = Math.atan2(this.dragEndPosition.x, this.dragEndPosition.z);
+                this.initialY = this.dragEndPosition.y; // Update the Y-coordinate
+                this.dragEndPosition = null; // Reset the stored position
+            }
+
+            // Increment the angle for the animation
+            this.angle += Math.PI / 1000;
+            this.angle %= 2 * Math.PI; // Normalize the angle
+
+            // Update camera position
+            this.graphRef.current.cameraPosition({
+                x: this.distance * Math.sin(this.angle),
+                y: this.initialY, // Use the updated Y-coordinate
+                z: this.distance * Math.cos(this.angle)
+            });
+        };
+
+        this.animationInterval = setInterval(updateCameraPosition, 33); // About 30 FPS
+    }
+
+    /*
+    startAnimation() {
+        // const distance = 500;
+        // this.graphRef.current.cameraPosition({ z: distance });
+        // camera orbit
+        let x = 1;
+        this.interval = setInterval(() => {
+            if (this.isClicking) return;
+            this.graphRef.current.cameraPosition({
+                x
+                // z: distance * Math.cos(angle)
+            });
+            x++;
+            // angle += Math.PI / 3000;
+        }, 10);
+    }
+    */
+
+    stopAnimation() {
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+        this.interval = null;
+    }
+
+    handleKeyDown(e) {
+        if (e.key === "`") {
+            this.toggleDepth();
+        }
     }
 
     handleAddInput(e) {
@@ -75,7 +164,7 @@ export default class App extends React.Component {
     toggleDepth() {
         let depth = this.state.depth;
         depth++;
-        if (depth > 2) depth = -1;
+        if (depth > 3) depth = 0;
 
         this.setState({ depth }, () => {
             this.reloadData();
@@ -85,7 +174,7 @@ export default class App extends React.Component {
     render() {
         return (
             <>
-                <div className="absolute flex gap-4 z-20">
+                {/* <div className="absolute flex gap-4 z-20">
                     {this.state.hyperedge.map((symbol, i) => {
                         return (
                             <div key={i} className="bg-gray-50 p-2 rounded-sm">
@@ -101,7 +190,7 @@ export default class App extends React.Component {
                             onChange={(e) => this.setState({ input: e.target.value })}
                         ></input>
                     </form>
-                </div>
+                </div> */}
                 <div className="absolute top-0 right-0 p-2 flex gap-4 z-20">
                     <a
                         onClick={this.toggleDepth.bind(this)}
@@ -112,6 +201,12 @@ export default class App extends React.Component {
                 </div>
                 <ForceGraph3D
                     ref={this.graphRef}
+                    onZoom={function () {
+                        console.log("ZOOM");
+                    }}
+                    onNodeClick={(node) => {
+                        console.log("CLICK");
+                    }}
                     graphData={this.state.data}
                     showNavInfo={false}
                     backgroundColor="#ffffff"
@@ -119,6 +214,17 @@ export default class App extends React.Component {
                         return link.color || "#333333";
                     }}
                     nodeThreeObject={(node) => {
+                        if (node.connector) {
+                            return new Three.Mesh(
+                                new Three.SphereGeometry(1),
+                                new Three.MeshLambertMaterial({
+                                    color: "#000000",
+                                    transparent: true,
+                                    opacity: 0.25
+                                })
+                            );
+                        }
+
                         const sprite = new SpriteText(node.name);
                         sprite.color = node.color;
                         sprite.textHeight = node.textHeight || 8;

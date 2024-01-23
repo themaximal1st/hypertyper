@@ -10,7 +10,7 @@ export default class Node {
 
     // we can simplify the graph by removing the masquerade nodes and connecting their children to other graphs that make sense
     masqueradeNode() {
-        if (this.hypergraph.options.depth < 1) return null;
+        if (this.hypergraph.options.depth < 2) return null;
 
         // TODO: simplify
         if (this.isStart) {
@@ -32,7 +32,7 @@ export default class Node {
     // a node that connects 2+ middle nodes
     connectorGraphData() {
         const data = { nodes: {}, links: {} };
-        if (this.hypergraph.options.depth < 2) return data;
+        if (this.hypergraph.options.depth < 3) return data;
         if (!this.isMiddle) return data;
 
         const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this._id);
@@ -41,11 +41,14 @@ export default class Node {
             data.nodes[id] = {
                 id,
                 color: this.hyperedge.color,
+                connector: true,
                 textHeight: 12
             };
 
             for (const node of nodes) {
                 const link = node.linkParent(data.nodes[id]);
+                link.length = 1;
+                link.connector = true;
                 data.links[link.id] = link;
             }
         }
@@ -66,8 +69,6 @@ export default class Node {
 
     graphData(data = {}) {
         let masqueradeNode = this.masqueradeNode();
-        console.log("graphData()");
-        console.log(`  ${this.symbol}`);
 
         // if we're masquerading as another node, but that other node doesn't exist
         // ...this is now the masquerade node and the other node will masqurade as this node
@@ -105,8 +106,6 @@ export default class Node {
         if (this.isMiddle) {
             const connector = this.connectorGraphData();
             data = mergeGraphs([data, connector]);
-            console.log("IS MIDDLE", this.id);
-            console.log(connector);
         }
 
         return data;

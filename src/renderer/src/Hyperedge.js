@@ -12,8 +12,17 @@ export default class Hyperedge {
         return new Node(symbol, index, this);
     }
 
+    get index() {
+        return this.hypergraph.hyperedges.indexOf(this);
+    }
+
     get id() {
-        return this.nodes.map((node) => node.symbol).join("-");
+        const id = this.nodes.map((node) => node.symbol).join("-");
+        if (this.hypergraph.options.depth === 0) {
+            return `${this.index}-${id}`;
+        }
+
+        return id;
     }
 
     graphData(data = {}) {
@@ -21,7 +30,12 @@ export default class Hyperedge {
     }
 
     nodeId(index) {
-        return this.symbols.slice(0, index + 1).join("-");
+        const id = this.symbols.slice(0, index + 1).join("-");
+        if (this.hypergraph.options.depth === 0) {
+            return `${this.index}-${id}`;
+        }
+
+        return id;
     }
 
     get color() {
