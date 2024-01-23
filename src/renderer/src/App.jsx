@@ -5,8 +5,6 @@ import Hypergraph from "./Hypergraph";
 import Node from "./Node";
 import Animation from "./Animation";
 
-// TODO: [ ] Add camera WASD controls, which disables animation
-
 // TODO: [ ] get dynamic updates working well
 // TODO: [ ] get integrated with backend
 // TODO: [ ] implement pagerank for text size!
@@ -63,6 +61,7 @@ export default class App extends React.Component {
         this.reloadData();
 
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
+        document.addEventListener("keyup", this.handleKeyUp.bind(this));
         document.addEventListener("mousedown", this.handleMouseDown.bind(this));
         document.addEventListener("mouseup", this.handleMouseUp.bind(this));
         document.addEventListener("wheel", this.handleZoom.bind(this));
@@ -74,6 +73,7 @@ export default class App extends React.Component {
     componentWillUnmount() {
         this.animation.stop();
         document.removeEventListener("keydown", this.handleKeyDown.bind(this));
+        document.removeEventListener("keyup", this.handleKeyUp.bind(this));
         document.removeEventListener("mousedown", this.handleMouseDown.bind(this));
         document.removeEventListener("mouseup", this.handleMouseUp.bind(this));
         document.removeEventListener("wheel", this.handleZoom.bind(this));
@@ -101,9 +101,14 @@ export default class App extends React.Component {
     }
 
     handleKeyDown(e) {
+        this.animation.click();
         if (e.key === "`") {
             this.toggleDepth();
         }
+    }
+
+    handleKeyUp(e) {
+        this.animation.unclick();
     }
 
     handleAddInput(e) {
