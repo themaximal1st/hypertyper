@@ -41,8 +41,7 @@ export default class Node {
             data.nodes[id] = {
                 id,
                 color: this.hyperedge.color,
-                connector: true,
-                textHeight: 12
+                connector: true
             };
 
             for (const node of nodes) {
@@ -77,12 +76,13 @@ export default class Node {
         }
 
         const node = masqueradeNode || this;
+        const textHeight = node.isStart ? 12 : 8;
 
         data.nodes[node.id] = {
             id: node.id,
             name: node.symbol,
             color: node.hyperedge.color,
-            textHeight: 12
+            textHeight
         };
 
         // start nodes don't need to be linked
@@ -106,6 +106,7 @@ export default class Node {
         if (this.isMiddle) {
             const connector = this.connectorGraphData();
             data = mergeGraphs([data, connector]);
+            data.nodes[node.id].textHeight = 6;
         }
 
         return data;

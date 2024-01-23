@@ -5,14 +5,34 @@ import * as Three from "three";
 
 import Hypergraph from "./Hypergraph";
 
+// TODO: Slider + animation bug. Slide then click and hold...shouldn't animate until release
+
+// TODO: [ ] Abstract animation
+// TODO: [ ] Add camera WASD controls, which disables animation
 // TODO: [ ] Better depth UX
-// TODO: [ ] Animation spinner (auto spin if no mouse movement for 5s?)
 // TODO: [ ] get dynamic updates working well
+// TODO: [ ] get integrated with backend
+// TODO: [ ] implement pagerank for text size!
+
+class Animation {
+    constructor(graphRef) {
+        this.graphRef = graphRef;
+    }
+
+    start() {}
+
+    stop() {}
+
+    pause() {}
+
+    unpause() {}
+}
 
 export default class App extends React.Component {
     constructor(props) {
         super(props);
         this.graphRef = React.createRef();
+        this.animation = new Animation(this.graphRef);
         this.cameraPosition = { x: 0, y: 0, z: 0 };
         this.state = {
             depth: 3,
@@ -41,7 +61,16 @@ export default class App extends React.Component {
         const hypergraph = new Hypergraph(this.state.hypergraph, {
             depth: this.state.depth
         });
-        this.setState({ data: hypergraph.graphData() });
+
+        this.pauseAnimation();
+        this.setState({ data: hypergraph.graphData() }, () => {
+            setTimeout(() => {
+                // this.graphRef.current.zoomToFit(1000);
+                // setTimeout(() => {
+                this.resumeAnimation();
+                // }, 1000);
+            }, 1000);
+        });
     }
 
     componentDidMount() {
@@ -49,33 +78,45 @@ export default class App extends React.Component {
             return link.length || 50;
         });
 
-        console.log("CURRENT", this.graphRef.current);
-
         this.reloadData();
 
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
         document.addEventListener("mousedown", this.handleMouseDown.bind(this));
         document.addEventListener("mouseup", this.handleMouseUp.bind(this));
+        document.addEventListener("wheel", this.handleZoom.bind(this));
 
         this.startAnimation();
     }
 
-    handleMouseDown(e) {
-        if (this.mouseUpInterval) {
-            clearTimeout(this.mouseUpInterval);
-            this.mouseUpInterval = null;
-        }
+    handleZoom() {
+        this.pauseAnimation();
+        this.resumeAnimation();
+    }
 
-        this.isClicking = true;
-        // this.stopAnimation();
+    handleMouseDown(e) {
+        this.pauseAnimation();
     }
 
     handleMouseUp(e) {
-        if (this.mouseUpInterval) return;
+        this.resumeAnimation();
+    }
 
-        this.mouseUpInterval = setTimeout(() => {
+    pauseAnimation() {
+        if (this.resumeAnimationInterval) {
+            clearTimeout(this.resumeAnimationInterval);
+            this.resumeAnimationInterval = null;
+        }
+
+        this.isClicking = true;
+    }
+
+    resumeAnimation(interval = 1000) {
+        console.log("RESUME ANIMATION");
+        if (this.resumeAnimationInterval) return;
+
+        this.resumeAnimationInterval = setTimeout(() => {
             this.isClicking = false;
-        }, 1000);
+        }, interval);
     }
 
     startAnimation() {
@@ -115,24 +156,6 @@ export default class App extends React.Component {
         this.animationInterval = setInterval(updateCameraPosition, 33); // About 30 FPS
     }
 
-    /*
-    startAnimation() {
-        // const distance = 500;
-        // this.graphRef.current.cameraPosition({ z: distance });
-        // camera orbit
-        let x = 1;
-        this.interval = setInterval(() => {
-            if (this.isClicking) return;
-            this.graphRef.current.cameraPosition({
-                x
-                // z: distance * Math.cos(angle)
-            });
-            x++;
-            // angle += Math.PI / 3000;
-        }, 10);
-    }
-    */
-
     stopAnimation() {
         if (this.interval) {
             clearInterval(this.interval);
@@ -162,9 +185,18 @@ export default class App extends React.Component {
     }
 
     toggleDepth() {
-        let depth = this.state.depth;
-        depth++;
-        if (depth > 3) depth = 0;
+        let depth = this.state.depth + 1;
+        if (depth > 3) {
+            depth = 0;
+        }
+
+        this.setState({ depth }, () => {
+            this.reloadData();
+        });
+    }
+
+    handleChangeDepth(e) {
+        const depth = parseInt(e.target.value) || 0;
 
         this.setState({ depth }, () => {
             this.reloadData();
@@ -191,22 +223,19 @@ export default class App extends React.Component {
                         ></input>
                     </form>
                 </div> */}
-                <div className="absolute top-0 right-0 p-2 flex gap-4 z-20">
-                    <a
-                        onClick={this.toggleDepth.bind(this)}
-                        className="cursor-pointer opacity-50 hover:opacity-100 transition-all bg-gray-50 rounded-sm"
-                    >
-                        {this.state.depth}
-                    </a>
+                <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-10 h-full">
+                    <input
+                        type="range"
+                        min="0"
+                        max="3"
+                        step="1"
+                        value={this.state.depth}
+                        className="depth-slider"
+                        onChange={this.handleChangeDepth.bind(this)}
+                    />
                 </div>
                 <ForceGraph3D
                     ref={this.graphRef}
-                    onZoom={function () {
-                        console.log("ZOOM");
-                    }}
-                    onNodeClick={(node) => {
-                        console.log("CLICK");
-                    }}
                     graphData={this.state.data}
                     showNavInfo={false}
                     backgroundColor="#ffffff"
