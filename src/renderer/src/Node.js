@@ -7,66 +7,79 @@ export default class Node {
     }
 
     // we can simplify the graph by removing the masquerade nodes and connecting their children to other graphs that make sense
-    masqueradeID() {
+    masqueradeNode() {
         if (!this.hypergraph.options.isConnected) return null;
 
         if (this.isStart) {
-            const edges = this.hypergraph.edgesWithEndSymbol(this.symbol);
+            const edges = this.hypergraph.edgesWithEndSymbol(this.symbol, this.hyperedge.id);
             if (edges.length > 0) {
-                return edges[0].id;
+                const nodes = edges[0].nodes;
+                return nodes[nodes.length - 1];
+            }
+        } else if (this.isEnd) {
+            const edges = this.hypergraph.edgesWithEndSymbol(this.symbol, this.hyperedge.id);
+            if (edges.length > 0) {
+                const nodes = edges[edges.length - 1].nodes;
+                return nodes[nodes.length - 1];
             }
         }
-
         return null;
     }
 
-    get id() {
-        const masqueradeID = this.masqueradeID();
-        if (masqueradeID) {
-            return masqueradeID;
+    id(masquerade = true) {
+        if (masquerade) {
+            const masqueradeNode = this.masqueradeNode();
+            if (masqueradeNode) return masqueradeNode.hyperedge.nodeId(masqueradeNode.index);
         }
+
         return this.hyperedge.nodeId(this.index);
     }
 
-    get data() {
-        const graphData = { nodes: {}, links: {} };
+    graphData(data = {}) {
+        let masqueradeNode = this.masqueradeNode();
+        console.log("graphData()");
+        console.log(`  ${this.symbol}`);
 
-        if (this.isStart) {
-            const masqueradeID = this.masqueradeID();
-            if (masqueradeID) {
-                return graphData;
-            }
+        // if we're masquerading as another node, but that other node doesn't exist
+        // ...this is now the masquerade node and the other node will masqurade as this node
+        if (masqueradeNode && !data.nodes[masqueradeNode.id()]) {
+            masqueradeNode = null;
         }
 
-        console.log("DATA()");
-        console.log(" - SYMBOL", this.symbol);
-        console.log(" - ID", this.id);
+        const node = masqueradeNode || this;
 
-        graphData.nodes[this.id] = {
-            id: this.id,
-            name: this.symbol,
-            color: this.hyperedge.color,
+        data.nodes[node.id()] = {
+            id: node.id(),
+            name: node.symbol,
+            color: node.hyperedge.color,
             textHeight: 12
         };
 
         if (this.isStart) {
-            return graphData;
+        } else if (this.isEnd) {
+            if (masqueradeNode) {
+                const parentNode = this.hyperedge.prevNode(this.index);
+                const link = parentNode.link(masqueradeNode);
+                data.links[link.id] = link;
+            } else {
+                const parentNode = node.hyperedge.prevNode(node.index);
+                const link = parentNode.link(node);
+                data.links[link.id] = link;
+            }
+        } else {
+            const parentNode = node.hyperedge.prevNode(node.index);
+            const link = parentNode.link(node);
+            data.links[link.id] = link;
         }
 
-        const parentNode = this.hyperedge.prevNode(this.index);
-        console.log(" - PARENT SYMBOL", parentNode.symbol);
-        console.log(" - PARENT ID", parentNode.id);
-        const link = parentNode.link(this);
-        graphData.links[link.id] = link;
-
-        return graphData;
+        return data;
     }
 
     link(childNode) {
         return {
-            id: `${this.id}-${childNode.id}-link`,
-            source: this.id,
-            target: childNode.id,
+            id: `${this.id()}-${childNode.id()}-link`,
+            source: this.id(),
+            target: childNode.id(),
             color: this.hyperedge.color
         };
     }
@@ -76,7 +89,7 @@ export default class Node {
     }
 
     get isEnd() {
-        return this.index === this.hyperedge.length - 1;
+        return this.index === this.hyperedge.nodes.length - 1;
     }
 
     get isMiddle() {

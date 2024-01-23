@@ -4,6 +4,12 @@ import SpriteText from "three-spritetext";
 
 import Hypergraph from "./Hypergraph";
 
+// TODO: [ ] Animation spinner (auto spin if no mouse movement for 5s?)
+// TODO: [X] Start nodes
+// TODO: [X] End Nodes
+// TODO: [ ] Middle Nodes
+// TODO: get dynamic updates working well
+
 export default class App extends React.Component {
     constructor(props) {
         super(props);
@@ -14,10 +20,15 @@ export default class App extends React.Component {
             hyperedge: [],
             hypergraph: [
                 ["Ted Nelson", "invented", "HyperText"],
+                ["Tim Berners-Lee", "invented", "WWW"],
+                ["Tim Berners-Lee", "author", "Weaving the Web"],
+                ["Ted Nelson", "author", "Lib Machines"],
+                ["Ted Nelson", "invented", "HyperMedia"],
                 ["Ted Nelson", "invented", "Xanadu"],
-                ["HyperText", "influenced", "WWW"],
-                ["HyperText", "influenced", "HTML"],
-                ["HTML", "influenced", "WWW"]
+                ["Ted Nelson", "invented", "ZigZag"],
+                ["Vannevar Bush", "invented", "Memex"],
+                ["Vannevar Bush", "author", "As We May Think"],
+                ["HyperText", "influenced", "WWW"]
             ],
             colors: [],
 
@@ -29,7 +40,7 @@ export default class App extends React.Component {
         const hypergraph = new Hypergraph(this.state.hypergraph, {
             isConnected: this.state.isConnected
         });
-        this.setState({ data: hypergraph.data });
+        this.setState({ data: hypergraph.graphData() });
     }
 
     componentDidMount() {
@@ -111,6 +122,7 @@ export default class App extends React.Component {
                         return 5;
                     }}
                     linkDirectionalArrowRelPos={1}
+                    linkWidth={1}
                     linkCurvature={0.25}
                 />
             </>

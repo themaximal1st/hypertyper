@@ -8,12 +8,21 @@ export default class Hypergraph {
         this.hyperedges = hyperedges.map((hyperedge) => new Hyperedge(hyperedge, this));
     }
 
-    get data() {
-        const graphs = mergeGraphs(this.hyperedges.map((hyperedge) => hyperedge.data));
-        return { nodes: Object.values(graphs.nodes), links: Object.values(graphs.links) };
+    graphData() {
+        let data = { nodes: {}, links: {} };
+        for (const hyperedge of this.hyperedges) {
+            data = mergeGraphs([data, hyperedge.graphData(data)]);
+        }
+
+        return {
+            nodes: Object.values(data.nodes),
+            links: Object.values(data.links)
+        };
     }
 
-    edgesWithEndSymbol(symbol) {
-        return this.hyperedges.filter((hyperedge) => hyperedge.endNode().symbol === symbol);
+    edgesWithEndSymbol(symbol, hyperedgeID) {
+        return this.hyperedges.filter((hyperedge) => {
+            return hyperedge.id !== hyperedgeID && hyperedge.endNode().symbol === symbol;
+        });
     }
 }

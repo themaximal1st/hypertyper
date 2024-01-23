@@ -16,8 +16,8 @@ export default class Hyperedge {
         return this.nodes.map((node) => node.symbol).join("-");
     }
 
-    get data() {
-        return mergeGraphs(this.nodes.map((node) => node.data));
+    graphData(data = {}) {
+        return mergeGraphs(this.nodes.map((node) => node.graphData(data)));
     }
 
     nodeId(index) {
