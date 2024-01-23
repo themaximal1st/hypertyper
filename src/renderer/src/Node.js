@@ -26,11 +26,9 @@ export default class Node {
         return null;
     }
 
-    id(masquerade = true) {
-        if (masquerade) {
-            const masqueradeNode = this.masqueradeNode();
-            if (masqueradeNode) return masqueradeNode.hyperedge.nodeId(masqueradeNode.index);
-        }
+    get id() {
+        const masqueradeNode = this.masqueradeNode();
+        if (masqueradeNode) return masqueradeNode.hyperedge.nodeId(masqueradeNode.index);
 
         return this.hyperedge.nodeId(this.index);
     }
@@ -42,44 +40,42 @@ export default class Node {
 
         // if we're masquerading as another node, but that other node doesn't exist
         // ...this is now the masquerade node and the other node will masqurade as this node
-        if (masqueradeNode && !data.nodes[masqueradeNode.id()]) {
+        if (masqueradeNode && !data.nodes[masqueradeNode.id]) {
             masqueradeNode = null;
         }
 
         const node = masqueradeNode || this;
 
-        data.nodes[node.id()] = {
-            id: node.id(),
+        data.nodes[node.id] = {
+            id: node.id,
             name: node.symbol,
             color: node.hyperedge.color,
             textHeight: 12
         };
 
+        // start nodes don't need to be linked
         if (this.isStart) {
-        } else if (this.isEnd) {
-            if (masqueradeNode) {
-                const parentNode = this.hyperedge.prevNode(this.index);
-                const link = parentNode.link(masqueradeNode);
-                data.links[link.id] = link;
-            } else {
-                const parentNode = node.hyperedge.prevNode(node.index);
-                const link = parentNode.link(node);
-                data.links[link.id] = link;
-            }
-        } else {
-            const parentNode = node.hyperedge.prevNode(node.index);
-            const link = parentNode.link(node);
-            data.links[link.id] = link;
+            return data;
         }
 
+        let source = node.hyperedge.prevNode(node.index);
+        let target = node;
+
+        if (this.isEnd && masqueradeNode) {
+            source = this.hyperedge.prevNode(this.index);
+            target = masqueradeNode;
+        }
+
+        const link = source.link(target);
+        data.links[link.id] = link;
         return data;
     }
 
     link(childNode) {
         return {
-            id: `${this.id()}-${childNode.id()}-link`,
-            source: this.id(),
-            target: childNode.id(),
+            id: `${this.id}-${childNode.id}-link`,
+            source: this.id,
+            target: childNode.id,
             color: this.hyperedge.color
         };
     }
