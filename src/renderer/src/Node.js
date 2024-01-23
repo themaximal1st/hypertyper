@@ -1,3 +1,6 @@
+import SpriteText from "three-spritetext";
+import * as Three from "three";
+
 import { mergeGraphs } from "./utils";
 
 export default class Node {
@@ -140,5 +143,23 @@ export default class Node {
 
     get isMiddle() {
         return !this.isStart && !this.isEnd;
+    }
+
+    static nodeThreeObject(node) {
+        if (node.connector) {
+            return new Three.Mesh(
+                new Three.SphereGeometry(1),
+                new Three.MeshLambertMaterial({
+                    color: "#000000",
+                    transparent: true,
+                    opacity: 0.25
+                })
+            );
+        }
+
+        const sprite = new SpriteText(node.name);
+        sprite.color = node.color;
+        sprite.textHeight = node.textHeight || 8;
+        return sprite;
     }
 }
