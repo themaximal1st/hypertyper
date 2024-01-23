@@ -25,4 +25,16 @@ export default class Hypergraph {
             return hyperedge.id !== hyperedgeID && hyperedge.endNode().symbol === symbol;
         });
     }
+
+    nodesWithSymbol(symbol, id) {
+        const nodes = [];
+        for (const hyperedge of this.hyperedges) {
+            for (const node of hyperedge.nodes) {
+                if (node.symbol === symbol && node.id !== id) {
+                    nodes.push(node);
+                }
+            }
+        }
+        return nodes;
+    }
 }

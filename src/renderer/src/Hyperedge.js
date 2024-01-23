@@ -51,4 +51,8 @@ export default class Hyperedge {
     endNode() {
         return this.nodes[this.nodes.length - 1];
     }
+
+    containsSymbol(symbol) {
+        return this.symbols.includes(symbol);
+    }
 }

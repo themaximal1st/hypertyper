@@ -4,6 +4,11 @@ import SpriteText from "three-spritetext";
 
 import Hypergraph from "./Hypergraph";
 
+// -1 = no depth
+// 0 = default depth
+// 1 = start and end connected
+// 2 = middle connected
+
 // TODO: [ ] Animation spinner (auto spin if no mouse movement for 5s?)
 // TODO: [X] Start nodes
 // TODO: [X] End Nodes
@@ -15,18 +20,19 @@ export default class App extends React.Component {
         super(props);
         this.graphRef = React.createRef();
         this.state = {
-            isConnected: true,
+            depth: 0,
             input: "",
             hyperedge: [],
             hypergraph: [
                 ["Ted Nelson", "invented", "HyperText"],
                 ["Tim Berners-Lee", "invented", "WWW"],
+                ["Vannevar Bush", "invented", "Memex"],
+
                 ["Tim Berners-Lee", "author", "Weaving the Web"],
                 ["Ted Nelson", "author", "Lib Machines"],
                 ["Ted Nelson", "invented", "HyperMedia"],
                 ["Ted Nelson", "invented", "Xanadu"],
                 ["Ted Nelson", "invented", "ZigZag"],
-                ["Vannevar Bush", "invented", "Memex"],
                 ["Vannevar Bush", "author", "As We May Think"],
                 ["HyperText", "influenced", "WWW"]
             ],
@@ -38,7 +44,7 @@ export default class App extends React.Component {
 
     reloadData() {
         const hypergraph = new Hypergraph(this.state.hypergraph, {
-            isConnected: this.state.isConnected
+            depth: this.state.depth
         });
         this.setState({ data: hypergraph.graphData() });
     }
@@ -66,8 +72,12 @@ export default class App extends React.Component {
         });
     }
 
-    toggleIsConnected() {
-        this.setState({ isConnected: !this.state.isConnected }, () => {
+    toggleDepth() {
+        let depth = this.state.depth;
+        depth++;
+        if (depth > 2) depth = -1;
+
+        this.setState({ depth }, () => {
             this.reloadData();
         });
     }
@@ -94,11 +104,10 @@ export default class App extends React.Component {
                 </div>
                 <div className="absolute top-0 right-0 p-2 flex gap-4 z-20">
                     <a
-                        onClick={this.toggleIsConnected.bind(this)}
+                        onClick={this.toggleDepth.bind(this)}
                         className="cursor-pointer opacity-50 hover:opacity-100 transition-all bg-gray-50 rounded-sm"
                     >
-                        {!this.state.isConnected && "Connect"}
-                        {this.state.isConnected && "Disconnect"}
+                        {this.state.depth}
                     </a>
                 </div>
                 <ForceGraph3D
