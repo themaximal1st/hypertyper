@@ -4,29 +4,14 @@ import SpriteText from "three-spritetext";
 import * as Three from "three";
 
 import Hypergraph from "./Hypergraph";
+import Animation from "./Animation";
 
-// TODO: Slider + animation bug. Slide then click and hold...shouldn't animate until release
-
-// TODO: [ ] Abstract animation
+// TODO: [ ] Resize graph on window resize
 // TODO: [ ] Add camera WASD controls, which disables animation
-// TODO: [ ] Better depth UX
+
 // TODO: [ ] get dynamic updates working well
 // TODO: [ ] get integrated with backend
 // TODO: [ ] implement pagerank for text size!
-
-class Animation {
-    constructor(graphRef) {
-        this.graphRef = graphRef;
-    }
-
-    start() {}
-
-    stop() {}
-
-    pause() {}
-
-    unpause() {}
-}
 
 export default class App extends React.Component {
     constructor(props) {
@@ -62,13 +47,10 @@ export default class App extends React.Component {
             depth: this.state.depth
         });
 
-        this.pauseAnimation();
+        this.animation.pause();
         this.setState({ data: hypergraph.graphData() }, () => {
             setTimeout(() => {
-                // this.graphRef.current.zoomToFit(1000);
-                // setTimeout(() => {
-                this.resumeAnimation();
-                // }, 1000);
+                this.animation.resume();
             }, 1000);
         });
     }
@@ -85,82 +67,20 @@ export default class App extends React.Component {
         document.addEventListener("mouseup", this.handleMouseUp.bind(this));
         document.addEventListener("wheel", this.handleZoom.bind(this));
 
-        this.startAnimation();
+        this.animation.start();
     }
 
     handleZoom() {
-        this.pauseAnimation();
-        this.resumeAnimation();
+        this.animation.pause();
+        this.animation.resume();
     }
 
     handleMouseDown(e) {
-        this.pauseAnimation();
+        this.animation.click();
     }
 
     handleMouseUp(e) {
-        this.resumeAnimation();
-    }
-
-    pauseAnimation() {
-        if (this.resumeAnimationInterval) {
-            clearTimeout(this.resumeAnimationInterval);
-            this.resumeAnimationInterval = null;
-        }
-
-        this.isClicking = true;
-    }
-
-    resumeAnimation(interval = 1000) {
-        console.log("RESUME ANIMATION");
-        if (this.resumeAnimationInterval) return;
-
-        this.resumeAnimationInterval = setTimeout(() => {
-            this.isClicking = false;
-        }, interval);
-    }
-
-    startAnimation() {
-        const initialPosition = this.graphRef.current.cameraPosition();
-        this.distance = Math.sqrt(Math.pow(-5, 2) + Math.pow(-500, 2)); // Set the initial distance
-        this.angle = Math.atan2(-5, -500); // Set the initial angle
-        this.initialY = initialPosition.y; // Store the initial Y-coordinate
-
-        const updateCameraPosition = () => {
-            if (this.isClicking) {
-                // Store the current position when starting to drag
-                const currentPos = this.graphRef.current.cameraPosition();
-                this.dragEndPosition = { x: currentPos.x, y: currentPos.y, z: currentPos.z };
-                return;
-            } else if (this.dragEndPosition) {
-                // Recalculate the angle and distance based on the position when dragging stopped
-                this.distance = Math.sqrt(
-                    Math.pow(this.dragEndPosition.x, 2) + Math.pow(this.dragEndPosition.z, 2)
-                );
-                this.angle = Math.atan2(this.dragEndPosition.x, this.dragEndPosition.z);
-                this.initialY = this.dragEndPosition.y; // Update the Y-coordinate
-                this.dragEndPosition = null; // Reset the stored position
-            }
-
-            // Increment the angle for the animation
-            this.angle += Math.PI / 1000;
-            this.angle %= 2 * Math.PI; // Normalize the angle
-
-            // Update camera position
-            this.graphRef.current.cameraPosition({
-                x: this.distance * Math.sin(this.angle),
-                y: this.initialY, // Use the updated Y-coordinate
-                z: this.distance * Math.cos(this.angle)
-            });
-        };
-
-        this.animationInterval = setInterval(updateCameraPosition, 33); // About 30 FPS
-    }
-
-    stopAnimation() {
-        if (this.interval) {
-            clearInterval(this.interval);
-        }
-        this.interval = null;
+        this.animation.unclick();
     }
 
     handleKeyDown(e) {
