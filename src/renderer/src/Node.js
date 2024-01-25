@@ -78,9 +78,9 @@ export default class Node {
             this.isMasqueradeNode = true;
         }
 
-        // console.log("CREATE NODE");
-        // console.log(`  ID=${node.id}`);
-        // console.log(`  SYMBOL=${node.symbol}`);
+        console.log("CREATE NODE");
+        console.log(`  ID=${node.id}`);
+        console.log(`  SYMBOL=${node.symbol}`);
 
         data.nodes[node.id] = {
             id: node.id,
