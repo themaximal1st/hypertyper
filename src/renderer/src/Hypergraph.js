@@ -22,15 +22,20 @@ export default class Hypergraph {
 
     edgesWithEndSymbol(symbol, hyperedgeID) {
         return this.hyperedges.filter((hyperedge) => {
-            return hyperedge.id !== hyperedgeID && hyperedge.endNode().symbol === symbol;
+            const node = hyperedge.endNode();
+            return hyperedge.id !== hyperedgeID && !node.isMasqueradeNode && node.symbol === symbol;
         });
     }
 
-    nodesWithSymbol(symbol, id) {
+    nodesWithSymbol(symbol, hyperedgeID) {
         const nodes = [];
         for (const hyperedge of this.hyperedges) {
             for (const node of hyperedge.nodes) {
-                if (node.symbol === symbol && node.id !== id) {
+                if (
+                    !node.isMasqueradeNode &&
+                    node.symbol === symbol &&
+                    hyperedge.id !== hyperedgeID
+                ) {
                     nodes.push(node);
                 }
             }

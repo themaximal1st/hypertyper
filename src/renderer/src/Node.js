@@ -9,9 +9,11 @@ export default class Node {
         this.index = index;
         this.hyperedge = hyperedge;
         this.hypergraph = hyperedge.hypergraph;
+        this.isMasqueradeNode = false;
     }
 
     // we can simplify the graph by removing the masquerade nodes and connecting their children to other graphs that make sense
+    // BUG: masquerade nodes are returning any node that can be a masquerade node. not the node that is a masquerade node
     masqueradeNode() {
         if (this.hypergraph.options.depth < 2) return null;
 
@@ -20,13 +22,14 @@ export default class Node {
             const edges = this.hypergraph.edgesWithEndSymbol(this.symbol, this.hyperedge.id);
             if (edges.length > 0) {
                 const nodes = edges[0].nodes;
+                console.log("EDGE", edges[0]);
                 return nodes[nodes.length - 1];
             }
         } else if (this.isEnd) {
-            const edges = this.hypergraph.edgesWithEndSymbol(this.symbol, this.hyperedge.id);
-            if (edges.length > 0) {
-                const nodes = edges[edges.length - 1].nodes;
-                return nodes[nodes.length - 1];
+            const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this.hyperedge.id);
+            if (nodes.length > 0) {
+                console.log("END", nodes[0]);
+                return nodes[0];
             }
         }
         return null;
@@ -39,7 +42,8 @@ export default class Node {
         if (!this.isMiddle) return data;
 
         const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this._id);
-        if (nodes.length > 0) {
+
+        if (nodes.length >= 2) {
             const id = `${this.symbol}-connector`;
             data.nodes[id] = {
                 id,
@@ -58,34 +62,31 @@ export default class Node {
         return data;
     }
 
-    get _id() {
-        return this.hyperedge.nodeId(this.index);
-    }
-
     get id() {
-        const masqueradeNode = this.masqueradeNode();
-        if (masqueradeNode) return masqueradeNode.hyperedge.nodeId(masqueradeNode.index);
-
-        return this._id;
+        return this.hyperedge.nodeId(this.index);
     }
 
     graphData(data = {}) {
         let masqueradeNode = this.masqueradeNode();
-
-        // if we're masquerading as another node, but that other node doesn't exist
-        // ...this is now the masquerade node and the other node will masqurade as this node
         if (masqueradeNode && !data.nodes[masqueradeNode.id]) {
             masqueradeNode = null;
         }
 
         const node = masqueradeNode || this;
-        const textHeight = node.isStart ? 12 : 8;
+
+        if (masqueradeNode) {
+            this.isMasqueradeNode = true;
+        }
+
+        console.log("CREATE NODE");
+        console.log(`  ID=${node.id}`);
+        console.log(`  SYMBOL=${node.symbol}`);
 
         data.nodes[node.id] = {
             id: node.id,
             name: node.symbol,
             color: node.hyperedge.color,
-            textHeight
+            textHeight: node.textHeight
         };
 
         // start nodes don't need to be linked
@@ -103,7 +104,35 @@ export default class Node {
             target = node;
         }
 
-        const link = source.link(target);
+        // TODO: This creates an infinite loop... isMasqueradeNode is always false
+        let i = 0;
+        while (i++ < 10) {
+            const sourceMasqueradeNode = source.masqueradeNode();
+            if (!sourceMasqueradeNode) {
+                break;
+            }
+            source = sourceMasqueradeNode;
+        }
+
+        i = 0;
+        while (i++ < 10) {
+            const targetMasqueradeNode = target.masqueradeNode();
+            if (!targetMasqueradeNode) {
+                break;
+            }
+            console.log("TARGET");
+            console.log(`  ID=${target.id}`);
+            console.log(`  ID=${targetMasqueradeNode.id}`);
+            console.log(`  ID=${targetMasqueradeNode.isMasqueradeNode}`);
+
+            target = targetMasqueradeNode;
+        }
+
+        console.log("CREATE LINK");
+        console.log(`  SOURCE=${source.id}`);
+        console.log(`  TARGET=${target.id}`);
+
+        const link = Node.link(source, target);
         data.links[link.id] = link;
 
         if (this.isMiddle) {
@@ -121,6 +150,15 @@ export default class Node {
             source: this.id,
             target: childNode.id,
             color: this.hyperedge.color
+        };
+    }
+
+    static link(parentNode, childNode) {
+        return {
+            id: `${parentNode.id}-${childNode.id}-link`,
+            source: parentNode.id,
+            target: childNode.id,
+            color: parentNode.hyperedge.color
         };
     }
 
@@ -143,6 +181,10 @@ export default class Node {
 
     get isMiddle() {
         return !this.isStart && !this.isEnd;
+    }
+
+    get textHeight() {
+        return this.isStart ? 12 : 8;
     }
 
     static nodeThreeObject(node) {
