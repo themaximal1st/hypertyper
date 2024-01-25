@@ -30,7 +30,6 @@ export default class Hyperedge {
     }
 
     nodeId(index) {
-        console.log("ID", this.hypergraph.options.interwingle);
         const id = this.symbols.slice(0, index + 1).join(".");
         if (this.hypergraph.isIsolated) {
             return `${this.index}:${id}`;

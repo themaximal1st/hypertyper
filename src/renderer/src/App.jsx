@@ -7,18 +7,9 @@ import Animation from "./Animation";
 
 import { cycleInterwingle } from "./utils";
 
-// TODO: just build up tests...nice and easy
-
-// TODO: ...something aint right. either we're missing a case or something
-//          basic issue is masquerading nodes are not being handled correctly
-//          sometimes a link is done and it doesn't find the right id
-
-// TODO: [ ] fix hypergraph :( ...issue is with masquerading nodes...id generation is weird and goes recursive sometimes
-// TODO: [ ] come up with test cases that should work...just create examples you can quickly load in and test
-
 // TODO: [ ] get dynamic updates working well
 // TODO: [ ] get integrated with backend
-// TODO: [ ] implement pagerank for text size!
+// TODO: [ ] implement pagerank for node and text size!
 
 export default class App extends React.Component {
     constructor(props) {
@@ -33,23 +24,20 @@ export default class App extends React.Component {
             input: "",
             hyperedge: [],
             hypergraph: [
-                ["A", "B", "C"],
-                ["A", "1", "2"],
-                ["C", "D", "E"]
-                // ["Vannevar Bush", "author", "As We May Think"],
-                // ["As We May Think", "influenced", "HyperText"],
-                // ["Ted Nelson", "invented", "HyperText"],
-                // ["Tim Berners-Lee", "invented", "WWW"],
-                // ["Vannevar Bush", "invented", "Memex"],
-                // ["Vannevar Bush", "author", "As We May Think"],
-                // // ["As We May Think", "influenced", "HyperText"],
-                // ["HyperText", "influenced", "WWW"],
-                // ["Ted Nelson", "invented", "Xanadu"],
+                ["Ted Nelson", "invented", "HyperText"],
+                ["Ted Nelson", "invented", "Xanadu"],
+                ["Ted Nelson", "invented", "HyperMedia"],
+                ["Ted Nelson", "invented", "ZigZag"],
+                ["Ted Nelson", "author", "Lib Machines"],
 
-                // ["Tim Berners-Lee", "author", "Weaving the Web"],
-                // ["Ted Nelson", "author", "Lib Machines"],
-                // ["Ted Nelson", "invented", "HyperMedia"],
-                // ["Ted Nelson", "invented", "ZigZag"]
+                ["Tim Berners-Lee", "invented", "WWW"],
+                ["Tim Berners-Lee", "author", "Weaving the Web"],
+
+                ["HyperText", "influenced", "WWW"],
+
+                ["Vannevar Bush", "invented", "Memex"],
+                ["Vannevar Bush", "author", "As We May Think"],
+                ["As We May Think", "influenced", "HyperText"]
             ],
             colors: [],
 
@@ -180,10 +168,6 @@ export default class App extends React.Component {
                     linkWidth={1}
                     linkCurvature={0.25}
                 />
-                <div className="absolute z-20 top-0 left-0">
-                    BOOM
-                    {this.state.interwingle}
-                </div>
             </>
         );
     }

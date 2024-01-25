@@ -37,15 +37,13 @@ export default class Hypergraph {
             data = mergeGraphs([data, hyperedge.graphData(data)]);
         }
 
-        console.log(data);
-
         return {
             nodes: Object.values(data.nodes),
             links: Object.values(data.links)
         };
     }
 
-    edgeWithEndSymbol(symbol, hyperedgeID, data = {}) {
+    edgeWithEndSymbol(symbol, hyperedgeID, data = { nodes: [], links: [] }) {
         const edges = this.hyperedges.filter((hyperedge) => {
             const node = hyperedge.endNode();
             if (!node) return false;
@@ -58,21 +56,18 @@ export default class Hypergraph {
         return edges[0];
     }
 
-    /*
-    nodesWithSymbol(symbol, hyperedgeID) {
+    nodesWithSymbol(symbol, hyperedgeID, data = { nodes: [], links: [] }) {
         const nodes = [];
         for (const hyperedge of this.hyperedges) {
             for (const node of hyperedge.nodes) {
-                if (
-                    !node.isMasqueradeNode &&
-                    node.symbol === symbol &&
-                    hyperedge.id !== hyperedgeID
-                ) {
-                    nodes.push(node);
-                }
+                if (node.symbol !== symbol) continue; // ignore nodes that don't match symbol
+                if (hyperedge.id === hyperedgeID) continue; // ignore self
+                if (!data.nodes[node.id]) continue; // ignore nodes that don't exist
+                nodes.push(node);
             }
         }
         return nodes;
     }
-    */
 }
+
+Hypergraph.INTERWINGLE = INTERWINGLE;

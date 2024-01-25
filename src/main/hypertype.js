@@ -14,7 +14,6 @@ export default class HyperType {
         return obj.symbol;
     }
 
-    // TODO: does a proxy make sense here?
     get nodes() {
         return this.hypergraph.nodes.map((node) => node.symbol);
     }

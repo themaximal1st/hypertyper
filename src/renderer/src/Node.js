@@ -15,7 +15,7 @@ export default class Node {
     //  ex: A.B.C && C.D.E become A.B.C.D.E
     fusionNode(data = {}) {
         if (!this.hypergraph.isFusion) return null;
-        if (!this.isStart) return null;
+        if (this.isMiddle) return null;
 
         const edge = this.hypergraph.edgeWithEndSymbol(this.symbol, this.hyperedge.id, data);
         if (!edge) return null;
@@ -23,31 +23,39 @@ export default class Node {
         return edge.endNode();
     }
 
-    // a node that connects 2+ middle nodes
-    connectorGraphData() {
-        const data = { nodes: {}, links: {} };
-        if (this.hypergraph.isBridge) return data;
+    // a node that bridges 2+ middle nodes
+    bridgeGraphData(data = { nodes: {}, links: {} }) {
+        if (!this.hypergraph.isBridge) return data;
         if (!this.isMiddle) return data;
 
-        const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this._id);
-
+        const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this.id, data);
         if (nodes.length >= 2) {
-            const id = `${this.symbol}-connector`;
-            data.nodes[id] = {
-                id,
+            const bridgeNode = {
+                id: `${this.symbol}#bridge`,
                 color: this.hyperedge.color,
-                connector: true
+                bridge: true
             };
 
+            data.nodes[bridgeNode.id] = bridgeNode;
+
             for (const node of nodes) {
-                const link = node.linkParent(data.nodes[id]);
+                const link = Node.link(bridgeNode, node, data);
                 link.length = 1;
-                link.connector = true;
+                link.bridge = true;
                 data.links[link.id] = link;
             }
         }
 
         return data;
+    }
+
+    resolveFusionNode(data = {}) {
+        const resolved = this.fusionNode(data);
+        if (resolved) {
+            return resolved;
+        }
+
+        return this;
     }
 
     get id() {
@@ -58,13 +66,6 @@ export default class Node {
         const fusionNode = this.fusionNode(data);
 
         const node = fusionNode || this;
-
-        // console.log("CREATE NODE");
-        // console.log(`  SYMBOL=${node.symbol}`);
-        // console.log(`  ID=${this.id}`);
-        // if (fusionNode) {
-        //     console.log(`  FUSION=${node.id}`);
-        // }
 
         data.nodes[node.id] = {
             id: node.id,
@@ -78,55 +79,17 @@ export default class Node {
             return data;
         }
 
-        // console.log("GETTING");
-        // console.log("  NODE", node.id);
+        let source = this.hyperedge.prevNode(this.index).resolveFusionNode(data);
+        let target = node.resolveFusionNode(data);
 
-        let source, target;
+        const link = Node.link(source, target, data);
+        data.links[link.id] = link;
 
-        // fusion nodes are invisible
-        if (!fusionNode) {
-            source = this.hyperedge.prevNode(this.index);
-            target = node;
-        }
-
-        // if source is a fusion node, use that instead
-        const sourceFusionNode = source.fusionNode(data);
-        if (sourceFusionNode) {
-            source = sourceFusionNode;
-        }
-
-        // if target is a fusion node, use that instead
-        const targetFusionNode = target.fusionNode(data);
-        if (targetFusionNode) {
-            target = targetFusionNode;
-        }
-
-        /*
-        if (this.isEnd && masqueradeNode) {
-            source = this.hyperedge.prevNode(this.index);
-            target = masqueradeNode;
-        } else {
-            source = node.hyperedge.prevNode(node.index);
-            target = node;
-        }
-        */
-
-        // console.log("LINK");
-        // console.log(" SOURCE", source.id);
-        // console.log(" TARGET", target.id);
-
-        if (source && target) {
-            const link = Node.link(source, target, data);
-            data.links[link.id] = link;
-        }
-
-        /*
         if (this.isMiddle) {
-            const connector = this.connectorGraphData();
-            data = mergeGraphs([data, connector]);
+            const bridgeData = this.bridgeGraphData(data);
+            data = mergeGraphs([data, bridgeData]);
             data.nodes[node.id].textHeight = 6;
         }
-        */
 
         return data;
     }
@@ -134,9 +97,6 @@ export default class Node {
     static link(parentNode, childNode, data = {}) {
         if (!parentNode) throw new Error("Missing parentNode");
         if (!childNode) throw new Error("Missing childNode");
-
-        // console.log("LINK!!!");
-        // console.log(parentNode.id);
 
         if (!data.nodes[parentNode.id])
             throw new Error(`Missing parent node ${parentNode.id} in link to ${childNode.id}`);
@@ -147,7 +107,7 @@ export default class Node {
             id: `${parentNode.id}->${childNode.id}`,
             source: parentNode.id,
             target: childNode.id,
-            color: parentNode.hyperedge.color
+            color: parentNode.color || parentNode.hyperedge.color || "#000000"
         };
     }
 
@@ -168,7 +128,7 @@ export default class Node {
     }
 
     static nodeThreeObject(node) {
-        if (node.connector) {
+        if (node.bridge) {
             return new Three.Mesh(
                 new Three.SphereGeometry(1),
                 new Three.MeshLambertMaterial({
