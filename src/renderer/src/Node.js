@@ -105,6 +105,7 @@ export default class Node {
         }
 
         // TODO: This creates an infinite loop... isMasqueradeNode is always false
+        /*
         let i = 0;
         while (i++ < 10) {
             const sourceMasqueradeNode = source.masqueradeNode();
@@ -120,13 +121,14 @@ export default class Node {
             if (!targetMasqueradeNode) {
                 break;
             }
-            console.log("TARGET");
-            console.log(`  ID=${target.id}`);
-            console.log(`  ID=${targetMasqueradeNode.id}`);
-            console.log(`  ID=${targetMasqueradeNode.isMasqueradeNode}`);
+            // console.log("TARGET");
+            // console.log(`  ID=${target.id}`);
+            // console.log(`  ID=${targetMasqueradeNode.id}`);
+            // console.log(`  ID=${targetMasqueradeNode.isMasqueradeNode}`);
 
             target = targetMasqueradeNode;
         }
+        */
 
         console.log("CREATE LINK");
         console.log(`  SOURCE=${source.id}`);
@@ -144,6 +146,7 @@ export default class Node {
         return data;
     }
 
+    /*
     link(childNode) {
         return {
             id: `${this.id}-${childNode.id}-link`,
@@ -152,16 +155,18 @@ export default class Node {
             color: this.hyperedge.color
         };
     }
+    */
 
     static link(parentNode, childNode) {
         return {
-            id: `${parentNode.id}-${childNode.id}-link`,
+            id: `${parentNode.id}->${childNode.id}`,
             source: parentNode.id,
             target: childNode.id,
             color: parentNode.hyperedge.color
         };
     }
 
+    /*
     linkParent(parentNode) {
         return {
             id: `${parentNode.id}-${this.id}-link`,
@@ -170,6 +175,7 @@ export default class Node {
             color: this.hyperedge.color
         };
     }
+    */
 
     get isStart() {
         return this.index === 0;
