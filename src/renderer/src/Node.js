@@ -15,20 +15,20 @@ export default class Node {
     // we can simplify the graph by removing the masquerade nodes and connecting their children to other graphs that make sense
     // BUG: masquerade nodes are returning any node that can be a masquerade node. not the node that is a masquerade node
     masqueradeNode() {
-        if (this.hypergraph.options.depth < 2) return null;
+        if (this.hypergraph.interwingle < 2) return null;
 
         // TODO: simplify
         if (this.isStart) {
             const edges = this.hypergraph.edgesWithEndSymbol(this.symbol, this.hyperedge.id);
             if (edges.length > 0) {
                 const nodes = edges[0].nodes;
-                console.log("EDGE", edges[0]);
+                // console.log("EDGE", edges[0]);
                 return nodes[nodes.length - 1];
             }
         } else if (this.isEnd) {
             const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this.hyperedge.id);
             if (nodes.length > 0) {
-                console.log("END", nodes[0]);
+                // console.log("END", nodes[0]);
                 return nodes[0];
             }
         }
@@ -38,7 +38,7 @@ export default class Node {
     // a node that connects 2+ middle nodes
     connectorGraphData() {
         const data = { nodes: {}, links: {} };
-        if (this.hypergraph.options.depth < 3) return data;
+        if (this.hypergraph.interwingle < 3) return data;
         if (!this.isMiddle) return data;
 
         const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this._id);
@@ -78,9 +78,9 @@ export default class Node {
             this.isMasqueradeNode = true;
         }
 
-        console.log("CREATE NODE");
-        console.log(`  ID=${node.id}`);
-        console.log(`  SYMBOL=${node.symbol}`);
+        // console.log("CREATE NODE");
+        // console.log(`  ID=${node.id}`);
+        // console.log(`  SYMBOL=${node.symbol}`);
 
         data.nodes[node.id] = {
             id: node.id,
@@ -130,9 +130,9 @@ export default class Node {
         }
         */
 
-        console.log("CREATE LINK");
-        console.log(`  SOURCE=${source.id}`);
-        console.log(`  TARGET=${target.id}`);
+        // console.log("CREATE LINK");
+        // console.log(`  SOURCE=${source.id}`);
+        // console.log(`  TARGET=${target.id}`);
 
         const link = Node.link(source, target);
         data.links[link.id] = link;

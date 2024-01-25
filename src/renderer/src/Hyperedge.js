@@ -18,7 +18,7 @@ export default class Hyperedge {
 
     get id() {
         const id = this.nodes.map((node) => node.symbol).join("->");
-        if (this.hypergraph.options.depth === 0) {
+        if (this.hypergraph.interwingle === 0) {
             return `${this.index}-${id}`;
         }
 
@@ -31,7 +31,7 @@ export default class Hyperedge {
 
     nodeId(index) {
         const id = this.symbols.slice(0, index + 1).join(".");
-        if (this.hypergraph.options.depth === 0) {
+        if (this.hypergraph.interwingle === 0) {
             return `${this.index}-${id}`;
         }
 

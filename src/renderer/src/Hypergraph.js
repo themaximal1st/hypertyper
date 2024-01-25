@@ -5,6 +5,7 @@ import Hyperedge from "./Hyperedge";
 export default class Hypergraph {
     constructor(hyperedges = [], options = {}) {
         this.options = options;
+        this.interwingle = options.interwingle || 0;
         this.hyperedges = hyperedges.map((hyperedge) => new Hyperedge(hyperedge, this));
     }
 
