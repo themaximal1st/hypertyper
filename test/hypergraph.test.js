@@ -76,7 +76,40 @@ test("two distinct hyperedges", () => {
     expect(data.links[3].target).toBe("1.2.3");
 });
 
-test.only("confluence", () => {
+test("isolated", () => {
+    const hyperedges = [
+        ["A", "B", "C"],
+        ["A", "1", "2"]
+    ];
+    const hypergraph = new Hypergraph(hyperedges, { interwingle: 0 });
+    expect(hypergraph.hyperedges.length).toEqual(2);
+
+    expect(hypergraph.hyperedges[0].symbols).toEqual(["A", "B", "C"]);
+    expect(hypergraph.hyperedges[0].nodes[0].id).toEqual("0:A");
+    expect(hypergraph.hyperedges[0].nodes[1].id).toEqual("0:A.B");
+    expect(hypergraph.hyperedges[1].symbols).toEqual(["A", "1", "2"]);
+    expect(hypergraph.hyperedges[1].nodes[0].id).toEqual("1:A");
+    expect(hypergraph.hyperedges[1].nodes[1].id).toEqual("1:A.1");
+
+    const data = hypergraph.graphData();
+    expect(data.links.length).toBe(4);
+    expect(data.links[0].id).toBe("0:A->0:A.B");
+    expect(data.links[0].source).toBe("0:A");
+    expect(data.links[0].target).toBe("0:A.B");
+    expect(data.links[1].id).toBe("0:A.B->0:A.B.C");
+    expect(data.links[1].source).toBe("0:A.B");
+    expect(data.links[1].target).toBe("0:A.B.C");
+
+    expect(data.links[2].id).toBe("1:A->1:A.1");
+    expect(data.links[2].source).toBe("1:A");
+    expect(data.links[2].target).toBe("1:A.1");
+
+    expect(data.links[3].id).toBe("1:A.1->1:A.1.2");
+    expect(data.links[3].source).toBe("1:A.1");
+    expect(data.links[3].target).toBe("1:A.1.2");
+});
+
+test("confluence", () => {
     const hyperedges = [
         ["A", "B", "C"],
         ["A", "1", "2"]
