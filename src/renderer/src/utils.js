@@ -37,3 +37,8 @@ export function mergeGraphs(graphs) {
 
     return graphData;
 }
+
+export function cycleInterwingle(interwingle) {
+    if (++interwingle > 3) interwingle = 0;
+    return interwingle;
+}

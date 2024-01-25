@@ -6,18 +6,18 @@ body {
     @apply bg-gray-50;
 }
 
-.depth-slider {
+.interwingle-slider {
     @apply rotate-[270deg] w-44 absolute appearance-none mr-8 opacity-40 hover:opacity-100 transition-all;
 }
 
-.depth-slider:focus {
+.interwingle-slider:focus {
     @apply appearance-none outline-0;
 }
 
-.depth-slider::-webkit-slider-runnable-track {
+.interwingle-slider::-webkit-slider-runnable-track {
     @apply bg-gray-100;
 }
 
-.depth-slider::-webkit-slider-thumb {
+.interwingle-slider::-webkit-slider-thumb {
     @apply border-2 appearance-none my-[-7px] bg-gray-400 h-8 w-2;
 }

@@ -5,6 +5,8 @@ import Hypergraph from "./Hypergraph";
 import Node from "./Node";
 import Animation from "./Animation";
 
+import { cycleInterwingle } from "./utils";
+
 // TODO: just build up tests...nice and easy
 
 // TODO: ...something aint right. either we're missing a case or something
@@ -27,24 +29,27 @@ export default class App extends React.Component {
         this.state = {
             width: window.innerWidth,
             height: window.innerHeight,
-            depth: 3,
+            interwingle: 3,
             input: "",
             hyperedge: [],
             hypergraph: [
-                ["Vannevar Bush", "author", "As We May Think"],
-                ["As We May Think", "influenced", "HyperText"],
-                ["Ted Nelson", "invented", "HyperText"],
-                ["Tim Berners-Lee", "invented", "WWW"],
-                ["Vannevar Bush", "invented", "Memex"],
-                ["Vannevar Bush", "author", "As We May Think"],
+                ["A", "B", "C"],
+                ["A", "1", "2"],
+                ["C", "D", "E"]
+                // ["Vannevar Bush", "author", "As We May Think"],
                 // ["As We May Think", "influenced", "HyperText"],
-                ["HyperText", "influenced", "WWW"],
-                ["Ted Nelson", "invented", "Xanadu"],
+                // ["Ted Nelson", "invented", "HyperText"],
+                // ["Tim Berners-Lee", "invented", "WWW"],
+                // ["Vannevar Bush", "invented", "Memex"],
+                // ["Vannevar Bush", "author", "As We May Think"],
+                // // ["As We May Think", "influenced", "HyperText"],
+                // ["HyperText", "influenced", "WWW"],
+                // ["Ted Nelson", "invented", "Xanadu"],
 
-                ["Tim Berners-Lee", "author", "Weaving the Web"],
-                ["Ted Nelson", "author", "Lib Machines"],
-                ["Ted Nelson", "invented", "HyperMedia"],
-                ["Ted Nelson", "invented", "ZigZag"]
+                // ["Tim Berners-Lee", "author", "Weaving the Web"],
+                // ["Ted Nelson", "author", "Lib Machines"],
+                // ["Ted Nelson", "invented", "HyperMedia"],
+                // ["Ted Nelson", "invented", "ZigZag"]
             ],
             colors: [],
 
@@ -54,7 +59,7 @@ export default class App extends React.Component {
 
     reloadData() {
         const hypergraph = new Hypergraph(this.state.hypergraph, {
-            depth: this.state.depth
+            interwingle: this.state.interwingle
         });
 
         this.animation.pause();
@@ -115,7 +120,7 @@ export default class App extends React.Component {
     handleKeyDown(e) {
         this.animation.click();
         if (e.key === "`") {
-            this.toggleDepth();
+            this.toggleInterwingle();
         }
     }
 
@@ -138,16 +143,9 @@ export default class App extends React.Component {
         });
     }
 
-    toggleDepth(depth = null) {
-        if (!depth) {
-            depth = this.state.depth + 1;
-        }
-
-        if (depth > 3) {
-            depth = 0;
-        }
-
-        this.setState({ depth }, this.reloadData.bind(this));
+    toggleInterwingle(interwingle) {
+        if (typeof interwingle === "undefined") interwingle = this.state.interwingle;
+        this.setState({ interwingle: cycleInterwingle(interwingle) }, this.reloadData.bind(this));
     }
 
     render() {
@@ -159,9 +157,9 @@ export default class App extends React.Component {
                         min="0"
                         max="3"
                         step="1"
-                        value={this.state.depth}
-                        className="depth-slider"
-                        onChange={(e) => this.toggleDepth(parseInt(e.target.value))}
+                        value={this.state.interwingle}
+                        className="interwingle-slider"
+                        onChange={(e) => this.toggleInterwingle(parseInt(e.target.value))}
                     />
                 </div>
                 <ForceGraph3D
@@ -182,6 +180,10 @@ export default class App extends React.Component {
                     linkWidth={1}
                     linkCurvature={0.25}
                 />
+                <div className="absolute z-20 top-0 left-0">
+                    BOOM
+                    {this.state.interwingle}
+                </div>
             </>
         );
     }

@@ -9,36 +9,24 @@ export default class Node {
         this.index = index;
         this.hyperedge = hyperedge;
         this.hypergraph = hyperedge.hypergraph;
-        this.isMasqueradeNode = false;
     }
 
-    // we can simplify the graph by removing the masquerade nodes and connecting their children to other graphs that make sense
-    // BUG: masquerade nodes are returning any node that can be a masquerade node. not the node that is a masquerade node
-    masqueradeNode() {
-        if (this.hypergraph.interwingle < 2) return null;
+    // A fusion node connects a start node to and end node
+    //  ex: A.B.C && C.D.E become A.B.C.D.E
+    fusionNode(data = {}) {
+        if (!this.hypergraph.isFusion) return null;
+        if (!this.isStart) return null;
 
-        // TODO: simplify
-        if (this.isStart) {
-            const edges = this.hypergraph.edgesWithEndSymbol(this.symbol, this.hyperedge.id);
-            if (edges.length > 0) {
-                const nodes = edges[0].nodes;
-                // console.log("EDGE", edges[0]);
-                return nodes[nodes.length - 1];
-            }
-        } else if (this.isEnd) {
-            const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this.hyperedge.id);
-            if (nodes.length > 0) {
-                // console.log("END", nodes[0]);
-                return nodes[0];
-            }
-        }
-        return null;
+        const edge = this.hypergraph.edgeWithEndSymbol(this.symbol, this.hyperedge.id, data);
+        if (!edge) return null;
+
+        return edge.endNode();
     }
 
     // a node that connects 2+ middle nodes
     connectorGraphData() {
         const data = { nodes: {}, links: {} };
-        if (this.hypergraph.interwingle < 3) return data;
+        if (this.hypergraph.isBridge) return data;
         if (!this.isMiddle) return data;
 
         const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this._id);
@@ -67,20 +55,16 @@ export default class Node {
     }
 
     graphData(data = {}) {
-        let masqueradeNode = this.masqueradeNode();
-        if (masqueradeNode && !data.nodes[masqueradeNode.id]) {
-            masqueradeNode = null;
-        }
+        const fusionNode = this.fusionNode(data);
 
-        const node = masqueradeNode || this;
+        const node = fusionNode || this;
 
-        if (masqueradeNode) {
-            this.isMasqueradeNode = true;
-        }
-
-        console.log("CREATE NODE");
-        console.log(`  ID=${node.id}`);
-        console.log(`  SYMBOL=${node.symbol}`);
+        // console.log("CREATE NODE");
+        // console.log(`  SYMBOL=${node.symbol}`);
+        // console.log(`  ID=${this.id}`);
+        // if (fusionNode) {
+        //     console.log(`  FUSION=${node.id}`);
+        // }
 
         data.nodes[node.id] = {
             id: node.id,
@@ -94,8 +78,30 @@ export default class Node {
             return data;
         }
 
+        // console.log("GETTING");
+        // console.log("  NODE", node.id);
+
         let source, target;
 
+        // fusion nodes are invisible
+        if (!fusionNode) {
+            source = this.hyperedge.prevNode(this.index);
+            target = node;
+        }
+
+        // if source is a fusion node, use that instead
+        const sourceFusionNode = source.fusionNode(data);
+        if (sourceFusionNode) {
+            source = sourceFusionNode;
+        }
+
+        // if target is a fusion node, use that instead
+        const targetFusionNode = target.fusionNode(data);
+        if (targetFusionNode) {
+            target = targetFusionNode;
+        }
+
+        /*
         if (this.isEnd && masqueradeNode) {
             source = this.hyperedge.prevNode(this.index);
             target = masqueradeNode;
@@ -103,61 +109,40 @@ export default class Node {
             source = node.hyperedge.prevNode(node.index);
             target = node;
         }
-
-        // TODO: This creates an infinite loop... isMasqueradeNode is always false
-        /*
-        let i = 0;
-        while (i++ < 10) {
-            const sourceMasqueradeNode = source.masqueradeNode();
-            if (!sourceMasqueradeNode) {
-                break;
-            }
-            source = sourceMasqueradeNode;
-        }
-
-        i = 0;
-        while (i++ < 10) {
-            const targetMasqueradeNode = target.masqueradeNode();
-            if (!targetMasqueradeNode) {
-                break;
-            }
-            // console.log("TARGET");
-            // console.log(`  ID=${target.id}`);
-            // console.log(`  ID=${targetMasqueradeNode.id}`);
-            // console.log(`  ID=${targetMasqueradeNode.isMasqueradeNode}`);
-
-            target = targetMasqueradeNode;
-        }
         */
 
-        // console.log("CREATE LINK");
-        // console.log(`  SOURCE=${source.id}`);
-        // console.log(`  TARGET=${target.id}`);
+        // console.log("LINK");
+        // console.log(" SOURCE", source.id);
+        // console.log(" TARGET", target.id);
 
-        const link = Node.link(source, target);
-        data.links[link.id] = link;
+        if (source && target) {
+            const link = Node.link(source, target, data);
+            data.links[link.id] = link;
+        }
 
+        /*
         if (this.isMiddle) {
             const connector = this.connectorGraphData();
             data = mergeGraphs([data, connector]);
             data.nodes[node.id].textHeight = 6;
         }
+        */
 
         return data;
     }
 
-    /*
-    link(childNode) {
-        return {
-            id: `${this.id}-${childNode.id}-link`,
-            source: this.id,
-            target: childNode.id,
-            color: this.hyperedge.color
-        };
-    }
-    */
+    static link(parentNode, childNode, data = {}) {
+        if (!parentNode) throw new Error("Missing parentNode");
+        if (!childNode) throw new Error("Missing childNode");
 
-    static link(parentNode, childNode) {
+        // console.log("LINK!!!");
+        // console.log(parentNode.id);
+
+        if (!data.nodes[parentNode.id])
+            throw new Error(`Missing parent node ${parentNode.id} in link to ${childNode.id}`);
+        if (!data.nodes[childNode.id])
+            throw new Error(`Missing child node ${childNode.id} in link from ${parentNode.id}`);
+
         return {
             id: `${parentNode.id}->${childNode.id}`,
             source: parentNode.id,
@@ -165,17 +150,6 @@ export default class Node {
             color: parentNode.hyperedge.color
         };
     }
-
-    /*
-    linkParent(parentNode) {
-        return {
-            id: `${parentNode.id}-${this.id}-link`,
-            source: parentNode.id,
-            target: this.id,
-            color: this.hyperedge.color
-        };
-    }
-    */
 
     get isStart() {
         return this.index === 0;

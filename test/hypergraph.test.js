@@ -2,18 +2,22 @@ import Hypergraph from "../src/renderer/src/Hypergraph.js";
 
 import { expect, test } from "vitest";
 
-// TODO: kill or figure out isMasqueradeNode
+// TODO: hypertype actually needs to be built much differently.
+//          we can't do everything on init, it's too slow.
+//          we should have a batch parameter, that shows activity is happening/syncing
+//          and nodes that don't have data, are shown, but those attributes are ignored
+//          we should be able to load and render a 50k node graph in 1 second
 
 // INTERWINGLE PARAMETER
 // 0 = isolated
 // 1 = confluence
 // 2 = fusion
 // 3 = bridge
-// 4 = pagerank
-// 5 = embeddings
+// pagerank (toggle)
+// embeddings (toggle)
 
-// TODO: test simple A-B-C C-D-E hypergraph
-// TODO: test simple A-B-C 1-B-2 hypergraph
+// TODO: test simple A-B-C 1-B-2 bridge hypergraph
+// TODO: come up with all kinds of weird connections...test them
 // TODO: test case we were hitting...masquerade node should be deterministic. Not flip flop. One node is the masquerade node. Not any node that can be a masquerade node.
 
 // TODO: come up with names for type of hypergraph simplification ()
@@ -25,7 +29,7 @@ test("empty hypergraph", () => {
 });
 
 test("single hyperedge", () => {
-    const hyperedges = [["A", "B", "C"]];
+    const hyperedges = [["A", "B", "C"]]; // A.B.C
     const hypergraph = new Hypergraph(hyperedges);
     expect(hypergraph.hyperedges.length).toEqual(1);
 
@@ -51,6 +55,7 @@ test("single hyperedge", () => {
 
 test("two distinct hyperedges", () => {
     const hyperedges = [
+        // A.B.C && 1.2.3
         ["A", "B", "C"],
         ["1", "2", "3"]
     ];
@@ -79,6 +84,7 @@ test("two distinct hyperedges", () => {
 
 test("isolated", () => {
     const hyperedges = [
+        // A.B.C && 1.2.3
         ["A", "B", "C"],
         ["A", "1", "2"]
     ];
@@ -112,6 +118,7 @@ test("isolated", () => {
 
 test("confluence", () => {
     const hyperedges = [
+        // A.B.C && A.1.2 with A as confluence node
         ["A", "B", "C"],
         ["A", "1", "2"]
     ];
@@ -143,9 +150,9 @@ test("confluence", () => {
     expect(data.links[3].target).toBe("A.1.2");
 });
 
-// TODO: test simple A-B-C C-D-E hypergraph
 test("fusion", () => {
     const hyperedges = [
+        // A.B.C.D.E
         ["A", "B", "C"],
         ["C", "D", "E"]
     ];
@@ -161,20 +168,21 @@ test("fusion", () => {
     expect(hypergraph.hyperedges[1].nodes[1].id).toEqual("C.D");
 
     const data = hypergraph.graphData();
+    expect(data.nodes.length).toBe(5); // C masquerades as A.B.C
+
     expect(data.links.length).toBe(4);
-    console.log(data);
-    // expect(data.links[0].id).toBe("A->A.B");
-    // expect(data.links[0].source).toBe("A");
-    // expect(data.links[0].target).toBe("A.B");
-    // expect(data.links[1].id).toBe("A.B->A.B.C");
-    // expect(data.links[1].source).toBe("A.B");
-    // expect(data.links[1].target).toBe("A.B.C");
+    expect(data.links[0].id).toBe("A->A.B");
+    expect(data.links[0].source).toBe("A");
+    expect(data.links[0].target).toBe("A.B");
+    expect(data.links[1].id).toBe("A.B->A.B.C");
+    expect(data.links[1].source).toBe("A.B");
+    expect(data.links[1].target).toBe("A.B.C");
 
-    // expect(data.links[2].id).toBe("A->A.1");
-    // expect(data.links[2].source).toBe("A");
-    // expect(data.links[2].target).toBe("A.1");
+    expect(data.links[2].id).toBe("A.B.C->C.D");
+    expect(data.links[2].source).toBe("A.B.C");
+    expect(data.links[2].target).toBe("C.D");
 
-    // expect(data.links[3].id).toBe("A.1->A.1.2");
-    // expect(data.links[3].source).toBe("A.1");
-    // expect(data.links[3].target).toBe("A.1.2");
+    expect(data.links[3].id).toBe("C.D->C.D.E");
+    expect(data.links[3].source).toBe("C.D");
+    expect(data.links[3].target).toBe("C.D.E");
 });
