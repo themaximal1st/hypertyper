@@ -1,6 +1,7 @@
 import Hypergraph from "../src/renderer/src/Hypergraph.js";
 
 import { expect, test } from "vitest";
+import fs from "fs";
 
 // TODO: hypertype actually needs to be built much differently.
 //          we can't do everything on init, it's too slow.
@@ -198,7 +199,6 @@ test("fusion end", () => {
     expect(hypergraph.hyperedges.length).toEqual(2);
 
     const data = hypergraph.graphData();
-    console.log(data);
 
     expect(data.nodes.length).toBe(5); // C masquerades as A.B.C
     expect(data.links.length).toBe(4);
@@ -206,4 +206,29 @@ test("fusion end", () => {
     expect(data.links[1].id).toBe("A.B->A.B.C");
     expect(data.links[2].id).toBe("1->1.2");
     expect(data.links[3].id).toBe("1.2->A.B.C");
+});
+
+// TODO: huge with 3 interwingle
+
+test.only("huge", () => {
+    const hyperedges = fs
+        .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
+        .split("\n")
+        .slice(0, 2000)
+        .map((line) => {
+            return line.split(" -> ");
+        });
+
+    // console.log(hyperedges);
+
+    // const hypergraph = new Hypergraph(hyperedges);
+    const hypergraph = new Hypergraph(hyperedges, { interwingle: 2 });
+    console.log("GOT HYPERGRAPH");
+
+    const start = Date.now();
+    const data = hypergraph.graphData();
+    const elapsed = Date.now() - start;
+    console.log("elapsed", elapsed);
+
+    expect(elapsed).toBeLessThan(250);
 });

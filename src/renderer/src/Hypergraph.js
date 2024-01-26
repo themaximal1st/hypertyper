@@ -12,7 +12,15 @@ const INTERWINGLE = {
 export default class Hypergraph {
     constructor(hyperedges = [], options = {}) {
         this.options = options;
-        this.hyperedges = hyperedges.map((hyperedge) => new Hyperedge(hyperedge, this));
+        this._hyperedges = new Map();
+        for (const hyperedge of hyperedges) {
+            const edge = new Hyperedge(hyperedge, this);
+            this._hyperedges.set(edge.id, edge);
+        }
+    }
+
+    get hyperedges() {
+        return Array.from(this._hyperedges.values());
     }
 
     get isIsolated() {
@@ -33,7 +41,6 @@ export default class Hypergraph {
 
     graphData() {
         let data = { nodes: {}, links: {} };
-        console.log("HYPERGRAPH graphData");
         for (const hyperedge of this.hyperedges) {
             hyperedge.updateGraphData(data);
         }
@@ -44,7 +51,28 @@ export default class Hypergraph {
         };
     }
 
-    edgeWithEndSymbol(symbol, hyperedgeID, data = { nodes: [], links: [] }) {
+    // TODO: bloom filter?
+    edgeWithEndSymbol(symbol, hyperedgeID, data = { nodes: {}, links: {} }) {
+        let key = null;
+        for (const linkID in data.links) {
+            return null;
+            if (linkID !== hyperedgeID && linkID.endsWith(symbol)) {
+                key = linkID;
+                break;
+            }
+        }
+
+        if (!key) return null;
+        const hyperedge = data.links[key];
+        if (!hyperedge) {
+            console.log(this._hyperedges);
+            console.log("KEY", key);
+            console.log("edgeWithEndSymbol", hyperedge);
+            throw "BLAMO";
+        }
+        return this._hyperedges.get();
+
+        /*
         const edges = this.hyperedges.filter((hyperedge) => {
             const node = hyperedge.endNode();
             if (!node) return false;
@@ -54,7 +82,10 @@ export default class Hypergraph {
             return true;
         });
 
+        if (edges.length === 0) return null;
+
         return edges[0];
+        */
     }
 
     nodesWithSymbol(symbol, hyperedgeID, data = { nodes: [], links: [] }) {

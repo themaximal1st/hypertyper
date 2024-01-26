@@ -60,10 +60,13 @@ export default class App extends React.Component {
             const hypergraph = new Hypergraph(hyperedges, {
                 interwingle: this.state.interwingle
             });
+
+            console.log(hypergraph);
+
             console.log("INIT HYPERGRAPH");
 
-            const data = hypergraph.graphData();
-            console.log("INIT DATA");
+            // const data = hypergraph.graphData();
+            // console.log("INIT DATA");
 
             /*
             this.setState({ hypergraph: hyperedges, data }, () => {

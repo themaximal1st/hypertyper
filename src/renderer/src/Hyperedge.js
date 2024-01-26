@@ -17,7 +17,7 @@ export default class Hyperedge {
     }
 
     get id() {
-        const id = this.nodes.map((node) => node.symbol).join("->");
+        const id = this.nodes.map((node) => node.id).join("->");
         if (this.hypergraph.isIsolated) {
             return `${this.index}-${id}`;
         }

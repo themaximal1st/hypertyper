@@ -25,8 +25,8 @@ export default class Node {
 
     // a node that bridges 2+ middle nodes
     updateBridgeGraphData(data = { nodes: {}, links: {} }) {
-        if (!this.hypergraph.isBridge) return data;
-        if (!this.isMiddle) return data;
+        if (!this.hypergraph.isBridge) return;
+        if (!this.isMiddle) return;
 
         const nodes = this.hypergraph.nodesWithSymbol(this.symbol, this.id, data);
         if (nodes.length >= 2) {
