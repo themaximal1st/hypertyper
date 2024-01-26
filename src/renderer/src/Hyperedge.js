@@ -1,7 +1,7 @@
 import { stringToColor } from "./utils";
-import Node from "./Node";
+import ForceNode from "./Node";
 
-export default class Hyperedge {
+export default class ForceHyperedge {
     constructor(symbols = [], hypergraph) {
         this.symbols = symbols;
         this.hypergraph = hypergraph;
@@ -9,7 +9,7 @@ export default class Hyperedge {
     }
 
     createNode(symbol, index) {
-        return new Node(symbol, index, this);
+        return new ForceNode(symbol, index, this);
     }
 
     get index() {
@@ -23,6 +23,18 @@ export default class Hyperedge {
         }
 
         return id;
+    }
+
+    // TODO: is this right?
+    static id(symbols) {
+        const nodeIds = [];
+        const edge = [];
+        for (const symbol of symbols) {
+            edge.push(symbol);
+            nodeIds.push(edge.join("."));
+        }
+
+        return nodeIds.join("->");
     }
 
     updateGraphData() {

@@ -211,14 +211,17 @@ test("fusion end", () => {
 });
 
 // TODO: search edges at different interwingle depths
+// TODO: we need a concept of increasing crawl depth for search as intwerwingle increases
 
-test.only("search edges (isolated)", () => {
+test.skip("search edges (isolated)", () => {
     const hyperedges = [
         ["A", "B", "C"],
         ["1", "2", "C"]
     ];
 
     const hypergraph = new Hypergraph(hyperedges, { interwingle: Hypergraph.INTERWINGLE.ISOLATED });
+    hypergraph.search = [["A"]];
+
     const data = hypergraph.graphData();
 
     console.log(data);

@@ -1,8 +1,8 @@
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 
-import Hypergraph from "./Hypergraph";
-import Node from "./Node";
+import ForceHypergraph from "./Hypergraph";
+import ForceNode from "./Node";
 import Animation from "./Animation";
 
 // BIG THINGS TO DO TODAY
@@ -63,13 +63,20 @@ export default class App extends React.Component {
         // TODO: Loading screen
 
         window.api.hypergraph.all().then((hyperedges) => {
-            const hypergraph = new Hypergraph(hyperedges, {
+            const hypergraph = new ForceHypergraph(hyperedges, {
                 interwingle: this.state.interwingle
             });
 
-            const data = hypergraph.graphData();
+            const edges = hypergraph.edgeSearch(["Aleister"]).map((edge) => edge.symbols);
+            console.log("EDGES", edges);
 
-            this.setState({ hypergraph: hyperedges, data });
+            const hypergraph1 = new ForceHypergraph(edges, {
+                interwingle: this.state.interwingle
+            });
+
+            const data = hypergraph1.graphData();
+
+            this.setState({ hypergraph: edges, data });
         });
         /*
 
@@ -212,7 +219,7 @@ export default class App extends React.Component {
                     linkColor={(link) => {
                         return link.color || "#333333";
                     }}
-                    nodeThreeObject={Node.nodeThreeObject}
+                    nodeThreeObject={ForceNode.nodeThreeObject}
                     linkDirectionalArrowLength={(link) => {
                         return 5;
                     }}

@@ -1,4 +1,4 @@
-import Hyperedge from "./Hyperedge";
+import ForceHyperedge from "./Hyperedge";
 
 const INTERWINGLE = {
     ISOLATED: 0,
@@ -7,7 +7,7 @@ const INTERWINGLE = {
     BRIDGE: 3
 };
 
-export default class Hypergraph {
+export default class ForceHypergraph {
     constructor(hyperedges = [], options = {}) {
         this.options = options;
 
@@ -16,8 +16,9 @@ export default class Hypergraph {
 
         this._hyperedges = new Map();
         for (const hyperedge of hyperedges) {
-            const edge = new Hyperedge(hyperedge, this);
+            const edge = new ForceHyperedge(hyperedge, this);
             this._hyperedges.set(edge.id, edge);
+            edge.updateGraphData();
         }
     }
 
@@ -42,12 +43,6 @@ export default class Hypergraph {
     }
 
     graphData() {
-        this.nodes = new Map();
-        this.links = new Map();
-        for (const hyperedge of this.hyperedges) {
-            hyperedge.updateGraphData();
-        }
-
         return {
             nodes: Array.from(this.nodes.values()),
             links: Array.from(this.links.values())
@@ -71,7 +66,7 @@ export default class Hypergraph {
     }
 
     nodesWithSymbol(symbol, hyperedgeID) {
-        const matches = [];
+        const matches = new Map();
         for (const linkID of this.links.keys()) {
             if (linkID.includes(symbol) && linkID !== hyperedgeID) {
                 const linkData = this.links.get(linkID);
@@ -81,14 +76,36 @@ export default class Hypergraph {
 
                 for (const node of hyperedge.nodes) {
                     if (node.symbol === symbol && this.nodes.has(node.id)) {
-                        matches.push(node);
+                        matches.set(node.id, node);
                     }
                 }
             }
         }
 
-        return matches;
+        return Array.from(matches.values());
+    }
+
+    edgeSearch(edges = []) {
+        const matches = new Map();
+        for (const linkID of this.links.keys()) {
+            for (const edge of edges) {
+                const edgeID = Array.isArray(edge) ? ForceHyperedge.id(edge) : edge;
+
+                if (linkID.includes(edgeID)) {
+                    console.log(linkID, edgeID);
+                    const hyperedge = this._hyperedges.get(this.links.get(linkID).hyperedgeID);
+                    if (!hyperedge) continue;
+
+                    matches.set(hyperedge.id, hyperedge);
+                }
+            }
+        }
+
+        return Array.from(matches.values());
     }
 }
 
-Hypergraph.INTERWINGLE = INTERWINGLE;
+// TODO: do we need some kind of reverse index of nodes and links? we're regenerating these all over the place
+// TODO: also need to think how to get data from the hypergraph into the force graph...should force graph be doing the filtering or hypertype?
+
+ForceHypergraph.INTERWINGLE = INTERWINGLE;
