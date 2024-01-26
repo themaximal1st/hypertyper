@@ -1,6 +1,8 @@
 import SpriteText from "three-spritetext";
 import * as Three from "three";
 
+const threeCache = {};
+
 export default class Node {
     constructor(symbol, index, hyperedge) {
         this.symbol = symbol;
@@ -101,10 +103,6 @@ export default class Node {
         if (!nodes.has(parentNode.id))
             throw new Error(`Missing parent node ${parentNode.id} in link to ${childNode.id}`);
         if (!nodes.has(childNode.id)) {
-            console.log("CHILD NODE", childNode.symbol);
-            console.log("HYPEREDGE NODE", childNode.hyperedge.symbols);
-            console.log("ID", childNode.id);
-            // console.log(nodes);
             throw new Error(`Missing child node ${childNode.id} in link from ${parentNode.id}`);
         }
 
@@ -145,9 +143,18 @@ export default class Node {
             );
         }
 
-        const sprite = new SpriteText(node.name);
+        let name = node.name || "";
+        if (name.length > 30) {
+            name = `${name.substring(0, 27)}...`;
+        }
+        if (!name) {
+            return null;
+        }
+
+        const sprite = new SpriteText(name);
         sprite.color = node.color;
         sprite.textHeight = node.textHeight || 8;
+
         return sprite;
     }
 }

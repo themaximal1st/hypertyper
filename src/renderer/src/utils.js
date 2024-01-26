@@ -1,4 +1,4 @@
-const colorPalette = [
+const colors = [
     "#ef4444",
     "#f97316",
     "#f59e0b",
@@ -17,7 +17,7 @@ const colorPalette = [
     "#f43f5e"
 ];
 
-export function stringToColor(str, colors = colorPalette) {
+export function stringToColor(str) {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
         hash = str.charCodeAt(i) + ((hash << 5) - hash);

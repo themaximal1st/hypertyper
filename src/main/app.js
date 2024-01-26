@@ -12,6 +12,8 @@ export default class App {
         const browserWindow = new BrowserWindow({
             width: 900,
             height: 670,
+            // frame: false,
+            titleBarStyle: "hidden",
             show: false,
             autoHideMenuBar: true,
             webPreferences: {

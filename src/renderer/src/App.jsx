@@ -5,15 +5,23 @@ import Hypergraph from "./Hypergraph";
 import Node from "./Node";
 import Animation from "./Animation";
 
+// BIG THINGS TO DO TODAY
+// 1. We want to search / filter down hypergraph
+// 2. We want to add / create new
+// 3. We want the console looking good
+// 4. pagerank node/text size...pagerank stress test large files
+
+// TODO: Whole hypergraph is obviously overhwleming...so click to filter down onto nodes/edges
+// TODO: when creating scope down context
+// TODO: super sweet console!
+
 // TODO: [ ] get dynamic updates working well
 // TODO: [ ] get integrated with backend
 // TODO: [ ] implement pagerank for node and text size!
 // TODO: animations on big graphs is annoying
 // TODO: allow camera fly through...regenerate graph if you have to
-// TODO: performance optimizations...run through them in tests and see what can be made faster or if any dump stuff is happening
 // TODO: long text nodes should be truncated
 // TODO: should have numerical zoom, plus and minus keys
-// TODO: Look into returning raw symbols/arrays rather than objects. maybe electron bridge is slow?
 
 export default class App extends React.Component {
     constructor(props) {
@@ -65,15 +73,12 @@ export default class App extends React.Component {
 
             console.log("INIT HYPERGRAPH");
 
-            // const data = hypergraph.graphData();
-            // console.log("INIT DATA");
+            const data = hypergraph.graphData();
+            console.log("INIT DATA");
 
-            /*
             this.setState({ hypergraph: hyperedges, data }, () => {
                 console.log("SET STATE");
-                // console.log(hypergraph);
             });
-            */
 
             // this.update(hyperedges);
         });
@@ -177,6 +182,7 @@ export default class App extends React.Component {
     render() {
         return (
             <>
+                <a id="titlebar">HyperTyper</a>
                 {this.state.showHistory && (
                     <div className="absolute top-0 left-0 right-0 z-20 text-sm p-2 bg-white/50 max-h-[200px] overflow-y-scroll">
                         {this.state.hypergraph.map((edge, i) => {
@@ -213,7 +219,7 @@ export default class App extends React.Component {
                     height={this.state.height}
                     graphData={this.state.data}
                     showNavInfo={false}
-                    backgroundColor="#ffffff"
+                    // backgroundColor="#ffffff"
                     linkColor={(link) => {
                         return link.color || "#333333";
                     }}
@@ -222,8 +228,7 @@ export default class App extends React.Component {
                         return 5;
                     }}
                     linkDirectionalArrowRelPos={1}
-                    linkWidth={1}
-                    linkCurvature={0.25}
+                    linkWidth={2}
                 />
             </>
         );

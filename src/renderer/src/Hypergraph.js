@@ -69,14 +69,21 @@ export default class Hypergraph {
 
     nodesWithSymbol(symbol, hyperedgeID, nodes, links) {
         const matches = [];
-        for (const hyperedge of this.hyperedges) {
-            for (const node of hyperedge.nodes) {
-                if (node.symbol !== symbol) continue; // ignore nodes that don't match symbol
-                if (hyperedge.id === hyperedgeID) continue; // ignore self
-                if (!nodes.has(node.id)) continue; // ignore nodes that don't exist
-                matches.push(node);
+        for (const linkID of links.keys()) {
+            if (linkID.includes(symbol) && linkID !== hyperedgeID) {
+                const linkData = links.get(linkID);
+                if (linkData.bridge) continue;
+
+                const hyperedge = this._hyperedges.get(linkData.hyperedgeID);
+
+                for (const node of hyperedge.nodes) {
+                    if (node.symbol === symbol && nodes.has(node.id)) {
+                        matches.push(node);
+                    }
+                }
             }
         }
+
         return matches;
     }
 }

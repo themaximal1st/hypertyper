@@ -21,3 +21,8 @@ body {
 .interwingle-slider::-webkit-slider-thumb {
     @apply border-2 appearance-none my-[-7px] bg-gray-400 h-8 w-2;
 }
+
+#titlebar {
+    -webkit-app-region: drag;
+    @apply absolute z-20 top-0 left-0 right-0 h-12 text-white text-center text-xs pt-2 opacity-50 hover:opacity-100 transition-all;
+}

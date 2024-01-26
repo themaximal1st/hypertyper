@@ -216,7 +216,7 @@ test.only("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
         .split("\n")
-        // .slice(0, 1000)
+        // .slice(0, 2000)
         .map((line) => {
             return line.split(" -> ");
         });
@@ -224,7 +224,7 @@ test.only("huge", () => {
     // console.log(hyperedges);
 
     // const hypergraph = new Hypergraph(hyperedges);
-    const hypergraph = new Hypergraph(hyperedges, { interwingle: 2 });
+    const hypergraph = new Hypergraph(hyperedges, { interwingle: 3 });
     console.log("GOT HYPERGRAPH");
 
     const start = Date.now();
@@ -232,5 +232,5 @@ test.only("huge", () => {
     const elapsed = Date.now() - start;
     console.log("elapsed", elapsed);
 
-    expect(elapsed).toBeLessThan(200);
+    expect(elapsed).toBeLessThan(300);
 });
