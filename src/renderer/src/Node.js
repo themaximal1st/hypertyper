@@ -24,7 +24,7 @@ export default class Node {
     }
 
     // a node that bridges 2+ middle nodes
-    bridgeGraphData(data = { nodes: {}, links: {} }) {
+    updateBridgeGraphData(data = { nodes: {}, links: {} }) {
         if (!this.hypergraph.isBridge) return data;
         if (!this.isMiddle) return data;
 
@@ -45,8 +45,6 @@ export default class Node {
                 data.links[link.id] = link;
             }
         }
-
-        return data;
     }
 
     resolveFusionNode(data = {}) {
@@ -62,7 +60,8 @@ export default class Node {
         return this.hyperedge.nodeId(this.index);
     }
 
-    graphData(data = {}) {
+    updateGraphData(data = {}) {
+        // TODO: check this
         const fusionNode = this.fusionNode(data);
 
         const node = fusionNode || this;
@@ -86,12 +85,8 @@ export default class Node {
         data.links[link.id] = link;
 
         if (this.isMiddle) {
-            const bridgeData = this.bridgeGraphData(data);
-            data = mergeGraphs([data, bridgeData]);
-            data.nodes[node.id].textHeight = 6;
+            this.updateBridgeGraphData(data);
         }
-
-        return data;
     }
 
     static link(parentNode, childNode, data = {}) {

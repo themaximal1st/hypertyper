@@ -33,8 +33,9 @@ export default class Hypergraph {
 
     graphData() {
         let data = { nodes: {}, links: {} };
+        console.log("HYPERGRAPH graphData");
         for (const hyperedge of this.hyperedges) {
-            data = mergeGraphs([data, hyperedge.graphData(data)]);
+            hyperedge.updateGraphData(data);
         }
 
         return {

@@ -50,13 +50,15 @@ export default class HyperType {
 
         const file = "/Users/brad/Projects/loom/data/data";
         // const contents = fs.readFileSync(file, "utf8").split("\n").slice(0, 600).join("\n");
-        // const contents = fs.readFileSync(file, "utf8");
-        const contents = "";
+        const contents = fs.readFileSync(file, "utf8");
+        // const contents = "";
 
         try {
-            const hypergraph = await Hypergraph.parse(contents, options);
-            console.log("BOOM");
-            console.log(hypergraph);
+            console.log("LOADING");
+            const hypergraph = Hypergraph.parse(contents, options);
+            console.log("LOADED");
+            // console.log("BOOM");
+            // console.log(hypergraph);
             const hypertype = new HyperType(hypergraph);
             return hypertype;
         } catch (e) {

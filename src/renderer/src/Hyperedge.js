@@ -1,4 +1,4 @@
-import { mergeGraphs, stringToColor } from "./utils";
+import { stringToColor } from "./utils";
 import Node from "./Node";
 
 export default class Hyperedge {
@@ -25,8 +25,10 @@ export default class Hyperedge {
         return id;
     }
 
-    graphData(data = {}) {
-        return mergeGraphs(this.nodes.map((node) => node.graphData(data)));
+    updateGraphData(data = {}) {
+        for (const node of this.nodes) {
+            node.updateGraphData(data);
+        }
     }
 
     nodeId(index) {

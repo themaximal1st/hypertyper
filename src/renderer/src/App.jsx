@@ -8,6 +8,12 @@ import Animation from "./Animation";
 // TODO: [ ] get dynamic updates working well
 // TODO: [ ] get integrated with backend
 // TODO: [ ] implement pagerank for node and text size!
+// TODO: animations on big graphs is annoying
+// TODO: allow camera fly through...regenerate graph if you have to
+// TODO: performance optimizations...run through them in tests and see what can be made faster or if any dump stuff is happening
+// TODO: long text nodes should be truncated
+// TODO: should have numerical zoom, plus and minus keys
+// TODO: Look into returning raw symbols/arrays rather than objects. maybe electron bridge is slow?
 
 export default class App extends React.Component {
     constructor(props) {
@@ -18,25 +24,27 @@ export default class App extends React.Component {
         this.state = {
             width: window.innerWidth,
             height: window.innerHeight,
+            showHistory: false,
             interwingle: 3,
             input: "",
             hyperedge: [],
-            hypergraph: [
-                ["Ted Nelson", "invented", "HyperText"],
-                ["Ted Nelson", "invented", "Xanadu"],
-                ["Ted Nelson", "invented", "HyperMedia"],
-                ["Ted Nelson", "invented", "ZigZag"],
-                ["Ted Nelson", "author", "Lib Machines"],
+            hypergraph: [],
+            // hypergraph: [
+            //     ["Ted Nelson", "invented", "HyperText"],
+            //     ["Ted Nelson", "invented", "Xanadu"],
+            //     ["Ted Nelson", "invented", "HyperMedia"],
+            //     ["Ted Nelson", "invented", "ZigZag"],
+            //     ["Ted Nelson", "author", "Lib Machines"],
 
-                ["Tim Berners-Lee", "invented", "WWW"],
-                ["Tim Berners-Lee", "author", "Weaving the Web"],
+            //     ["Tim Berners-Lee", "invented", "WWW"],
+            //     ["Tim Berners-Lee", "author", "Weaving the Web"],
 
-                ["HyperText", "influenced", "WWW"],
+            //     ["HyperText", "influenced", "WWW"],
 
-                ["Vannevar Bush", "invented", "Memex"],
-                ["Vannevar Bush", "author", "As We May Think"],
-                ["As We May Think", "influenced", "HyperText"]
-            ],
+            //     ["Vannevar Bush", "invented", "Memex"],
+            //     ["Vannevar Bush", "author", "As We May Think"],
+            //     ["As We May Think", "influenced", "HyperText"]
+            // ],
             colors: [],
 
             data: { nodes: [], links: [] }
@@ -44,9 +52,29 @@ export default class App extends React.Component {
     }
 
     reloadData() {
-        const hypergraph = new Hypergraph(this.state.hypergraph, {
-            interwingle: this.state.interwingle
+        // TODO: Loading screen
+
+        console.log("RELOAD DATA");
+        window.api.hypergraph.all().then((hyperedges) => {
+            console.log("GOT ALL");
+            const hypergraph = new Hypergraph(hyperedges, {
+                interwingle: this.state.interwingle
+            });
+            console.log("INIT HYPERGRAPH");
+
+            const data = hypergraph.graphData();
+            console.log("INIT DATA");
+
+            /*
+            this.setState({ hypergraph: hyperedges, data }, () => {
+                console.log("SET STATE");
+                // console.log(hypergraph);
+            });
+            */
+
+            // this.update(hyperedges);
         });
+        /*
 
         this.animation.pause();
         this.setState({ data: hypergraph.graphData() }, () => {
@@ -54,6 +82,7 @@ export default class App extends React.Component {
                 this.animation.resume();
             }, 1000);
         });
+        */
     }
 
     componentDidMount() {
@@ -70,7 +99,7 @@ export default class App extends React.Component {
         document.addEventListener("wheel", this.handleZoom.bind(this));
         window.addEventListener("resize", this.handleResize.bind(this));
 
-        this.animation.start();
+        // this.animation.start();
     }
 
     componentWillUnmount() {
@@ -105,8 +134,10 @@ export default class App extends React.Component {
 
     handleKeyDown(e) {
         this.animation.click();
-        if (e.key === "`") {
+        if (e.key === "Tab") {
             this.toggleInterwingle();
+        } else if (e.key === "`") {
+            this.setState({ showHistory: !this.state.showHistory });
         }
     }
 
@@ -131,7 +162,8 @@ export default class App extends React.Component {
 
     toggleInterwingle(interwingle) {
         if (typeof interwingle === "undefined") {
-            interwingle = this.state.interwingle++;
+            interwingle = this.state.interwingle;
+            interwingle++;
         }
 
         if (interwingle > 3) interwingle = 0;
@@ -142,6 +174,25 @@ export default class App extends React.Component {
     render() {
         return (
             <>
+                {this.state.showHistory && (
+                    <div className="absolute top-0 left-0 right-0 z-20 text-sm p-2 bg-white/50 max-h-[200px] overflow-y-scroll">
+                        {this.state.hypergraph.map((edge, i) => {
+                            return (
+                                <div className="flex gap-3" key={`${edge.join("->")}-${i}}`}>
+                                    {edge
+                                        .map((node, j) => {
+                                            return (
+                                                <div key={`${node}-${j}`} className="w-36 truncate">
+                                                    {node}
+                                                </div>
+                                            );
+                                        })
+                                        .reduce((prev, curr) => [prev, " → ", curr])}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
                 <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-10 h-full">
                     <input
                         type="range"

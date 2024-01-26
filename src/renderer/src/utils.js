@@ -28,11 +28,13 @@ export function stringToColor(str, colors = colorPalette) {
     return colors[index];
 }
 
-export function mergeGraphs(graphs) {
-    const graphData = { nodes: {}, links: {} };
-    for (const graph of graphs) {
-        graphData.nodes = { ...graphData.nodes, ...(graph.nodes || {}) };
-        graphData.links = { ...graphData.links, ...(graph.links || {}) };
+export function mergeGraphs(graphData, graph) {
+    for (const key in graph.nodes) {
+        graphData.nodes[key] = graph.nodes[key];
+    }
+
+    for (const key in graph.links) {
+        graphData.links[key] = graph.links[key];
     }
 
     return graphData;
