@@ -88,12 +88,16 @@ export default class Node {
         let source = this.hyperedge.prevNode(this.index).resolveFusionNode();
         let target = node.resolveFusionNode();
 
-        const link = Node.link(source, target, this.hypergraph.nodes, this.hypergraph.links);
+        const link = source.link(target);
         this.hypergraph.links.set(link.id, link);
 
         if (this.isMiddle) {
             this.updateBridgeGraphData();
         }
+    }
+
+    link(childNode) {
+        return Node.link(this, childNode, this.hypergraph.nodes, this.hypergraph.links);
     }
 
     static link(parentNode, childNode, nodes, links) {

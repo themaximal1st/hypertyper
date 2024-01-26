@@ -212,7 +212,7 @@ test("fusion end", () => {
 
 // TODO: search edges at different interwingle depths
 
-test.skip("search edges (isolated)", () => {
+test.only("search edges (isolated)", () => {
     const hyperedges = [
         ["A", "B", "C"],
         ["1", "2", "C"]
