@@ -17,7 +17,7 @@ export default class Hyperedge {
     }
 
     get id() {
-        const id = this.nodes.map((node) => node.id).join("->");
+        const id = this.nodes.map((node) => node.symbol).join("->");
         if (this.hypergraph.isIsolated) {
             return `${this.index}-${id}`;
         }
@@ -25,9 +25,9 @@ export default class Hyperedge {
         return id;
     }
 
-    updateGraphData(data = {}) {
+    updateGraphData(nodes, links) {
         for (const node of this.nodes) {
-            node.updateGraphData(data);
+            node.updateGraphData(nodes, links);
         }
     }
 
@@ -49,15 +49,15 @@ export default class Hyperedge {
             return null;
         }
 
-        return this.createNode(this.symbols[index - 1], index - 1);
+        return this.nodes[index - 1];
     }
 
-    nextNode() {
+    nextNode(index) {
         if (index === this.length - 1) {
             return null;
         }
 
-        return this.createNode(this.symbols[index + 1], index + 1);
+        return this.nodes[index + 1];
     }
 
     startNode() {

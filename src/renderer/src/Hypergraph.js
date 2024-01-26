@@ -1,5 +1,3 @@
-import { mergeGraphs } from "./utils";
-
 import Hyperedge from "./Hyperedge";
 
 const INTERWINGLE = {
@@ -40,65 +38,46 @@ export default class Hypergraph {
     }
 
     graphData() {
-        let data = { nodes: {}, links: {} };
+        const nodes = new Map();
+        const links = new Map();
         for (const hyperedge of this.hyperedges) {
-            hyperedge.updateGraphData(data);
+            hyperedge.updateGraphData(nodes, links);
         }
 
+        // TODO: Maybe even more efficient to pass maps back fully?
         return {
-            nodes: Object.values(data.nodes),
-            links: Object.values(data.links)
+            nodes: Array.from(nodes.values()),
+            links: Array.from(links.values())
         };
     }
 
-    // TODO: bloom filter?
-    edgeWithEndSymbol(symbol, hyperedgeID, data = { nodes: {}, links: {} }) {
+    edgeWithEndSymbol(symbol, hyperedgeID, nodes, links) {
         let key = null;
-        for (const linkID in data.links) {
-            return null;
+        for (const linkID of links.keys()) {
             if (linkID !== hyperedgeID && linkID.endsWith(symbol)) {
                 key = linkID;
                 break;
             }
         }
 
-        if (!key) return null;
-        const hyperedge = data.links[key];
-        if (!hyperedge) {
-            console.log(this._hyperedges);
-            console.log("KEY", key);
-            console.log("edgeWithEndSymbol", hyperedge);
-            throw "BLAMO";
+        if (!key) {
+            return null;
         }
-        return this._hyperedges.get();
 
-        /*
-        const edges = this.hyperedges.filter((hyperedge) => {
-            const node = hyperedge.endNode();
-            if (!node) return false;
-            if (hyperedge.id === hyperedgeID) return false; // ignore self
-            if (!data.nodes[node.id]) return false; // ignore nodes that don't exist
-            if (node.symbol !== symbol) return false; // ignore nodes that don't match symbol
-            return true;
-        });
-
-        if (edges.length === 0) return null;
-
-        return edges[0];
-        */
+        return this._hyperedges.get(links.get(key).hyperedgeID);
     }
 
-    nodesWithSymbol(symbol, hyperedgeID, data = { nodes: [], links: [] }) {
-        const nodes = [];
+    nodesWithSymbol(symbol, hyperedgeID, nodes, links) {
+        const matches = [];
         for (const hyperedge of this.hyperedges) {
             for (const node of hyperedge.nodes) {
                 if (node.symbol !== symbol) continue; // ignore nodes that don't match symbol
                 if (hyperedge.id === hyperedgeID) continue; // ignore self
-                if (!data.nodes[node.id]) continue; // ignore nodes that don't exist
-                nodes.push(node);
+                if (!nodes.has(node.id)) continue; // ignore nodes that don't exist
+                matches.push(node);
             }
         }
-        return nodes;
+        return matches;
     }
 }
 

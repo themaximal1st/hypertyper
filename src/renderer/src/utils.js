@@ -27,15 +27,3 @@ export function stringToColor(str, colors = colorPalette) {
     const index = Math.abs(hash) % colors.length;
     return colors[index];
 }
-
-export function mergeGraphs(graphData, graph) {
-    for (const key in graph.nodes) {
-        graphData.nodes[key] = graph.nodes[key];
-    }
-
-    for (const key in graph.links) {
-        graphData.links[key] = graph.links[key];
-    }
-
-    return graphData;
-}

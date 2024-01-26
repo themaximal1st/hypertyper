@@ -3,6 +3,8 @@ import Hypergraph from "../src/renderer/src/Hypergraph.js";
 import { expect, test } from "vitest";
 import fs from "fs";
 
+// TODO: refactor graphData hash to map
+
 // TODO: hypertype actually needs to be built much differently.
 //          we can't do everything on init, it's too slow.
 //          we should have a batch parameter, that shows activity is happening/syncing
@@ -214,7 +216,7 @@ test.only("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
         .split("\n")
-        .slice(0, 2000)
+        // .slice(0, 1000)
         .map((line) => {
             return line.split(" -> ");
         });
@@ -230,5 +232,5 @@ test.only("huge", () => {
     const elapsed = Date.now() - start;
     console.log("elapsed", elapsed);
 
-    expect(elapsed).toBeLessThan(250);
+    expect(elapsed).toBeLessThan(200);
 });
