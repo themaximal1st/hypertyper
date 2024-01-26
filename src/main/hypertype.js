@@ -23,7 +23,7 @@ export default class HyperType {
     }
 
     get all() {
-        return this.hypergraph.hypergraph;
+        return this.hypergraph.all;
     }
 
     static async load() {
