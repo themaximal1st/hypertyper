@@ -13,16 +13,11 @@ export default class Node {
 
     // A fusion node connects a start node to and end node
     //  ex: A.B.C && C.D.E become A.B.C.D.E
-    fusionNode(nodes, links) {
+    fusionNode() {
         if (!this.hypergraph.isFusion) return null;
         if (this.isMiddle) return null;
 
-        const edge = this.hypergraph.edgeWithEndSymbol(
-            this.symbol,
-            this.hyperedge.id,
-            nodes,
-            links
-        );
+        const edge = this.hypergraph.edgeWithEndSymbol(this.symbol, this.hyperedge.id);
 
         if (!edge) return null;
 
@@ -30,11 +25,11 @@ export default class Node {
     }
 
     // a node that bridges 2+ middle nodes
-    updateBridgeGraphData(nodes, links) {
+    updateBridgeGraphData() {
         if (!this.hypergraph.isBridge) return;
         if (!this.isMiddle) return;
 
-        const matches = this.hypergraph.nodesWithSymbol(this.symbol, this.id, nodes, links);
+        const matches = this.hypergraph.nodesWithSymbol(this.symbol, this.id);
         if (matches.length >= 2) {
             const bridgeNode = {
                 id: `${this.symbol}#bridge`,
@@ -42,19 +37,24 @@ export default class Node {
                 bridge: true
             };
 
-            nodes.set(bridgeNode.id, bridgeNode);
+            this.hypergraph.nodes.set(bridgeNode.id, bridgeNode);
 
             for (const node of matches) {
-                const link = Node.link(bridgeNode, node, nodes, links);
+                const link = Node.link(
+                    bridgeNode,
+                    node,
+                    this.hypergraph.nodes,
+                    this.hypergraph.links
+                );
                 link.length = 1;
                 link.bridge = true;
-                links.set(link.id, link);
+                this.hypergraph.links.set(link.id, link);
             }
         }
     }
 
-    resolveFusionNode(nodes, links) {
-        const resolved = this.fusionNode(nodes, links);
+    resolveFusionNode() {
+        const resolved = this.fusionNode();
         if (resolved) {
             return resolved;
         }
@@ -66,8 +66,8 @@ export default class Node {
         return this.hyperedge.nodeId(this.index);
     }
 
-    updateGraphData(nodes, links) {
-        const fusionNode = this.fusionNode(nodes, links);
+    updateGraphData() {
+        const fusionNode = this.fusionNode();
 
         const node = fusionNode || this;
 
@@ -78,21 +78,21 @@ export default class Node {
             textHeight: node.textHeight
         };
 
-        nodes.set(nodeData.id, nodeData);
+        this.hypergraph.nodes.set(nodeData.id, nodeData);
 
         // start nodes don't need to be linked
         if (this.isStart) {
             return;
         }
 
-        let source = this.hyperedge.prevNode(this.index).resolveFusionNode(nodes, links);
-        let target = node.resolveFusionNode(nodes, links);
+        let source = this.hyperedge.prevNode(this.index).resolveFusionNode();
+        let target = node.resolveFusionNode();
 
-        const link = Node.link(source, target, nodes, links);
-        links.set(link.id, link);
+        const link = Node.link(source, target, this.hypergraph.nodes, this.hypergraph.links);
+        this.hypergraph.links.set(link.id, link);
 
         if (this.isMiddle) {
-            this.updateBridgeGraphData(nodes, links);
+            this.updateBridgeGraphData();
         }
     }
 

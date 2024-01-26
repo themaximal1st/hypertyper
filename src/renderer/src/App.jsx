@@ -62,25 +62,14 @@ export default class App extends React.Component {
     reloadData() {
         // TODO: Loading screen
 
-        console.log("RELOAD DATA");
         window.api.hypergraph.all().then((hyperedges) => {
-            console.log("GOT ALL");
             const hypergraph = new Hypergraph(hyperedges, {
                 interwingle: this.state.interwingle
             });
 
-            console.log(hypergraph);
-
-            console.log("INIT HYPERGRAPH");
-
             const data = hypergraph.graphData();
-            console.log("INIT DATA");
 
-            this.setState({ hypergraph: hyperedges, data }, () => {
-                console.log("SET STATE");
-            });
-
-            // this.update(hyperedges);
+            this.setState({ hypergraph: hyperedges, data });
         });
         /*
 

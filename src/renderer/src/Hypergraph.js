@@ -10,6 +10,10 @@ const INTERWINGLE = {
 export default class Hypergraph {
     constructor(hyperedges = [], options = {}) {
         this.options = options;
+
+        this.nodes = new Map();
+        this.links = new Map();
+
         this._hyperedges = new Map();
         for (const hyperedge of hyperedges) {
             const edge = new Hyperedge(hyperedge, this);
@@ -38,22 +42,21 @@ export default class Hypergraph {
     }
 
     graphData() {
-        const nodes = new Map();
-        const links = new Map();
+        this.nodes = new Map();
+        this.links = new Map();
         for (const hyperedge of this.hyperedges) {
-            hyperedge.updateGraphData(nodes, links);
+            hyperedge.updateGraphData();
         }
 
-        // TODO: Maybe even more efficient to pass maps back fully?
         return {
-            nodes: Array.from(nodes.values()),
-            links: Array.from(links.values())
+            nodes: Array.from(this.nodes.values()),
+            links: Array.from(this.links.values())
         };
     }
 
-    edgeWithEndSymbol(symbol, hyperedgeID, nodes, links) {
+    edgeWithEndSymbol(symbol, hyperedgeID) {
         let key = null;
-        for (const linkID of links.keys()) {
+        for (const linkID of this.links.keys()) {
             if (linkID !== hyperedgeID && linkID.endsWith(symbol)) {
                 key = linkID;
                 break;
@@ -64,20 +67,20 @@ export default class Hypergraph {
             return null;
         }
 
-        return this._hyperedges.get(links.get(key).hyperedgeID);
+        return this._hyperedges.get(this.links.get(key).hyperedgeID);
     }
 
-    nodesWithSymbol(symbol, hyperedgeID, nodes, links) {
+    nodesWithSymbol(symbol, hyperedgeID) {
         const matches = [];
-        for (const linkID of links.keys()) {
+        for (const linkID of this.links.keys()) {
             if (linkID.includes(symbol) && linkID !== hyperedgeID) {
-                const linkData = links.get(linkID);
+                const linkData = this.links.get(linkID);
                 if (linkData.bridge) continue;
 
                 const hyperedge = this._hyperedges.get(linkData.hyperedgeID);
 
                 for (const node of hyperedge.nodes) {
-                    if (node.symbol === symbol && nodes.has(node.id)) {
+                    if (node.symbol === symbol && this.nodes.has(node.id)) {
                         matches.push(node);
                     }
                 }

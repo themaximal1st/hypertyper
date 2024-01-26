@@ -210,9 +210,23 @@ test("fusion end", () => {
     expect(data.links[3].id).toBe("1.2->A.B.C");
 });
 
+// TODO: search edges at different interwingle depths
+
+test.skip("search edges (isolated)", () => {
+    const hyperedges = [
+        ["A", "B", "C"],
+        ["1", "2", "C"]
+    ];
+
+    const hypergraph = new Hypergraph(hyperedges, { interwingle: Hypergraph.INTERWINGLE.ISOLATED });
+    const data = hypergraph.graphData();
+
+    console.log(data);
+});
+
 // TODO: huge with 3 interwingle
 
-test.only("huge", () => {
+test.skip("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
         .split("\n")

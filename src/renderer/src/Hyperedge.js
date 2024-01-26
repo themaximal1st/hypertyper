@@ -25,9 +25,9 @@ export default class Hyperedge {
         return id;
     }
 
-    updateGraphData(nodes, links) {
+    updateGraphData() {
         for (const node of this.nodes) {
-            node.updateGraphData(nodes, links);
+            node.updateGraphData();
         }
     }
 
