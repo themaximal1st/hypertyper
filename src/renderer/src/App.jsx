@@ -5,8 +5,6 @@ import Hypergraph from "./Hypergraph";
 import Node from "./Node";
 import Animation from "./Animation";
 
-import { cycleInterwingle } from "./utils";
-
 // TODO: [ ] get dynamic updates working well
 // TODO: [ ] get integrated with backend
 // TODO: [ ] implement pagerank for node and text size!
@@ -132,8 +130,13 @@ export default class App extends React.Component {
     }
 
     toggleInterwingle(interwingle) {
-        if (typeof interwingle === "undefined") interwingle = this.state.interwingle;
-        this.setState({ interwingle: cycleInterwingle(interwingle) }, this.reloadData.bind(this));
+        if (typeof interwingle === "undefined") {
+            interwingle = this.state.interwingle++;
+        }
+
+        if (interwingle > 3) interwingle = 0;
+
+        this.setState({ interwingle }, this.reloadData.bind(this));
     }
 
     render() {
