@@ -1,8 +1,8 @@
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 
-import VisualHypergraph from "./Hypergraph";
-import VisualNode from "./Node";
+import Hypergraph from "./Hypergraph";
+import Node from "./Node";
 import Animation from "./Animation";
 
 // BIG THINGS TO DO TODAY
@@ -63,20 +63,23 @@ export default class App extends React.Component {
         // TODO: Loading screen
 
         window.api.hypergraph.all().then((hyperedges) => {
-            const hypergraph = new VisualHypergraph(hyperedges, {
+            const hypergraph = new Hypergraph({
                 interwingle: this.state.interwingle
             });
 
-            const edges = hypergraph.edgeSearch(["Aleister"]).map((edge) => edge.symbols);
-            console.log("EDGES", edges);
+            hypergraph.addHyperedges(hyperedges);
 
-            const hypergraph1 = new VisualHypergraph(edges, {
-                interwingle: this.state.interwingle
-            });
+            // const edges = hypergraph.edgeSearch(["Aleister"]).map((edge) => edge.symbols);
+            // console.log("EDGES", edges);
 
-            const data = hypergraph1.graphData();
+            // const hypergraph1 = new Hypergraph(edges, {
+            //     interwingle: this.state.interwingle
+            // });
 
-            this.setState({ hypergraph: edges, data });
+            const data = hypergraph.graphData();
+            console.log(data);
+
+            this.setState({ hypergraph: hyperedges, data });
         });
         /*
 
@@ -219,7 +222,7 @@ export default class App extends React.Component {
                     linkColor={(link) => {
                         return link.color || "#333333";
                     }}
-                    nodeThreeObject={VisualNode.nodeThreeObject}
+                    nodeThreeObject={Node.nodeThreeObject}
                     linkDirectionalArrowLength={(link) => {
                         return 5;
                     }}

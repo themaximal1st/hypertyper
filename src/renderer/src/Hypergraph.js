@@ -1,68 +1,46 @@
-import VisualHyperedge from "./Hyperedge";
+import Hyperedge from "./Hyperedge";
 
-const INTERWINGLE = {
-    ISOLATED: 0,
-    CONFLUENCE: 1,
-    FUSION: 2,
-    BRIDGE: 3
-};
+export default class Hypergraph {
+    static INTERWINGLE = {
+        ISOLATED: 0,
+        CONFLUENCE: 1,
+        FUSION: 2,
+        BRIDGE: 3
+    };
 
-export default class VisualHypergraph {
-    constructor(hyperedges = [], options = {}) {
+    constructor(options = {}) {
         this.options = options;
+
+        this._hyperedges = new Map();
 
         this.nodes = new Map();
         this.links = new Map();
 
-        this.indexNodes = new Map();
-        this.indexLinks = new Map();
+        this.nodeIndex = new Map();
+        this.endSymbolIndex = new Map();
 
-        this._hyperedges = new Map();
-        for (const hyperedge of hyperedges) {
-            const edge = new VisualHyperedge(hyperedge, this);
-            this._hyperedges.set(edge.id, edge);
-            this.updateIndexes(edge);
-            edge.updateGraphData();
-            this.updateIndexes(edge); // hacky :(
-        }
+        this.masqueradeIndex = new Map();
+        // this.linksIndex = new Map();
+    }
+
+    get isIsolated() {
+        return this.options.interwingle === Hypergraph.INTERWINGLE.ISOLATED;
+    }
+
+    get isConfluence() {
+        return this.options.interwingle >= Hypergraph.INTERWINGLE.CONFLUENCE;
+    }
+
+    get isFusion() {
+        return this.options.interwingle >= Hypergraph.INTERWINGLE.FUSION;
+    }
+
+    get isBridge() {
+        return this.options.interwingle >= Hypergraph.INTERWINGLE.BRIDGE;
     }
 
     get hyperedges() {
         return Array.from(this._hyperedges.values());
-    }
-
-    get isIsolated() {
-        return this.options.interwingle === INTERWINGLE.ISOLATED;
-    }
-
-    get isConfluence() {
-        return this.options.interwingle >= INTERWINGLE.CONFLUENCE;
-    }
-
-    get isFusion() {
-        return this.options.interwingle >= INTERWINGLE.FUSION;
-    }
-
-    get isBridge() {
-        return this.options.interwingle >= INTERWINGLE.BRIDGE;
-    }
-
-    updateIndexes(hyperedge) {
-        for (let node of hyperedge.nodes) {
-            if (!this.indexNodes.has(node.symbol)) {
-                this.indexNodes.set(node.symbol, new Set());
-            }
-
-            this.indexNodes.get(node.symbol).add(node.id);
-        }
-
-        for (const symbol of hyperedge.symbols) {
-            if (!this.indexLinks.has(symbol)) {
-                this.indexLinks.set(symbol, new Set());
-            }
-
-            this.indexLinks.get(symbol).add(hyperedge.id);
-        }
     }
 
     graphData() {
@@ -72,87 +50,184 @@ export default class VisualHypergraph {
         };
     }
 
-    edgesWithSymbol(symbol) {
-        const edges = [];
-        const linkIDs = this.indexLinks.get(symbol);
-        for (const linkID of linkIDs) {
-            if (this.links.has(linkID)) {
-                edges.push(this._hyperedges.get(linkID));
-            }
+    addNode(node) {
+        const data = node.graphData();
+        if (data.node) {
+            this.nodes.set(data.node.id, data.node);
         }
-        return edges;
+
+        if (data.link) {
+            this.links.set(data.link.id, data.link);
+        }
+
+        if (node.isEnd) {
+            if (!this.endSymbolIndex.has(node.symbol)) {
+                this.endSymbolIndex.set(node.symbol, new Map());
+            }
+
+            this.endSymbolIndex.get(node.symbol).set(node.id, node);
+        }
     }
 
-    edgeWithEndSymbol(symbol, hyperedgeID) {
-        const edges = this.edgesWithSymbol(symbol);
-
-        for (const edge of edges) {
-            if (edge.id === hyperedgeID) continue;
-            if (edge.endNode().symbol !== symbol) continue;
-            console.log("FOUND EDGE", symbol, edge.id);
-            return edge;
+    addHyperedge(hyperedge) {
+        const edge = new Hyperedge(hyperedge, this);
+        this._hyperedges.set(edge.id, edge);
+        for (const node of edge.nodes) {
+            this.addNode(node);
         }
-
-        return null;
-
-        /*
-        let key = null;
-        for (const linkID of this.links.keys()) {
-            if (linkID !== hyperedgeID && linkID.endsWith(symbol)) {
-                key = linkID;
-                break;
-            }
-        }
-
-        if (!key) {
-            return null;
-        }
-
-        return this._hyperedges.get(this.links.get(key).hyperedgeID);
-        */
     }
 
-    nodesWithSymbol(symbol, hyperedgeID) {
-        const matches = new Map();
-        for (const linkID of this.links.keys()) {
-            if (linkID.includes(symbol) && linkID !== hyperedgeID) {
-                const linkData = this.links.get(linkID);
-                if (linkData.bridge) continue;
-
-                const hyperedge = this._hyperedges.get(linkData.hyperedgeID);
-
-                for (const node of hyperedge.nodes) {
-                    if (node.symbol === symbol && this.nodes.has(node.id)) {
-                        matches.set(node.id, node);
-                    }
-                }
-            }
+    addHyperedges(hyperedges) {
+        for (const hyperedge of hyperedges) {
+            this.addHyperedge(hyperedge);
         }
-
-        return Array.from(matches.values());
-    }
-
-    _edgeSearch(edges = []) {
-        const matches = new Map();
-        for (const linkID of this.links.keys()) {
-            for (const edge of edges) {
-                const edgeID = Array.isArray(edge) ? VisualHyperedge.id(edge) : edge;
-
-                if (linkID.includes(edgeID)) {
-                    console.log(linkID, edgeID);
-                    const hyperedge = this._hyperedges.get(this.links.get(linkID).hyperedgeID);
-                    if (!hyperedge) continue;
-
-                    matches.set(hyperedge.id, hyperedge);
-                }
-            }
-        }
-
-        return Array.from(matches.values());
     }
 }
 
-// TODO: do we need some kind of reverse index of nodes and links? we're regenerating these all over the place
-// TODO: also need to think how to get data from the hypergraph into the force graph...should force graph be doing the filtering or hypertype?
+// const INTERWINGLE = {
+// };
 
-VisualHypergraph.INTERWINGLE = INTERWINGLE;
+// export default class VisualHypergraph {
+//     constructor(hyperedges = [], options = {}) {
+//         this.options = options;
+
+//         this.nodes = new Map();
+//         this.links = new Map();
+
+//         this.indexNodes = new Map();
+//         this.indexLinks = new Map();
+
+//         this._hyperedges = new Map();
+//         for (const hyperedge of hyperedges) {
+//             const edge = new VisualHyperedge(hyperedge, this);
+//             this._hyperedges.set(edge.id, edge);
+//             this.updateIndexes(edge);
+//             edge.updateGraphData();
+//             this.updateIndexes(edge); // hacky :(
+//         }
+//     }
+
+//     get hyperedges() {
+//         return Array.from(this._hyperedges.values());
+//     }
+
+//     get isIsolated() {
+//         return this.options.interwingle === INTERWINGLE.ISOLATED;
+//     }
+
+//     get isConfluence() {
+//         return this.options.interwingle >= INTERWINGLE.CONFLUENCE;
+//     }
+
+//     get isFusion() {
+//         return this.options.interwingle >= INTERWINGLE.FUSION;
+//     }
+
+//     get isBridge() {
+//         return this.options.interwingle >= INTERWINGLE.BRIDGE;
+//     }
+
+//     updateIndexes(hyperedge) {
+//         for (let node of hyperedge.nodes) {
+//             if (!this.indexNodes.has(node.symbol)) {
+//                 this.indexNodes.set(node.symbol, new Set());
+//             }
+
+//             this.indexNodes.get(node.symbol).add(node.id);
+//         }
+
+//         for (const symbol of hyperedge.symbols) {
+//             if (!this.indexLinks.has(symbol)) {
+//                 this.indexLinks.set(symbol, new Set());
+//             }
+
+//             this.indexLinks.get(symbol).add(hyperedge.id);
+//         }
+//     }
+
+//     graphData() {
+//         return {
+//             nodes: Array.from(this.nodes.values()),
+//             links: Array.from(this.links.values())
+//         };
+//     }
+
+//     edgesWithSymbol(symbol) {
+//         const edges = [];
+//         const linkIDs = this.indexLinks.get(symbol);
+//         for (const linkID of linkIDs) {
+//             if (this.links.has(linkID)) {
+//                 edges.push(this._hyperedges.get(linkID));
+//             }
+//         }
+//         return edges;
+//     }
+
+//     edgeWithEndSymbol(symbol, hyperedgeID) {
+//         const edges = this.edgesWithSymbol(symbol);
+
+//         for (const edge of edges) {
+//             if (edge.id === hyperedgeID) continue;
+//             if (edge.endNode().symbol !== symbol) continue;
+//             console.log("FOUND EDGE", symbol, edge.id);
+//             return edge;
+//         }
+
+//         return null;
+
+//         // let key = null;
+//         // for (const linkID of this.links.keys()) {
+//         //     if (linkID !== hyperedgeID && linkID.endsWith(symbol)) {
+//         //         key = linkID;
+//         //         break;
+//         //     }
+//         // }
+
+//         // if (!key) {
+//         //     return null;
+//         // }
+
+//         // return this._hyperedges.get(this.links.get(key).hyperedgeID);
+//     }
+
+//     nodesWithSymbol(symbol, hyperedgeID) {
+//         const matches = new Map();
+//         for (const linkID of this.links.keys()) {
+//             if (linkID.includes(symbol) && linkID !== hyperedgeID) {
+//                 const linkData = this.links.get(linkID);
+//                 if (linkData.bridge) continue;
+
+//                 const hyperedge = this._hyperedges.get(linkData.hyperedgeID);
+
+//                 for (const node of hyperedge.nodes) {
+//                     if (node.symbol === symbol && this.nodes.has(node.id)) {
+//                         matches.set(node.id, node);
+//                     }
+//                 }
+//             }
+//         }
+
+//         return Array.from(matches.values());
+//     }
+
+//     _edgeSearch(edges = []) {
+//         const matches = new Map();
+//         for (const linkID of this.links.keys()) {
+//             for (const edge of edges) {
+//                 const edgeID = Array.isArray(edge) ? VisualHyperedge.id(edge) : edge;
+
+//                 if (linkID.includes(edgeID)) {
+//                     console.log(linkID, edgeID);
+//                     const hyperedge = this._hyperedges.get(this.links.get(linkID).hyperedgeID);
+//                     if (!hyperedge) continue;
+
+//                     matches.set(hyperedge.id, hyperedge);
+//                 }
+//             }
+//         }
+
+//         return Array.from(matches.values());
+//     }
+// }
+
+// VisualHypergraph.INTERWINGLE = INTERWINGLE;

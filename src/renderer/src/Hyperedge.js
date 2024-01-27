@@ -1,4 +1,52 @@
 import { stringToColor } from "./utils";
+
+import Node from "./Node";
+
+export default class Hyperedge {
+    constructor(symbols = [], hypergraph) {
+        this.symbols = symbols;
+        this.index = hypergraph._hyperedges.size;
+        this.hypergraph = hypergraph;
+        this.color = stringToColor(this.symbols[0]);
+        this.nodes = symbols.map(this.createNode.bind(this));
+        this.id = this.nodes.map((node) => node.symbol).join("->");
+
+        if (this.hypergraph.isIsolated) {
+            this.id = `${this.index}:${this.id}`;
+        }
+    }
+
+    createNode(symbol, index) {
+        return new Node(symbol, index, this);
+    }
+
+    nodeId(index) {
+        const id = this.symbols.slice(0, index + 1).join(".");
+        if (this.hypergraph.isIsolated) {
+            return `${this.index}:${id}`;
+        }
+
+        return id;
+    }
+
+    prevNode(index) {
+        if (index === 0) {
+            return null;
+        }
+
+        return this.nodes[index - 1];
+    }
+
+    nextNode(index) {
+        if (index === this.length - 1) {
+            return null;
+        }
+
+        return this.nodes[index + 1];
+    }
+}
+
+/*
 import VisualNode from "./Node";
 
 export default class VisualHyperedge {
@@ -17,12 +65,6 @@ export default class VisualHyperedge {
     }
 
     get id() {
-        const id = this.nodes.map((node) => node.symbol).join("->");
-        if (this.hypergraph.isIsolated) {
-            return `${this.index}-${id}`;
-        }
-
-        return id;
     }
 
     updateGraphData() {
@@ -31,34 +73,8 @@ export default class VisualHyperedge {
         }
     }
 
-    nodeId(index) {
-        const id = this.symbols.slice(0, index + 1).join(".");
-        if (this.hypergraph.isIsolated) {
-            return `${this.index}:${id}`;
-        }
 
-        return id;
-    }
 
-    get color() {
-        return stringToColor(this.symbols[0]);
-    }
-
-    prevNode(index) {
-        if (index === 0) {
-            return null;
-        }
-
-        return this.nodes[index - 1];
-    }
-
-    nextNode(index) {
-        if (index === this.length - 1) {
-            return null;
-        }
-
-        return this.nodes[index + 1];
-    }
 
     startNode() {
         return this.nodes[0];
@@ -72,3 +88,5 @@ export default class VisualHyperedge {
         return this.symbols.includes(symbol);
     }
 }
+
+*/
