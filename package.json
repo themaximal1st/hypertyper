@@ -22,9 +22,11 @@
         "@electron-toolkit/utils": "^2.0.0",
         "@themaximalist/hypertype": "git+ssh://git@github-themaximalist:themaximal1st/hypertype.git",
         "electron-updater": "^6.1.1",
+        "ldrs": "^1.0.1",
         "react-force-graph-3d": "^1.24.1",
         "three": "^0.160.0",
-        "three-spritetext": "^1.8.1"
+        "three-spritetext": "^1.8.1",
+        "troika-three-text": "^0.49.0"
     },
     "devDependencies": {
         "@electron-toolkit/eslint-config": "^1.0.1",

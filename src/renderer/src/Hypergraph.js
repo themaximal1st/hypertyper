@@ -16,11 +16,9 @@ export default class Hypergraph {
         this.nodes = new Map();
         this.links = new Map();
 
-        this.nodeIndex = new Map();
         this.endSymbolIndex = new Map();
-
+        this.symbolIndex = new Map();
         this.masqueradeIndex = new Map();
-        // this.linksIndex = new Map();
     }
 
     get isIsolated() {
@@ -50,23 +48,36 @@ export default class Hypergraph {
         };
     }
 
-    addNode(node) {
-        const data = node.graphData();
-        if (data.node) {
-            this.nodes.set(data.node.id, data.node);
+    updateIndex(index, node) {
+        if (!index.has(node.symbol)) {
+            index.set(node.symbol, new Map());
         }
 
-        if (data.link) {
-            this.links.set(data.link.id, data.link);
-        }
+        index.get(node.symbol).set(node.id, node);
+    }
+
+    addNode(node) {
+        this.updateIndex(this.symbolIndex, node);
 
         if (node.isEnd) {
-            if (!this.endSymbolIndex.has(node.symbol)) {
-                this.endSymbolIndex.set(node.symbol, new Map());
-            }
-
-            this.endSymbolIndex.get(node.symbol).set(node.id, node);
+            this.updateIndex(this.endSymbolIndex, node);
         }
+
+        node.updateGraphData();
+
+        /*
+        if (data.nodes) {
+            for (const node of data.nodes) {
+                this.nodes.set(node.id, node);
+            }
+        }
+
+        if (data.links) {
+            for (const link of data.links) {
+                this.links.set(link.id, link);
+            }
+        }
+        */
     }
 
     addHyperedge(hyperedge) {

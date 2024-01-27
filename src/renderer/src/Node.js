@@ -1,6 +1,3 @@
-import SpriteText from "three-spritetext";
-import * as Three from "three";
-
 export default class Node {
     constructor(symbol, index, hyperedge) {
         this.symbol = symbol;
@@ -12,7 +9,7 @@ export default class Node {
         this.textHeight = 8;
     }
 
-    updateMasqueradeNode() {
+    updateMasqueradeIndex() {
         if (!this.hypergraph.isFusion) return null;
         if (this.isMiddle) return null;
 
@@ -21,6 +18,29 @@ export default class Node {
 
         const node = nodes.values().next().value;
         this.hypergraph.masqueradeIndex.set(this.id, node);
+    }
+
+    updateBridgeGraphData() {
+        if (!this.hypergraph.isBridge) return null;
+        if (!this.isMiddle) return;
+
+        const matches = this.hypergraph.symbolIndex.get(this.symbol);
+        if (!matches || matches.size < 2) return;
+
+        const bridgeNode = {
+            id: `${this.symbol}#bridge`,
+            color: this.hyperedge.color,
+            bridge: true
+        };
+
+        this.hypergraph.nodes.set(bridgeNode.id, bridgeNode);
+
+        for (const node of matches.values()) {
+            const link = Node.linkData(bridgeNode, node.resolvedNode(), this.hypergraph.nodes);
+            link.length = 1;
+            link.bridge = true;
+            this.hypergraph.links.set(link.id, link);
+        }
     }
 
     resolvedNode() {
@@ -44,24 +64,45 @@ export default class Node {
         };
     }
 
-    graphData() {
-        this.updateMasqueradeNode();
+    updateGraphData() {
+        this.updateMasqueradeIndex();
 
-        return {
-            node: this.nodeData(this.resolvedNode()),
-            link: this.linkData(this)
-        };
+        const node = this.nodeData(this.resolvedNode());
+        this.hypergraph.nodes.set(node.id, node);
+
+        const parentLink = this.linkData(this);
+        if (parentLink) {
+            this.hypergraph.links.set(parentLink.id, parentLink);
+        }
+
+        if (this.isMiddle) {
+            this.updateBridgeGraphData();
+        }
     }
 
     linkData(node) {
-        console.log("LINK DATA", node.id);
-
         if (node.isStart) return null;
 
-        let parentNode = node.hyperedge.prevNode(node.index).resolvedNode();
-        if (!parentNode) throw new Error("Missing parentNode");
-
+        const parentNode = node.hyperedge.prevNode(node.index).resolvedNode();
         const childNode = node.resolvedNode();
+
+        return Node.linkData(parentNode, childNode, this.hypergraph.nodes);
+    }
+
+    // TODO: we want to make bridged nodes actual instances so we can check and verify the nodes are already added
+
+    static linkData(parentNode, childNode, existingNodes) {
+        if (!parentNode) throw new Error("Missing parentNode");
+        if (!childNode) throw new Error("Missing childNode");
+
+        if (!existingNodes.has(parentNode.id)) {
+            throw new Error(`Missing parent node ${parentNode.id} in link to ${childNode.id}`);
+        }
+
+        if (!existingNodes.has(childNode.id)) {
+            throw new Error(`Missing child node ${childNode.id} in link from ${parentNode.id}`);
+        }
+
         return {
             id: `${parentNode.id}->${childNode.id}`,
             source: parentNode.id,
@@ -81,33 +122,6 @@ export default class Node {
 
     get isMiddle() {
         return !this.isStart && !this.isEnd;
-    }
-
-    static nodeThreeObject(node) {
-        if (node.bridge) {
-            return new Three.Mesh(
-                new Three.SphereGeometry(1),
-                new Three.MeshLambertMaterial({
-                    color: "#000000",
-                    transparent: true,
-                    opacity: 0.25
-                })
-            );
-        }
-
-        let name = node.name || "";
-        if (name.length > 30) {
-            name = `${name.substring(0, 27)}...`;
-        }
-        if (!name) {
-            return null;
-        }
-
-        const sprite = new SpriteText(name);
-        sprite.color = node.color;
-        sprite.textHeight = node.textHeight || 8;
-
-        return sprite;
     }
 }
 

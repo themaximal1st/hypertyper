@@ -1,3 +1,9 @@
+import "ldrs/quantum";
+import { CSS3DObject, CSS3DSprite } from "three/examples/jsm/renderers/CSS3DRenderer";
+
+import SpriteText from "three-spritetext";
+import * as Three from "three";
+
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 
@@ -27,11 +33,16 @@ export default class App extends React.Component {
     constructor(props) {
         super(props);
         this.graphRef = React.createRef();
+        this.interwingleRef = React.createRef();
+        this.nodeThreeObjectCache = {};
         this.animation = new Animation(this.graphRef);
         this.cameraPosition = { x: 0, y: 0, z: 0 };
         this.state = {
             width: window.innerWidth,
+            controlType: "fly",
             height: window.innerHeight,
+            hideLabelsThreshold: 10000,
+            hideLabels: true,
             showHistory: false,
             interwingle: 3,
             input: "",
@@ -62,24 +73,24 @@ export default class App extends React.Component {
     reloadData() {
         // TODO: Loading screen
 
+        console.log("RELOAD DATA");
         window.api.hypergraph.all().then((hyperedges) => {
+            console.log("GOT DATA");
             const hypergraph = new Hypergraph({
                 interwingle: this.state.interwingle
             });
 
             hypergraph.addHyperedges(hyperedges);
-
-            // const edges = hypergraph.edgeSearch(["Aleister"]).map((edge) => edge.symbols);
-            // console.log("EDGES", edges);
-
-            // const hypergraph1 = new Hypergraph(edges, {
-            //     interwingle: this.state.interwingle
-            // });
+            console.log("ADDED HYPERGRAPH");
 
             const data = hypergraph.graphData();
-            console.log(data);
+            console.log("GOT DATA");
 
-            this.setState({ hypergraph: hyperedges, data });
+            this.setState({
+                hypergraph: hyperedges,
+                data,
+                hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
+            });
         });
         /*
 
@@ -141,8 +152,13 @@ export default class App extends React.Component {
 
     handleKeyDown(e) {
         this.animation.click();
+        // console.log(e.key);
         if (e.key === "Tab") {
             this.toggleInterwingle();
+        } else if (e.key === "F1") {
+            this.toggleLabels();
+        } else if (e.key === "F2") {
+            this.toggleCamera();
         } else if (e.key === "`") {
             this.setState({ showHistory: !this.state.showHistory });
         }
@@ -167,6 +183,24 @@ export default class App extends React.Component {
         });
     }
 
+    toggleLabels() {
+        this.setState({ hideLabels: !this.state.hideLabels }, () => {
+            this.graphRef.current.refresh();
+        });
+    }
+
+    toggleCamera() {
+        if (this.state.controlType === "orbit") {
+            this.setState({ controlType: "fly" }, () => {
+                this.graphRef.current.refresh();
+            });
+        } else {
+            this.setState({ controlType: "orbit" }, () => {
+                this.graphRef.current.refresh();
+            });
+        }
+    }
+
     toggleInterwingle(interwingle) {
         if (typeof interwingle === "undefined") {
             interwingle = this.state.interwingle;
@@ -175,7 +209,72 @@ export default class App extends React.Component {
 
         if (interwingle > 3) interwingle = 0;
 
-        this.setState({ interwingle }, this.reloadData.bind(this));
+        this.setState({ interwingle }, () => {
+            setTimeout(() => {
+                this.interwingleRef.current.blur();
+            }, 10);
+
+            this.reloadData();
+        });
+    }
+
+    // TODO: https://github.com/vasturiano/3d-force-graph/issues/515#issuecomment-1874982867
+    // try CSS3DSprite,creat a div,it's fast
+    nodeThreeObject(node) {
+        const element = document.createElement("div");
+        element.innerText = "BOOM TOWN";
+        element.style.color = "red";
+
+        console.log(element);
+        const object = new CSS3DObject(element);
+        // const sprite = new CSS3DSprite(element);
+        return object;
+
+        return null;
+        // const text = new CSS3DRenderer();
+        // text.text = node.name;
+        /*
+        console.log("NODE THREE OBJECT");
+        const text = new Text();
+        text.text = "BOOM";
+        text.fontSize = 0.2;
+        text.position.set(node.x, node.y, node.z); // Position the text at the node
+        text.color = 0xffffff;
+        return text;
+
+        if (this.nodeThreeObjectCache[node.id]) {
+            return this.nodeThreeObjectCache[node.id];
+        }
+
+        if (node.bridge) {
+            const mesh = new Three.Mesh(
+                new Three.SphereGeometry(1),
+                new Three.MeshLambertMaterial({
+                    color: "#000000",
+                    transparent: true,
+                    opacity: 0.25
+                })
+            );
+            this.nodeThreeObjectCache[node.id] = mesh;
+            return mesh;
+        }
+
+        let name = node.name || "";
+        if (name.length > 30) {
+            name = `${name.substring(0, 27)}...`;
+        }
+        if (!name) {
+            return null;
+        }
+
+        const sprite = new SpriteText(name);
+        sprite.color = node.color;
+        sprite.textHeight = node.textHeight || 8;
+
+        this.nodeThreeObjectCache[node.id] = sprite;
+
+        return sprite;
+        */
     }
 
     render() {
@@ -204,6 +303,7 @@ export default class App extends React.Component {
                 <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-10 h-full">
                     <input
                         type="range"
+                        ref={this.interwingleRef}
                         min="0"
                         max="3"
                         step="1"
@@ -215,14 +315,19 @@ export default class App extends React.Component {
                 <ForceGraph3D
                     ref={this.graphRef}
                     width={this.state.width}
+                    controlType={this.state.controlType}
                     height={this.state.height}
                     graphData={this.state.data}
                     showNavInfo={false}
-                    // backgroundColor="#ffffff"
                     linkColor={(link) => {
                         return link.color || "#333333";
                     }}
-                    nodeThreeObject={Node.nodeThreeObject}
+                    nodeThreeObject={(node) => {
+                        if (this.state.hideLabels) {
+                            return null;
+                        }
+                        return this.nodeThreeObject(node);
+                    }}
                     linkDirectionalArrowLength={(link) => {
                         return 5;
                     }}

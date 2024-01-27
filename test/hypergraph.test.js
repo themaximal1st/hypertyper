@@ -192,15 +192,15 @@ test("fusion end", () => {
     expect(data.links[3].id).toBe("1.2->A.B.C");
 });
 
-/*
-
 test("bridge", () => {
     const hyperedges = [
         ["A", "vs", "B"],
         ["1", "vs", "2"]
     ];
 
-    const hypergraph = new Hypergraph(hyperedges, { interwingle: Hypergraph.INTERWINGLE.BRIDGE });
+    const hypergraph = new Hypergraph({ interwingle: Hypergraph.INTERWINGLE.BRIDGE });
+    hypergraph.addHyperedges(hyperedges);
+
     expect(hypergraph.hyperedges.length).toEqual(2);
 
     const data = hypergraph.graphData();
@@ -227,7 +227,6 @@ test("bridge", () => {
     expect(linkIds).toContain("vs#bridge->1.vs");
 });
 
-
 // TODO: search edges at different interwingle depths
 // TODO: we need a concept of increasing crawl depth for search as intwerwingle increases
 
@@ -244,11 +243,10 @@ test.skip("search edges (isolated)", () => {
 
     console.log(data);
 });
-*/
 
 // TODO: huge with 3 interwingle
 
-test.skip("huge", () => {
+test("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
         .split("\n")
