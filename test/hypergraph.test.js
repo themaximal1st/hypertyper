@@ -213,7 +213,6 @@ test("fusion end", () => {
 // TODO: search edges at different interwingle depths
 // TODO: we need a concept of increasing crawl depth for search as intwerwingle increases
 
-/*
 test.skip("search edges (isolated)", () => {
     const hyperedges = [
         ["A", "B", "C"],
@@ -230,7 +229,7 @@ test.skip("search edges (isolated)", () => {
 
 // TODO: huge with 3 interwingle
 
-test.only("huge", () => {
+test.skip("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
         .split("\n")
@@ -242,14 +241,15 @@ test.only("huge", () => {
     // console.log(hyperedges);
 
     // const hypergraph = new Hypergraph(hyperedges);
+    const start = Date.now();
     const hypergraph = new Hypergraph(hyperedges, { interwingle: 3 });
     console.log("GOT HYPERGRAPH");
 
-    const start = Date.now();
     const data = hypergraph.graphData();
     const elapsed = Date.now() - start;
     console.log("elapsed", elapsed);
 
     expect(elapsed).toBeLessThan(300);
 });
-*/
+
+// TODO: generate graphData based on search parameters

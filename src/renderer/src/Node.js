@@ -52,12 +52,13 @@ export default class VisualNode {
     }
 
     resolveFusionNode() {
-        const resolved = this.fusionNode();
-        if (resolved) {
-            return resolved;
+        if (this._fusionNode) {
+            return this._fusionNode;
         }
 
-        return this;
+        const node = this.fusionNode() || this;
+        this._fusionNode = node;
+        return node;
     }
 
     get id() {

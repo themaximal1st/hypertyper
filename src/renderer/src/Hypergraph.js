@@ -14,11 +14,16 @@ export default class VisualHypergraph {
         this.nodes = new Map();
         this.links = new Map();
 
+        this.indexNodes = new Map();
+        this.indexLinks = new Map();
+
         this._hyperedges = new Map();
         for (const hyperedge of hyperedges) {
             const edge = new VisualHyperedge(hyperedge, this);
             this._hyperedges.set(edge.id, edge);
+            this.updateIndexes(edge);
             edge.updateGraphData();
+            this.updateIndexes(edge); // hacky :(
         }
     }
 
@@ -42,6 +47,24 @@ export default class VisualHypergraph {
         return this.options.interwingle >= INTERWINGLE.BRIDGE;
     }
 
+    updateIndexes(hyperedge) {
+        for (let node of hyperedge.nodes) {
+            if (!this.indexNodes.has(node.symbol)) {
+                this.indexNodes.set(node.symbol, new Set());
+            }
+
+            this.indexNodes.get(node.symbol).add(node.id);
+        }
+
+        for (const symbol of hyperedge.symbols) {
+            if (!this.indexLinks.has(symbol)) {
+                this.indexLinks.set(symbol, new Set());
+            }
+
+            this.indexLinks.get(symbol).add(hyperedge.id);
+        }
+    }
+
     graphData() {
         return {
             nodes: Array.from(this.nodes.values()),
@@ -49,7 +72,30 @@ export default class VisualHypergraph {
         };
     }
 
+    edgesWithSymbol(symbol) {
+        const edges = [];
+        const linkIDs = this.indexLinks.get(symbol);
+        for (const linkID of linkIDs) {
+            if (this.links.has(linkID)) {
+                edges.push(this._hyperedges.get(linkID));
+            }
+        }
+        return edges;
+    }
+
     edgeWithEndSymbol(symbol, hyperedgeID) {
+        const edges = this.edgesWithSymbol(symbol);
+
+        for (const edge of edges) {
+            if (edge.id === hyperedgeID) continue;
+            if (edge.endNode().symbol !== symbol) continue;
+            console.log("FOUND EDGE", symbol, edge.id);
+            return edge;
+        }
+
+        return null;
+
+        /*
         let key = null;
         for (const linkID of this.links.keys()) {
             if (linkID !== hyperedgeID && linkID.endsWith(symbol)) {
@@ -63,6 +109,7 @@ export default class VisualHypergraph {
         }
 
         return this._hyperedges.get(this.links.get(key).hyperedgeID);
+        */
     }
 
     nodesWithSymbol(symbol, hyperedgeID) {
