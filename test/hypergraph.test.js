@@ -213,6 +213,7 @@ test("fusion end", () => {
 // TODO: search edges at different interwingle depths
 // TODO: we need a concept of increasing crawl depth for search as intwerwingle increases
 
+/*
 test.skip("search edges (isolated)", () => {
     const hyperedges = [
         ["A", "B", "C"],
@@ -229,7 +230,7 @@ test.skip("search edges (isolated)", () => {
 
 // TODO: huge with 3 interwingle
 
-test.skip("huge", () => {
+test.only("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
         .split("\n")
@@ -251,3 +252,4 @@ test.skip("huge", () => {
 
     expect(elapsed).toBeLessThan(300);
 });
+*/

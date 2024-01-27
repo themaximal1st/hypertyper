@@ -1,4 +1,4 @@
-import ForceHyperedge from "./Hyperedge";
+import VisualHyperedge from "./Hyperedge";
 
 const INTERWINGLE = {
     ISOLATED: 0,
@@ -7,7 +7,7 @@ const INTERWINGLE = {
     BRIDGE: 3
 };
 
-export default class ForceHypergraph {
+export default class VisualHypergraph {
     constructor(hyperedges = [], options = {}) {
         this.options = options;
 
@@ -16,7 +16,7 @@ export default class ForceHypergraph {
 
         this._hyperedges = new Map();
         for (const hyperedge of hyperedges) {
-            const edge = new ForceHyperedge(hyperedge, this);
+            const edge = new VisualHyperedge(hyperedge, this);
             this._hyperedges.set(edge.id, edge);
             edge.updateGraphData();
         }
@@ -85,11 +85,11 @@ export default class ForceHypergraph {
         return Array.from(matches.values());
     }
 
-    edgeSearch(edges = []) {
+    _edgeSearch(edges = []) {
         const matches = new Map();
         for (const linkID of this.links.keys()) {
             for (const edge of edges) {
-                const edgeID = Array.isArray(edge) ? ForceHyperedge.id(edge) : edge;
+                const edgeID = Array.isArray(edge) ? VisualHyperedge.id(edge) : edge;
 
                 if (linkID.includes(edgeID)) {
                     console.log(linkID, edgeID);
@@ -108,4 +108,4 @@ export default class ForceHypergraph {
 // TODO: do we need some kind of reverse index of nodes and links? we're regenerating these all over the place
 // TODO: also need to think how to get data from the hypergraph into the force graph...should force graph be doing the filtering or hypertype?
 
-ForceHypergraph.INTERWINGLE = INTERWINGLE;
+VisualHypergraph.INTERWINGLE = INTERWINGLE;

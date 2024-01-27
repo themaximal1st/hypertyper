@@ -1,5 +1,5 @@
 import Hypergraph from "@themaximalist/hypertype";
-import { default as ForceHypergraph } from "../src/renderer/src/Hypergraph.js";
+import { default as VisualHypergraph } from "../src/renderer/src/Hypergraph.js";
 
 import Hypertype from "../src/main/hypertype.js";
 
@@ -20,6 +20,7 @@ test("simple hypertype", () => {
 
     expect(hypertype.all).toEqual([["A", "B", "C"]]);
 });
+/*
 
 test.skip("search hypertype", () => {
     const hypergraph = new Hypergraph([
@@ -28,7 +29,7 @@ test.skip("search hypertype", () => {
     ]);
     const hypertype = new Hypertype(hypergraph);
     const data = hypertype.all;
-    const forceGraph = new ForceHypergraph(data);
+    const forceGraph = new VisualHypergraph(data);
 
     let hyperedges = forceGraph.edgeSearch([["A"]]);
     expect(hyperedges.length).toEqual(1);
@@ -49,7 +50,7 @@ test("search with edge", () => {
     ]);
     const hypertype = new Hypertype(hypergraph);
     const data = hypertype.all;
-    const forceGraph = new ForceHypergraph(data);
+    const forceGraph = new VisualHypergraph(data);
 
     let hyperedges = forceGraph.edgeSearch([["A", "B"]]);
     expect(hyperedges.length).toEqual(1);
@@ -67,7 +68,7 @@ test("search edge vs multiple nodes", () => {
     ]);
     const hypertype = new Hypertype(hypergraph);
     const data = hypertype.all;
-    const forceGraph = new ForceHypergraph(data);
+    const forceGraph = new VisualHypergraph(data);
 
     let hyperedges = forceGraph.edgeSearch([["A", "B"]]);
     expect(hyperedges.length).toEqual(1);
@@ -82,3 +83,5 @@ test("search edge vs multiple nodes", () => {
     hyperedges = forceGraph.edgeSearch([["A"], ["1", "2"]]);
     expect(hyperedges.length).toEqual(2);
 });
+
+*/

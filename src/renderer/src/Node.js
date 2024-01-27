@@ -1,7 +1,7 @@
 import SpriteText from "three-spritetext";
 import * as Three from "three";
 
-export default class ForceNode {
+export default class VisualNode {
     constructor(symbol, index, hyperedge) {
         this.symbol = symbol;
         this.index = index;
@@ -38,7 +38,7 @@ export default class ForceNode {
             this.hypergraph.nodes.set(bridgeNode.id, bridgeNode);
 
             for (const node of matches) {
-                const link = ForceNode.link(
+                const link = VisualNode.link(
                     bridgeNode,
                     node,
                     this.hypergraph.nodes,
@@ -95,7 +95,7 @@ export default class ForceNode {
     }
 
     link(childNode) {
-        return ForceNode.link(this, childNode, this.hypergraph.nodes, this.hypergraph.links);
+        return VisualNode.link(this, childNode, this.hypergraph.nodes, this.hypergraph.links);
     }
 
     static link(parentNode, childNode, nodes, links) {
