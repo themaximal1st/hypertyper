@@ -1,5 +1,4 @@
 import "ldrs/quantum";
-import { CSS3DObject, CSS3DSprite } from "three/examples/jsm/renderers/CSS3DRenderer";
 
 import SpriteText from "three-spritetext";
 import * as Three from "three";
@@ -44,7 +43,7 @@ export default class App extends React.Component {
             hideLabelsThreshold: 10000,
             hideLabels: true,
             showHistory: false,
-            interwingle: 3,
+            interwingle: 1,
             input: "",
             hyperedge: [],
             hypergraph: [],
@@ -70,7 +69,7 @@ export default class App extends React.Component {
         };
     }
 
-    reloadData() {
+    reloadData(controlType = null) {
         // TODO: Loading screen
 
         console.log("RELOAD DATA");
@@ -86,11 +85,17 @@ export default class App extends React.Component {
             const data = hypergraph.graphData();
             console.log("GOT DATA");
 
-            this.setState({
+            const state = {
                 hypergraph: hyperedges,
                 data,
                 hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
-            });
+            };
+
+            if (controlType) {
+                state.controlType = controlType;
+            }
+
+            this.setState(state);
         });
         /*
 
@@ -108,8 +113,6 @@ export default class App extends React.Component {
             return link.length || 50;
         });
 
-        this.reloadData();
-
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
         document.addEventListener("keyup", this.handleKeyUp.bind(this));
         document.addEventListener("mousedown", this.handleMouseDown.bind(this));
@@ -117,7 +120,13 @@ export default class App extends React.Component {
         document.addEventListener("wheel", this.handleZoom.bind(this));
         window.addEventListener("resize", this.handleResize.bind(this));
 
-        // this.animation.start();
+        this.reloadData();
+
+        // setInterval(() => {
+        //     this.toggleCamera();
+        // }, 5000);
+
+        // his.animation.start();
     }
 
     componentWillUnmount() {
@@ -190,15 +199,8 @@ export default class App extends React.Component {
     }
 
     toggleCamera() {
-        if (this.state.controlType === "orbit") {
-            this.setState({ controlType: "fly" }, () => {
-                this.graphRef.current.refresh();
-            });
-        } else {
-            this.setState({ controlType: "orbit" }, () => {
-                this.graphRef.current.refresh();
-            });
-        }
+        const controlType = this.state.controlType === "orbit" ? "fly" : "orbit";
+        this.reloadData(controlType);
     }
 
     toggleInterwingle(interwingle) {
@@ -212,39 +214,16 @@ export default class App extends React.Component {
         this.setState({ interwingle }, () => {
             setTimeout(() => {
                 this.interwingleRef.current.blur();
-            }, 10);
+            }, 50);
 
             this.reloadData();
         });
     }
 
-    // TODO: https://github.com/vasturiano/3d-force-graph/issues/515#issuecomment-1874982867
-    // try CSS3DSprite,creat a div,it's fast
     nodeThreeObject(node) {
-        const element = document.createElement("div");
-        element.innerText = "BOOM TOWN";
-        element.style.color = "red";
-
-        console.log(element);
-        const object = new CSS3DObject(element);
-        // const sprite = new CSS3DSprite(element);
-        return object;
-
-        return null;
-        // const text = new CSS3DRenderer();
-        // text.text = node.name;
-        /*
-        console.log("NODE THREE OBJECT");
-        const text = new Text();
-        text.text = "BOOM";
-        text.fontSize = 0.2;
-        text.position.set(node.x, node.y, node.z); // Position the text at the node
-        text.color = 0xffffff;
-        return text;
-
-        if (this.nodeThreeObjectCache[node.id]) {
-            return this.nodeThreeObjectCache[node.id];
-        }
+        // if (this.nodeThreeObjectCache[node.id]) {
+        //     return this.nodeThreeObjectCache[node.id];
+        // }
 
         if (node.bridge) {
             const mesh = new Three.Mesh(
@@ -255,7 +234,7 @@ export default class App extends React.Component {
                     opacity: 0.25
                 })
             );
-            this.nodeThreeObjectCache[node.id] = mesh;
+            // this.nodeThreeObjectCache[node.id] = mesh;
             return mesh;
         }
 
@@ -271,10 +250,9 @@ export default class App extends React.Component {
         sprite.color = node.color;
         sprite.textHeight = node.textHeight || 8;
 
-        this.nodeThreeObjectCache[node.id] = sprite;
+        // this.nodeThreeObjectCache[node.id] = sprite;
 
         return sprite;
-        */
     }
 
     render() {
@@ -312,28 +290,94 @@ export default class App extends React.Component {
                         onChange={(e) => this.toggleInterwingle(parseInt(e.target.value))}
                     />
                 </div>
-                <ForceGraph3D
-                    ref={this.graphRef}
-                    width={this.state.width}
-                    controlType={this.state.controlType}
-                    height={this.state.height}
-                    graphData={this.state.data}
-                    showNavInfo={false}
-                    linkColor={(link) => {
-                        return link.color || "#333333";
-                    }}
-                    nodeThreeObject={(node) => {
-                        if (this.state.hideLabels) {
-                            return null;
-                        }
-                        return this.nodeThreeObject(node);
-                    }}
-                    linkDirectionalArrowLength={(link) => {
-                        return 5;
-                    }}
-                    linkDirectionalArrowRelPos={1}
-                    linkWidth={2}
-                />
+                <div className="absolute text-white bottom-2 right-6 z-20 flex gap-4">
+                    <a
+                        onClick={() => this.toggleCamera()}
+                        className="opacity-50 hover:opacity-100 transition-all"
+                    >
+                        {this.state.controlType === "orbit" && (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-6 h-6"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"
+                                />
+                            </svg>
+                        )}
+
+                        {this.state.controlType === "fly" && (
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-6 h-6"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.834.166-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243-1.59-1.59"
+                                />
+                            </svg>
+                        )}
+                    </a>
+                </div>
+                {this.state.controlType === "fly" && (
+                    <ForceGraph3D
+                        ref={this.graphRef}
+                        width={this.state.width}
+                        controlType="fly"
+                        height={this.state.height}
+                        graphData={this.state.data}
+                        showNavInfo={false}
+                        linkColor={(link) => {
+                            return link.color || "#333333";
+                        }}
+                        nodeThreeObject={(node) => {
+                            if (this.state.hideLabels) {
+                                return null;
+                            }
+                            return this.nodeThreeObject(node);
+                        }}
+                        linkDirectionalArrowLength={(link) => {
+                            return 5;
+                        }}
+                        linkDirectionalArrowRelPos={1}
+                        linkWidth={2}
+                    />
+                )}
+                {this.state.controlType === "orbit" && (
+                    <ForceGraph3D
+                        ref={this.graphRef}
+                        width={this.state.width}
+                        controlType="orbit"
+                        height={this.state.height}
+                        graphData={this.state.data}
+                        showNavInfo={false}
+                        linkColor={(link) => {
+                            return link.color || "#333333";
+                        }}
+                        nodeThreeObject={(node) => {
+                            if (this.state.hideLabels) {
+                                return null;
+                            }
+                            return this.nodeThreeObject(node);
+                        }}
+                        linkDirectionalArrowLength={(link) => {
+                            return 5;
+                        }}
+                        linkDirectionalArrowRelPos={1}
+                        linkWidth={2}
+                    />
+                )}
             </>
         );
     }

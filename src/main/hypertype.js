@@ -49,8 +49,8 @@ export default class HyperType {
         };
 
         const file = "/Users/brad/Projects/loom/data/data";
-        // const contents = fs.readFileSync(file, "utf8").split("\n").slice(0, 100).join("\n");
-        const contents = fs.readFileSync(file, "utf8");
+        const contents = fs.readFileSync(file, "utf8").split("\n").slice(0, 100).join("\n");
+        // const contents = fs.readFileSync(file, "utf8").trim();
 
         try {
             console.log("LOADING");
