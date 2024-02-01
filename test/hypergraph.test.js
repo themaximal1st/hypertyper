@@ -168,6 +168,9 @@ test("fusion start", () => {
     expect(data.links[1].id).toBe("A.B->A.B.C");
     expect(data.links[2].id).toBe("A.B.C->C.D");
     expect(data.links[3].id).toBe("C.D->C.D.E");
+
+    expect(hypergraph.masqueradeIndex.size).toBe(1);
+    // console.log(hypergraph.masqueradeIndex);
 });
 
 test("fusion end", () => {

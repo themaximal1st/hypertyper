@@ -17,6 +17,7 @@ export default class Node {
         if (!nodes || nodes.size === 0) return null;
 
         const node = nodes.values().next().value;
+        if (node.id === this.id) return null;
         this.hypergraph.masqueradeIndex.set(this.id, node);
     }
 

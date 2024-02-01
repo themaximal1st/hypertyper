@@ -89,6 +89,36 @@ test("search edge multiple results (isolated)", () => {
     expect(data.links.length).toBe(4);
 });
 
+test("search edges (confluence)", () => {
+    const hyperedges = [
+        ["A", "B", "C"],
+        ["1", "2", "C"]
+    ];
+
+    const hypergraph = new Hypergraph({ interwingle: Hypergraph.INTERWINGLE.CONFLUENCE });
+    hypergraph.addHyperedges(hyperedges);
+
+    const data = hypergraph.searchGraphData([["A"]]);
+    expect(data.nodes.length).toBe(3);
+    expect(data.links.length).toBe(2);
+});
+
+test("search edges (fusion)", () => {
+    const hyperedges = [
+        ["A", "B", "C"],
+        ["1", "2", "C"]
+    ];
+
+    const hypergraph = new Hypergraph({ interwingle: Hypergraph.INTERWINGLE.FUSION });
+    hypergraph.addHyperedges(hyperedges);
+
+    const data = hypergraph.searchGraphData([["A"]]);
+    expect(data.nodes.length).toBe(5);
+    expect(data.links.length).toBe(4);
+});
+
+// TODO: test masquerade node
+
 /*
 test.only("multiple search edges (confluence)", () => {
     const hyperedges = [

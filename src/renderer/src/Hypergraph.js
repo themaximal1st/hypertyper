@@ -70,6 +70,10 @@ export default class Hypergraph {
             }
         }
 
+        if (this.isFusion) {
+            this.crawlMasqueradeGraphData(graphData);
+        }
+
         return {
             nodes: Array.from(graphData.nodes.values()),
             links: Array.from(graphData.links.values())
@@ -77,13 +81,26 @@ export default class Hypergraph {
     }
 
     findHyperedgeGraphData(hyperedge, nodes, links) {
-        for (const node of hyperedge.nodes) {
+        for (let node of hyperedge.nodes) {
+            node = node.resolvedNode();
             nodes.set(node.id, this.nodes.get(node.id));
         }
 
         for (const link of this.links.values()) {
             if (link.hyperedgeID === hyperedge.id) {
                 links.set(link.id, link);
+            }
+        }
+    }
+
+    crawlMasqueradeGraphData(graphData) {
+        const nodes = Array.from(graphData.nodes.values());
+        for (const node of nodes) {
+            for (const link of this.links.values()) {
+                if (link.source === node.id || link.target === node.id) {
+                    const hyperedge = this._hyperedges.get(link.hyperedgeID);
+                    this.findHyperedgeGraphData(hyperedge, graphData.nodes, graphData.links);
+                }
             }
         }
     }
