@@ -89,8 +89,6 @@ export default class Node {
         return Node.linkData(parentNode, childNode, this.hypergraph.nodes);
     }
 
-    // TODO: we want to make bridged nodes actual instances so we can check and verify the nodes are already added
-
     static linkData(parentNode, childNode, existingNodes) {
         if (!parentNode) throw new Error("Missing parentNode");
         if (!childNode) throw new Error("Missing childNode");

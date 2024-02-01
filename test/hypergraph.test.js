@@ -227,26 +227,7 @@ test("bridge", () => {
     expect(linkIds).toContain("vs#bridge->1.vs");
 });
 
-// TODO: search edges at different interwingle depths
-// TODO: we need a concept of increasing crawl depth for search as intwerwingle increases
-
-test.skip("search edges (isolated)", () => {
-    const hyperedges = [
-        ["A", "B", "C"],
-        ["1", "2", "C"]
-    ];
-
-    const hypergraph = new Hypergraph(hyperedges, { interwingle: Hypergraph.INTERWINGLE.ISOLATED });
-    hypergraph.search = [["A"]];
-
-    const data = hypergraph.graphData();
-
-    console.log(data);
-});
-
-// TODO: huge with 3 interwingle
-
-test("huge", () => {
+test.skip("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
         .split("\n")

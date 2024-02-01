@@ -48,6 +48,46 @@ export default class Hypergraph {
         };
     }
 
+    searchGraphData(queries = []) {
+        const graphData = {
+            nodes: new Map(),
+            links: new Map()
+        };
+
+        for (const edge of queries) {
+            if (edge.length === 1) {
+                const nodes = this.symbolIndex.get(edge[0]);
+                for (const node of nodes.values()) {
+                    this.findHyperedgeGraphData(node.hyperedge, graphData.nodes, graphData.links);
+                }
+            } else {
+                const subsetID = edge.join("->");
+                for (const link of this.links.values()) {
+                    if (link.hyperedgeID.indexOf(subsetID) === -1) continue;
+                    const hyperedge = this._hyperedges.get(link.hyperedgeID);
+                    this.findHyperedgeGraphData(hyperedge, graphData.nodes, graphData.links);
+                }
+            }
+        }
+
+        return {
+            nodes: Array.from(graphData.nodes.values()),
+            links: Array.from(graphData.links.values())
+        };
+    }
+
+    findHyperedgeGraphData(hyperedge, nodes, links) {
+        for (const node of hyperedge.nodes) {
+            nodes.set(node.id, this.nodes.get(node.id));
+        }
+
+        for (const link of this.links.values()) {
+            if (link.hyperedgeID === hyperedge.id) {
+                links.set(link.id, link);
+            }
+        }
+    }
+
     updateIndex(index, node) {
         if (!index.has(node.symbol)) {
             index.set(node.symbol, new Map());
@@ -64,20 +104,6 @@ export default class Hypergraph {
         }
 
         node.updateGraphData();
-
-        /*
-        if (data.nodes) {
-            for (const node of data.nodes) {
-                this.nodes.set(node.id, node);
-            }
-        }
-
-        if (data.links) {
-            for (const link of data.links) {
-                this.links.set(link.id, link);
-            }
-        }
-        */
     }
 
     addHyperedge(hyperedge) {
