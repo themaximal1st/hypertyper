@@ -1,3 +1,8 @@
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+
+// TODO: Filtering / searching
+// TODO: Adding / editing
+
 import "ldrs/quantum";
 
 import SpriteText from "three-spritetext";
@@ -9,6 +14,10 @@ import ForceGraph3D from "react-force-graph-3d";
 import Hypergraph from "./Hypergraph";
 import Node from "./Node";
 import Animation from "./Animation";
+
+import * as Icons from "./Icons";
+
+// TODO: Clean up code
 
 // BIG THINGS TO DO TODAY
 // 1. We want to search / filter down hypergraph
@@ -38,31 +47,18 @@ export default class App extends React.Component {
         this.cameraPosition = { x: 0, y: 0, z: 0 };
         this.state = {
             width: window.innerWidth,
-            controlType: "fly",
+            controlType: "orbit",
             height: window.innerHeight,
             hideLabelsThreshold: 10000,
             hideLabels: true,
             showHistory: false,
             interwingle: 1,
+            isLoaded: false,
+            isLoading: true,
+            isAnimating: false,
             input: "",
             hyperedge: [],
             hypergraph: [],
-            // hypergraph: [
-            //     ["Ted Nelson", "invented", "HyperText"],
-            //     ["Ted Nelson", "invented", "Xanadu"],
-            //     ["Ted Nelson", "invented", "HyperMedia"],
-            //     ["Ted Nelson", "invented", "ZigZag"],
-            //     ["Ted Nelson", "author", "Lib Machines"],
-
-            //     ["Tim Berners-Lee", "invented", "WWW"],
-            //     ["Tim Berners-Lee", "author", "Weaving the Web"],
-
-            //     ["HyperText", "influenced", "WWW"],
-
-            //     ["Vannevar Bush", "invented", "Memex"],
-            //     ["Vannevar Bush", "author", "As We May Think"],
-            //     ["As We May Think", "influenced", "HyperText"]
-            // ],
             colors: [],
 
             data: { nodes: [], links: [] }
@@ -72,31 +68,45 @@ export default class App extends React.Component {
     reloadData(controlType = null) {
         // TODO: Loading screen
 
+        const hyperedges = [
+            ["Ted Nelson", "invented", "HyperText"],
+            ["Ted Nelson", "invented", "Xanadu"],
+            ["Ted Nelson", "invented", "HyperMedia"],
+            ["Ted Nelson", "invented", "ZigZag"],
+            ["Ted Nelson", "author", "Computer Lib/Dream Machines"],
+            ["Tim Berners-Lee", "invented", "WWW"],
+            ["Tim Berners-Lee", "author", "Weaving the Web"],
+            ["HyperText", "influenced", "WWW"],
+            ["Vannevar Bush", "invented", "Memex"],
+            ["Vannevar Bush", "author", "As We May Think"],
+            ["As We May Think", "influenced", "HyperText"]
+        ];
+
         console.log("RELOAD DATA");
-        window.api.hypergraph.all().then((hyperedges) => {
-            console.log("GOT DATA");
-            const hypergraph = new Hypergraph({
-                interwingle: this.state.interwingle
-            });
-
-            hypergraph.addHyperedges(hyperedges);
-            console.log("ADDED HYPERGRAPH");
-
-            const data = hypergraph.graphData();
-            console.log("GOT DATA");
-
-            const state = {
-                hypergraph: hyperedges,
-                data,
-                hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
-            };
-
-            if (controlType) {
-                state.controlType = controlType;
-            }
-
-            this.setState(state);
+        // window.api.hypergraph.all().then((hyperedges) => {
+        console.log("GOT DATA");
+        const hypergraph = new Hypergraph({
+            interwingle: this.state.interwingle
         });
+
+        hypergraph.addHyperedges(hyperedges);
+        console.log("ADDED HYPERGRAPH");
+
+        const data = hypergraph.graphData();
+        console.log("GOT DATA");
+
+        const state = {
+            hypergraph: hyperedges,
+            data,
+            hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
+        };
+
+        if (controlType) {
+            state.controlType = controlType;
+        }
+
+        this.setState(state);
+        // });
         /*
 
         this.animation.pause();
@@ -113,6 +123,12 @@ export default class App extends React.Component {
             return link.length || 50;
         });
 
+        const bloomPass = new UnrealBloomPass();
+        bloomPass.strength = 1;
+        bloomPass.radius = 1;
+        bloomPass.threshold = 0;
+        this.graphRef.current.postProcessingComposer().addPass(bloomPass);
+
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
         document.addEventListener("keyup", this.handleKeyUp.bind(this));
         document.addEventListener("mousedown", this.handleMouseDown.bind(this));
@@ -122,11 +138,7 @@ export default class App extends React.Component {
 
         this.reloadData();
 
-        // setInterval(() => {
-        //     this.toggleCamera();
-        // }, 5000);
-
-        // his.animation.start();
+        // this.animation.start();
     }
 
     componentWillUnmount() {
@@ -152,15 +164,15 @@ export default class App extends React.Component {
     }
 
     handleMouseDown(e) {
-        this.animation.click();
+        this.animation.interact();
     }
 
     handleMouseUp(e) {
-        this.animation.unclick();
+        this.animation.stopInteracting();
     }
 
     handleKeyDown(e) {
-        this.animation.click();
+        this.animation.interact();
         // console.log(e.key);
         if (e.key === "Tab") {
             this.toggleInterwingle();
@@ -174,7 +186,7 @@ export default class App extends React.Component {
     }
 
     handleKeyUp(e) {
-        this.animation.unclick();
+        this.animation.stopInteracting();
     }
 
     handleAddInput(e) {
@@ -203,6 +215,16 @@ export default class App extends React.Component {
         this.reloadData(controlType);
     }
 
+    toggleAnimation() {
+        if (this.state.isAnimating) {
+            this.animation.stop();
+        } else {
+            this.animation.start();
+        }
+
+        this.setState({ isAnimating: !this.state.isAnimating });
+    }
+
     toggleInterwingle(interwingle) {
         if (typeof interwingle === "undefined") {
             interwingle = this.state.interwingle;
@@ -221,9 +243,7 @@ export default class App extends React.Component {
     }
 
     nodeThreeObject(node) {
-        // if (this.nodeThreeObjectCache[node.id]) {
-        //     return this.nodeThreeObjectCache[node.id];
-        // }
+        // console.log("NODE THREE OBJECT");
 
         if (node.bridge) {
             const mesh = new Three.Mesh(
@@ -234,7 +254,6 @@ export default class App extends React.Component {
                     opacity: 0.25
                 })
             );
-            // this.nodeThreeObjectCache[node.id] = mesh;
             return mesh;
         }
 
@@ -250,12 +269,42 @@ export default class App extends React.Component {
         sprite.color = node.color;
         sprite.textHeight = node.textHeight || 8;
 
-        // this.nodeThreeObjectCache[node.id] = sprite;
-
         return sprite;
     }
 
+    handleTick() {
+        if (!this.state.isLoading) return false;
+        this.setState({ isLoading: false });
+        console.log("TICK");
+    }
+
     render() {
+        const forceGraph = (
+            <ForceGraph3D
+                ref={this.graphRef}
+                onEngineTick={this.handleTick.bind(this)}
+                width={this.state.width}
+                controlType={this.state.controlType}
+                backgroundColor="#000000"
+                height={this.state.height}
+                graphData={this.state.data}
+                showNavInfo={false}
+                linkColor={(link) => {
+                    return link.color || "#333333";
+                }}
+                nodeThreeObject={(node) => {
+                    if (this.state.hideLabels) {
+                        return null;
+                    }
+                    return this.nodeThreeObject(node);
+                }}
+                linkDirectionalArrowLength={(link) => {
+                    return 5;
+                }}
+                linkDirectionalArrowRelPos={1}
+                linkWidth={2}
+            />
+        );
         return (
             <>
                 <a id="titlebar">HyperTyper</a>
@@ -292,92 +341,22 @@ export default class App extends React.Component {
                 </div>
                 <div className="absolute text-white bottom-2 right-6 z-20 flex gap-4">
                     <a
-                        onClick={() => this.toggleCamera()}
-                        className="opacity-50 hover:opacity-100 transition-all"
+                        onClick={() => this.toggleAnimation()}
+                        className="opacity-50 hover:opacity-100 transition-all cursor-pointer"
                     >
-                        {this.state.controlType === "orbit" && (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-6 h-6"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z"
-                                />
-                            </svg>
-                        )}
-
-                        {this.state.controlType === "fly" && (
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-6 h-6"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.834.166-1.591 1.591M20.25 10.5H18M7.757 14.743l-1.59 1.59M6 10.5H3.75m4.007-4.243-1.59-1.59"
-                                />
-                            </svg>
-                        )}
+                        {!this.state.isAnimating && Icons.PauseIcon}
+                        {this.state.isAnimating && Icons.RotateIcon}
+                    </a>
+                    <a
+                        onClick={() => this.toggleCamera()}
+                        className="opacity-50 hover:opacity-100 transition-all cursor-pointer"
+                    >
+                        {this.state.controlType === "orbit" && Icons.CameraIcon}
+                        {this.state.controlType === "fly" && Icons.MouseIcon}
                     </a>
                 </div>
-                {this.state.controlType === "fly" && (
-                    <ForceGraph3D
-                        ref={this.graphRef}
-                        width={this.state.width}
-                        controlType="fly"
-                        height={this.state.height}
-                        graphData={this.state.data}
-                        showNavInfo={false}
-                        linkColor={(link) => {
-                            return link.color || "#333333";
-                        }}
-                        nodeThreeObject={(node) => {
-                            if (this.state.hideLabels) {
-                                return null;
-                            }
-                            return this.nodeThreeObject(node);
-                        }}
-                        linkDirectionalArrowLength={(link) => {
-                            return 5;
-                        }}
-                        linkDirectionalArrowRelPos={1}
-                        linkWidth={2}
-                    />
-                )}
-                {this.state.controlType === "orbit" && (
-                    <ForceGraph3D
-                        ref={this.graphRef}
-                        width={this.state.width}
-                        controlType="orbit"
-                        height={this.state.height}
-                        graphData={this.state.data}
-                        showNavInfo={false}
-                        linkColor={(link) => {
-                            return link.color || "#333333";
-                        }}
-                        nodeThreeObject={(node) => {
-                            if (this.state.hideLabels) {
-                                return null;
-                            }
-                            return this.nodeThreeObject(node);
-                        }}
-                        linkDirectionalArrowLength={(link) => {
-                            return 5;
-                        }}
-                        linkDirectionalArrowRelPos={1}
-                        linkWidth={2}
-                    />
-                )}
+                {this.state.controlType === "fly" && forceGraph}
+                {this.state.controlType === "orbit" && forceGraph}
             </>
         );
     }

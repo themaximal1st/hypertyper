@@ -22,6 +22,8 @@ export default class App {
             }
         });
 
+        browserWindow.webContents.setFrameRate(60);
+
         browserWindow.on("ready-to-show", () => {
             browserWindow.show();
         });

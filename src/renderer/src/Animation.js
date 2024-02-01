@@ -2,7 +2,7 @@ export default class Animation {
     constructor(graphRef) {
         this.graphRef = graphRef;
         this.isPausing = false;
-        this.isClicking = false;
+        this.isInteracting = false;
         this.animationInterval = null;
     }
 
@@ -13,7 +13,7 @@ export default class Animation {
         this.initialY = initialPosition.y; // Store the initial Y-coordinate
 
         const updateCameraPosition = () => {
-            if (this.isPausing || this.isClicking) {
+            if (this.isPausing || this.isInteracting) {
                 // Store the current position when starting to drag
                 const currentPos = this.graphRef.current.cameraPosition();
                 this.dragEndPosition = { x: currentPos.x, y: currentPos.y, z: currentPos.z };
@@ -29,7 +29,7 @@ export default class Animation {
             }
 
             // Increment the angle for the animation
-            this.angle += Math.PI / 1000;
+            this.angle += Math.PI / 300;
             this.angle %= 2 * Math.PI; // Normalize the angle
 
             // Update camera position
@@ -51,13 +51,13 @@ export default class Animation {
         this.animationInterval = null;
     }
 
-    click() {
-        this.isClicking = true;
+    interact() {
+        this.isInteracting = true;
         this.pause();
     }
 
-    unclick() {
-        this.isClicking = false;
+    stopInteracting() {
+        this.isInteracting = false;
         this.resume();
     }
 
