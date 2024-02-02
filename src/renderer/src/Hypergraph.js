@@ -19,6 +19,7 @@ export default class Hypergraph {
         this.endSymbolIndex = new Map();
         this.symbolIndex = new Map();
         this.masqueradeIndex = new Map();
+        this.nodeEdgeIndex = new Map();
     }
 
     get isIsolated() {
@@ -74,6 +75,10 @@ export default class Hypergraph {
             this.crawlMasqueradeGraphData(graphData);
         }
 
+        if (this.isBridge) {
+            this.crawlBridgeGraphData(graphData);
+        }
+
         return {
             nodes: Array.from(graphData.nodes.values()),
             links: Array.from(graphData.links.values())
@@ -81,6 +86,11 @@ export default class Hypergraph {
     }
 
     findHyperedgeGraphData(hyperedge, nodes, links) {
+        const targets = new Set();
+        for (const node of hyperedge.nodes.values()) {
+            targets.add(node.id);
+        }
+
         for (let node of hyperedge.nodes) {
             node = node.resolvedNode();
             nodes.set(node.id, this.nodes.get(node.id));
@@ -88,6 +98,8 @@ export default class Hypergraph {
 
         for (const link of this.links.values()) {
             if (link.hyperedgeID === hyperedge.id) {
+                links.set(link.id, link);
+            } else if (this.isBridge && targets.has(link.target)) {
                 links.set(link.id, link);
             }
         }
@@ -98,8 +110,30 @@ export default class Hypergraph {
         for (const node of nodes) {
             for (const link of this.links.values()) {
                 if (link.source === node.id || link.target === node.id) {
-                    const hyperedge = this._hyperedges.get(link.hyperedgeID);
-                    this.findHyperedgeGraphData(hyperedge, graphData.nodes, graphData.links);
+                    if (this.isBridge && link.bridge) {
+                        const bridgeNode = this.nodes.get(link.source);
+                        graphData.nodes.set(bridgeNode.id, bridgeNode);
+                        graphData.links.set(link.id, link);
+                    } else {
+                        const hyperedge = this._hyperedges.get(link.hyperedgeID);
+                        this.findHyperedgeGraphData(hyperedge, graphData.nodes, graphData.links);
+                    }
+                }
+            }
+        }
+    }
+
+    // TODO: could be more efficient by not updating stuff we've already updated
+    crawlBridgeGraphData(graphData) {
+        const nodes = Array.from(graphData.nodes.values());
+        for (const node of nodes) {
+            if (node.bridge) {
+                for (const link of this.links.values()) {
+                    if (link.source === node.id) {
+                        const hyperedgeID = this.nodeEdgeIndex.get(link.target);
+                        const hyperedge = this._hyperedges.get(hyperedgeID);
+                        this.findHyperedgeGraphData(hyperedge, graphData.nodes, graphData.links);
+                    }
                 }
             }
         }
@@ -119,6 +153,8 @@ export default class Hypergraph {
         if (node.isEnd) {
             this.updateIndex(this.endSymbolIndex, node);
         }
+
+        this.nodeEdgeIndex.set(node.id, node.hyperedge.id);
 
         node.updateGraphData();
     }

@@ -2,24 +2,8 @@ import Hypergraph from "../src/renderer/src/Hypergraph.js";
 
 import { expect, test } from "vitest";
 import fs from "fs";
-// TODO: we need a really good way to modify/remove hyperedges
-//         - updating indexes and making sure everything is proper
-
-// TODO: refactor graphData hash to map
-
-// TODO: hypertype actually needs to be built much differently.
-//          we can't do everything on init, it's too slow.
-//          we should have a batch parameter, that shows activity is happening/syncing
-//          and nodes that don't have data, are shown, but those attributes are ignored
-//          we should be able to load and render a 50k node graph in 1 second
-
-// TODO: So we need some refactoring help
-// TODO: We want to be able to add/edit the hypergraph, without rewriting everything right? (maybe)
-// TODO: biggest issue is finding connections. to do this well we need indexes (i think)
-// TODO: to do indexes well, the updater needs to be more consistent.
-// TODO: ideally this is super deterministic. we should be able to run & cache results
-// TODO: need really solid way to translate between hypergraph and graphData
-// TODO: then you have weird "hidden" nodes like bridge nodes...which maybe should be their own hyperedge? can we just generate them dynamically like that or what?
+// TODO: edit/remove data. should also update indexes
+// TODO: activity parameter..way to expose in UI background sync is happening
 
 test("empty hypergraph", () => {
     const hypergraph = new Hypergraph();
@@ -230,6 +214,22 @@ test("bridge", () => {
     expect(linkIds).toContain("vs#bridge->1.vs");
 });
 
+test("bridge and fusion", () => {
+    const hyperedges = [
+        ["A", "B", "C"],
+        ["1", "B", "C"]
+    ];
+
+    const hypergraph = new Hypergraph({ interwingle: Hypergraph.INTERWINGLE.BRIDGE });
+    hypergraph.addHyperedges(hyperedges);
+
+    expect(hypergraph.hyperedges.length).toEqual(2);
+
+    const data = hypergraph.graphData();
+    expect(data.nodes.length).toBe(6); // 5 nodes + 1 bridge node
+    expect(data.links.length).toBe(6);
+});
+
 test.skip("huge", () => {
     const hyperedges = fs
         .readFileSync("/Users/brad/Projects/loom/data/data", "utf-8")
@@ -255,5 +255,3 @@ test.skip("huge", () => {
 
     expect(elapsed).toBeLessThan(300);
 });
-
-// TODO: generate graphData based on search parameters

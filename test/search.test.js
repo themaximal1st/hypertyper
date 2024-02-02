@@ -2,8 +2,7 @@ import Hypergraph from "../src/renderer/src/Hypergraph.js";
 
 import { expect, test } from "vitest";
 
-// TODO: search edges at different interwingle depths
-// TODO: we need a concept of increasing crawl depth for search as intwerwingle increases
+// TODO: (maybe) we need a concept of increasing crawl depth for search as intwerwingle increases
 
 test("search edges (isolated)", () => {
     const hyperedges = [
@@ -117,7 +116,21 @@ test("search edges (fusion)", () => {
     expect(data.links.length).toBe(4);
 });
 
-// TODO: test masquerade node
+test("search edges (bridge)", () => {
+    const hyperedges = [
+        ["A", "B", "C"],
+        ["1", "B", "D"]
+    ];
+
+    const hypergraph = new Hypergraph({ interwingle: Hypergraph.INTERWINGLE.BRIDGE });
+    hypergraph.addHyperedges(hyperedges);
+
+    const data = hypergraph.searchGraphData([["A"]]);
+    expect(data.nodes.length).toBe(7);
+    expect(data.links.length).toBe(6);
+});
+
+// TODO: crawl depth....do we want to bring in all bridge nodes or just bridge nodes that overlap more than X? where X is crawl depth?
 
 /*
 test.only("multiple search edges (confluence)", () => {
@@ -134,3 +147,8 @@ test.only("multiple search edges (confluence)", () => {
     expect(data.links.length).toBe(4);
 });
 */
+
+// TODO:
+// A B C
+// 1 B C
+// should be two conns right?

@@ -1,8 +1,5 @@
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
-// TODO: Filtering / searching
-// TODO: Adding / editing
-
 import "ldrs/quantum";
 
 import SpriteText from "three-spritetext";
@@ -17,24 +14,16 @@ import Animation from "./Animation";
 
 import * as Icons from "./Icons";
 
-// TODO: Clean up code
-
-// BIG THINGS TO DO TODAY
+// TODO
 // 1. We want to search / filter down hypergraph
 // 2. We want to add / create new
 // 3. We want the console looking good
+// 5. UI for syncing data
 // 4. pagerank node/text size...pagerank stress test large files
 
-// TODO: Whole hypergraph is obviously overhwleming...so click to filter down onto nodes/edges
-// TODO: when creating scope down context
+// TODO: click to filter down onto nodes/edges
+// TODO: when creating...scope down context
 // TODO: super sweet console!
-
-// TODO: [ ] get dynamic updates working well
-// TODO: [ ] get integrated with backend
-// TODO: [ ] implement pagerank for node and text size!
-// TODO: animations on big graphs is annoying
-// TODO: allow camera fly through...regenerate graph if you have to
-// TODO: long text nodes should be truncated
 // TODO: should have numerical zoom, plus and minus keys
 
 export default class App extends React.Component {
