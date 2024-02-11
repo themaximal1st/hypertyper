@@ -8,8 +8,6 @@ import * as Three from "three";
 import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 
-import Hypergraph from "./Hypergraph";
-import Node from "./Node";
 import Animation from "./Animation";
 
 import * as Icons from "./Icons";
@@ -33,21 +31,18 @@ export default class App extends React.Component {
         this.interwingleRef = React.createRef();
         this.nodeThreeObjectCache = {};
         this.animation = new Animation(this.graphRef);
-        this.cameraPosition = { x: 0, y: 0, z: 0 };
         this.state = {
             width: window.innerWidth,
             controlType: "orbit",
             height: window.innerHeight,
-            hideLabelsThreshold: 10000,
+            hideLabelsThreshold: 1000,
             hideLabels: true,
             showHistory: false,
-            interwingle: 1,
-            isLoaded: false,
-            isLoading: true,
+            interwingle: 0,
             isAnimating: false,
             input: "",
             hyperedge: [],
-            hypergraph: [],
+            hyperedges: [],
             colors: [],
 
             data: { nodes: [], links: [] }
@@ -55,56 +50,50 @@ export default class App extends React.Component {
     }
 
     reloadData(controlType = null) {
-        // TODO: Loading screen
+        const start = Date.now();
 
         const hyperedges = [
-            ["Ted Nelson", "invented", "HyperText"],
-            ["Ted Nelson", "invented", "Xanadu"],
-            ["Ted Nelson", "invented", "HyperMedia"],
-            ["Ted Nelson", "invented", "ZigZag"],
-            ["Ted Nelson", "author", "Computer Lib/Dream Machines"],
-            ["Tim Berners-Lee", "invented", "WWW"],
-            ["Tim Berners-Lee", "author", "Weaving the Web"],
-            ["HyperText", "influenced", "WWW"],
-            ["Vannevar Bush", "invented", "Memex"],
-            ["Vannevar Bush", "author", "As We May Think"],
-            ["As We May Think", "influenced", "HyperText"]
+            ["A", "B"],
+            ["B", "C"],
+            ["B", "1", "2"]
         ];
+        // const hyperedges = [
+        //     ["Ted Nelson", "invented", "HyperText"],
+        //     ["Ted Nelson", "invented", "Xanadu"],
+        //     ["Ted Nelson", "invented", "HyperMedia"],
+        //     ["Ted Nelson", "invented", "ZigZag"],
+        //     ["Ted Nelson", "author", "Computer Lib/Dream Machines"],
+        //     ["Tim Berners-Lee", "invented", "WWW"],
+        //     ["Tim Berners-Lee", "author", "Weaving the Web"],
+        //     ["HyperText", "influenced", "WWW"],
+        //     ["Vannevar Bush", "invented", "Memex"],
+        //     ["Vannevar Bush", "author", "As We May Think"],
+        //     ["As We May Think", "influenced", "HyperText"]
+        // ];
 
-        console.log("RELOAD DATA");
-        // window.api.hypergraph.all().then((hyperedges) => {
-        console.log("GOT DATA");
-        const hypergraph = new Hypergraph({
+        const options = {
+            hyperedges,
             interwingle: this.state.interwingle
-        });
-
-        hypergraph.addHyperedges(hyperedges);
-        console.log("ADDED HYPERGRAPH");
-
-        const data = hypergraph.graphData();
-        console.log("GOT DATA");
-
-        const state = {
-            hypergraph: hyperedges,
-            data,
-            hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
         };
 
-        if (controlType) {
-            state.controlType = controlType;
-        }
+        window.api.forceGraph.graphData(options).then((data) => {
+            console.log("GRAPH DATA", data);
 
-        this.setState(state);
-        // });
-        /*
+            const state = {
+                hyperedges,
+                data,
+                hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
+            };
 
-        this.animation.pause();
-        this.setState({ data: hypergraph.graphData() }, () => {
-            setTimeout(() => {
-                this.animation.resume();
-            }, 1000);
+            if (controlType) {
+                state.controlType = controlType;
+            }
+
+            const elapsed = Date.now() - start;
+            console.log(`reloaded data in ${elapsed}ms`);
+
+            this.setState(state);
         });
-        */
     }
 
     componentDidMount() {
@@ -126,8 +115,6 @@ export default class App extends React.Component {
         window.addEventListener("resize", this.handleResize.bind(this));
 
         this.reloadData();
-
-        // this.animation.start();
     }
 
     componentWillUnmount() {
@@ -162,7 +149,6 @@ export default class App extends React.Component {
 
     handleKeyDown(e) {
         this.animation.interact();
-        // console.log(e.key);
         if (e.key === "Tab") {
             this.toggleInterwingle();
         } else if (e.key === "F1") {
@@ -171,6 +157,14 @@ export default class App extends React.Component {
             this.toggleCamera();
         } else if (e.key === "`") {
             this.setState({ showHistory: !this.state.showHistory });
+        } else if (e.key === "-") {
+            this.zoom(30);
+        } else if (e.key === "=") {
+            this.zoom(-30);
+        } else if (e.key === "ArrowLeft") {
+            this.rotate(-10);
+        } else if (e.key === "ArrowRight") {
+            this.rotate(10);
         }
     }
 
@@ -180,17 +174,46 @@ export default class App extends React.Component {
 
     handleAddInput(e) {
         e.preventDefault();
+        /*
         const input = this.state.input;
         const hyperedge = [...this.state.hyperedge, input];
-        const hypergraph = this.state.hypergraph.filter((edge) => edge !== this.state.hyperedge);
-        hypergraph.push(hyperedge);
+        const hyperedges = this.state.hyperedges.filter((edge) => edge !== this.state.hyperedge);
+        hyperedges.push(hyperedge);
         const data = this.hypergraphToForceGraph(hypergraph);
         this.setState({
             hyperedge,
-            hypergraph,
+            hyperedges,
             data,
             input: ""
         });
+        */
+    }
+
+    handleClickNode(node) {
+        console.log("NODE", node);
+    }
+
+    // this doesn't really work
+    zoom(amount = 0) {
+        const cameraPosition = this.graphRef.current.cameraPosition();
+        this.graphRef.current.cameraPosition({ z: cameraPosition.z + amount });
+    }
+
+    // this doesn't really work
+    rotate(angleDegrees) {
+        const cameraPosition = this.graphRef.current.cameraPosition();
+
+        const distance = Math.sqrt(cameraPosition.x ** 2 + cameraPosition.z ** 2);
+
+        const initialAngle = Math.atan2(cameraPosition.x, cameraPosition.z);
+
+        const rotationRadians = angleDegrees * (Math.PI / 180);
+        const newAngle = initialAngle + rotationRadians;
+
+        const x = distance * Math.sin(newAngle);
+        const z = distance * Math.cos(newAngle);
+
+        this.graphRef.current.cameraPosition({ x, y: cameraPosition.y, z }, null, 100);
     }
 
     toggleLabels() {
@@ -261,21 +284,15 @@ export default class App extends React.Component {
         return sprite;
     }
 
-    handleTick() {
-        if (!this.state.isLoading) return false;
-        this.setState({ isLoading: false });
-        console.log("TICK");
-    }
-
     render() {
         const forceGraph = (
             <ForceGraph3D
                 ref={this.graphRef}
-                onEngineTick={this.handleTick.bind(this)}
                 width={this.state.width}
                 controlType={this.state.controlType}
                 backgroundColor="#000000"
                 height={this.state.height}
+                onNodeClick={this.handleClickNode.bind(this)}
                 graphData={this.state.data}
                 showNavInfo={false}
                 linkColor={(link) => {
@@ -299,7 +316,7 @@ export default class App extends React.Component {
                 <a id="titlebar">HyperTyper</a>
                 {this.state.showHistory && (
                     <div className="absolute top-0 left-0 right-0 z-20 text-sm p-2 bg-white/50 max-h-[200px] overflow-y-scroll">
-                        {this.state.hypergraph.map((edge, i) => {
+                        {this.state.hyperedges.map((edge, i) => {
                             return (
                                 <div className="flex gap-3" key={`${edge.join("->")}-${i}}`}>
                                     {edge
@@ -331,14 +348,14 @@ export default class App extends React.Component {
                 <div className="absolute text-white bottom-2 right-6 z-20 flex gap-4">
                     <a
                         onClick={() => this.toggleAnimation()}
-                        className="opacity-50 hover:opacity-100 transition-all cursor-pointer"
+                        className="opacity-20 hover:opacity-100 transition-all cursor-pointer"
                     >
                         {!this.state.isAnimating && Icons.PauseIcon}
                         {this.state.isAnimating && Icons.RotateIcon}
                     </a>
                     <a
                         onClick={() => this.toggleCamera()}
-                        className="opacity-50 hover:opacity-100 transition-all cursor-pointer"
+                        className="opacity-20 hover:opacity-100 transition-all cursor-pointer"
                     >
                         {this.state.controlType === "orbit" && Icons.CameraIcon}
                         {this.state.controlType === "fly" && Icons.MouseIcon}

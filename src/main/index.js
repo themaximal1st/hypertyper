@@ -1,14 +1,25 @@
 import { ipcMain } from "electron";
+import fs from "fs";
 
 import App from "./app.js";
-import HyperType from "./hypertype.js";
 
 (async function () {
     const app = await App.launch();
-    const hypertype = await HyperType.load();
+    const HyperType = (await import("@themaximalist/hypertype")).default;
 
-    ipcMain.handle("nodes.all", () => hypertype.nodes);
-    ipcMain.handle("hyperedges.all", () => hypertype.hyperedges);
-    ipcMain.handle("hypergraph.all", () => hypertype.all);
-    ipcMain.handle("hypergraph.add", (_, obj) => hypertype.add(obj));
+    const file = "/Users/brad/Projects/loom/data/data";
+    const contents = fs.readFileSync(file, "utf8").trim();
+
+    const options = {
+        parse: {
+            delimiter: " -> "
+        }
+    };
+
+    const hypertype = HyperType.parse(contents, options);
+
+    ipcMain.handle("forceGraph.graphData", (_, options) => {
+        hypertype.options = options;
+        return hypertype.graphData();
+    });
 })();

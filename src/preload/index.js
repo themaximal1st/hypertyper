@@ -1,22 +1,9 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const api = {
-    nodes: {
-        all: () => {
-            return ipcRenderer.invoke("nodes.all");
-        }
-    },
-    hyperedges: {
-        all: () => {
-            return ipcRenderer.invoke("hyperedges.all");
-        }
-    },
-    hypergraph: {
-        all: () => {
-            return ipcRenderer.invoke("hypergraph.all");
-        },
-        add: (obj) => {
-            return ipcRenderer.invoke("hypergraph.add", obj);
+    forceGraph: {
+        graphData: (options = {}) => {
+            return ipcRenderer.invoke("forceGraph.graphData", options);
         }
     }
 };
