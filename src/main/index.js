@@ -7,19 +7,12 @@ import App from "./app.js";
     const app = await App.launch();
     const HyperType = (await import("@themaximalist/hypertype")).default;
 
-    const file = "/Users/brad/Projects/loom/data/data";
-    const contents = fs.readFileSync(file, "utf8").trim();
-
-    const options = {
-        parse: {
-            delimiter: " -> "
-        }
-    };
-
-    const hypertype = HyperType.parse(contents, options);
+    const hypertype = new HyperType();
 
     ipcMain.handle("forceGraph.graphData", (_, options) => {
-        hypertype.options = options;
+        if (typeof options.interwingle !== "undefined") {
+            hypertype.options.interwingle = options.interwingle;
+        }
         return hypertype.graphData();
     });
 })();

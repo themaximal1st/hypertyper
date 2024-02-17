@@ -53,9 +53,8 @@ export default class App extends React.Component {
         const start = Date.now();
 
         const hyperedges = [
-            ["A", "B"],
-            ["B", "C"],
-            ["B", "1", "2"]
+            ["Hercules", "son", "Zeus"],
+            ["Hercules", "son", "Alcmene"]
         ];
         // const hyperedges = [
         //     ["Ted Nelson", "invented", "HyperText"],
