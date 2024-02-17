@@ -1,11 +1,43 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu, MenuItem } from "electron";
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 
+// TODO: Make HyperType multi-window
 export default class App {
-    constructor(browserWindow) {
+    constructor(browserWindow, hypertype) {
         this.app = app;
         this.browserWindow = browserWindow;
+        this.hypertype = hypertype;
+    }
+
+    async load() {
+        const menu = Menu.getApplicationMenu();
+        if (!menu) return;
+
+        let fileMenu = menu.items.find((m) => m.label === "File");
+
+        if (fileMenu) {
+            // separator
+            fileMenu.submenu.insert(
+                0,
+                new MenuItem({
+                    type: "separator"
+                })
+            );
+
+            fileMenu.submenu.insert(
+                0,
+                new MenuItem({
+                    label: "New HyperType File",
+                    click: () => {
+                        this.hypertype.reset();
+                        this.browserWindow.reload();
+                    }
+                })
+            );
+
+            Menu.setApplicationMenu(menu);
+        }
     }
 
     static createWindow() {
@@ -43,7 +75,7 @@ export default class App {
         return browserWindow;
     }
 
-    static async launch() {
+    static async launch(hypertype) {
         await app.whenReady();
 
         electronApp.setAppUserModelId(app.name);
@@ -65,6 +97,8 @@ export default class App {
             }
         });
 
-        return new App(browserWindow);
+        const hyperTyper = new App(browserWindow, hypertype);
+        await hyperTyper.load();
+        return hyperTyper;
     }
 }

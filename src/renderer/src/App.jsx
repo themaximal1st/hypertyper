@@ -27,6 +27,7 @@ import * as Icons from "./Icons";
 export default class App extends React.Component {
     constructor(props) {
         super(props);
+        this.inputRef = React.createRef();
         this.graphRef = React.createRef();
         this.interwingleRef = React.createRef();
         this.nodeThreeObjectCache = {};
@@ -49,49 +50,40 @@ export default class App extends React.Component {
         };
     }
 
-    reloadData(controlType = null) {
-        const start = Date.now();
+    reloadData(controlType = null, zoom = true) {
+        return new Promise((resolve, reject) => {
+            const start = Date.now();
 
-        const hyperedges = [
-            ["Hercules", "son", "Zeus"],
-            ["Hercules", "son", "Alcmene"]
-        ];
-        // const hyperedges = [
-        //     ["Ted Nelson", "invented", "HyperText"],
-        //     ["Ted Nelson", "invented", "Xanadu"],
-        //     ["Ted Nelson", "invented", "HyperMedia"],
-        //     ["Ted Nelson", "invented", "ZigZag"],
-        //     ["Ted Nelson", "author", "Computer Lib/Dream Machines"],
-        //     ["Tim Berners-Lee", "invented", "WWW"],
-        //     ["Tim Berners-Lee", "author", "Weaving the Web"],
-        //     ["HyperText", "influenced", "WWW"],
-        //     ["Vannevar Bush", "invented", "Memex"],
-        //     ["Vannevar Bush", "author", "As We May Think"],
-        //     ["As We May Think", "influenced", "HyperText"]
-        // ];
-
-        const options = {
-            hyperedges,
-            interwingle: this.state.interwingle
-        };
-
-        window.api.forceGraph.graphData(options).then((data) => {
-            console.log("GRAPH DATA", data);
-
-            const state = {
-                hyperedges,
-                data,
-                hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
+            const options = {
+                hyperedges: this.state.hyperedges,
+                interwingle: this.state.interwingle
             };
 
-            if (controlType) {
-                state.controlType = controlType;
-            }
+            window.api.forceGraph.graphData(options).then((data) => {
+                const state = {
+                    // hyperedges,
+                    data,
+                    hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
+                };
 
-            const elapsed = Date.now() - start;
-            console.log(`reloaded data in ${elapsed}ms`);
+                if (controlType) {
+                    state.controlType = controlType;
+                }
 
-            this.setState(state);
+                const elapsed = Date.now() - start;
+                console.log(`reloaded data in ${elapsed}ms`);
+
+                this.setState(state, () => {
+                    if (zoom) {
+                        setTimeout(() => {
+                            this.graphRef.current.zoomToFit(300, 200);
+                            resolve();
+                        }, 250);
+                    } else {
+                        resolve();
+                    }
+                });
+            });
         });
     }
 
@@ -126,6 +118,10 @@ export default class App extends React.Component {
         window.removeEventListener("resize", this.handleResize.bind(this));
     }
 
+    get isFocusingInput() {
+        return document.activeElement == this.inputRef.current;
+    }
+
     handleResize() {
         this.setState({
             width: window.innerWidth,
@@ -155,15 +151,27 @@ export default class App extends React.Component {
         } else if (e.key === "F2") {
             this.toggleCamera();
         } else if (e.key === "`") {
-            this.setState({ showHistory: !this.state.showHistory });
+            if (!this.isFocusingInput) {
+                this.setState({ showHistory: !this.state.showHistory });
+            }
         } else if (e.key === "-") {
-            this.zoom(30);
+            if (!this.isFocusingInput) {
+                this.zoom(30);
+            }
         } else if (e.key === "=") {
-            this.zoom(-30);
+            if (!this.isFocusingInput) {
+                this.zoom(-30);
+            }
         } else if (e.key === "ArrowLeft") {
             this.rotate(-10);
         } else if (e.key === "ArrowRight") {
             this.rotate(10);
+        } else if (e.key === "Backspace") {
+            if (this.state.input === "") {
+                this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
+            }
+        } else {
+            this.inputRef.current.focus();
         }
     }
 
@@ -171,21 +179,28 @@ export default class App extends React.Component {
         this.animation.stopInteracting();
     }
 
-    handleAddInput(e) {
+    async handleAddInput(e) {
         e.preventDefault();
-        /*
-        const input = this.state.input;
-        const hyperedge = [...this.state.hyperedge, input];
-        const hyperedges = this.state.hyperedges.filter((edge) => edge !== this.state.hyperedge);
-        hyperedges.push(hyperedge);
-        const data = this.hypergraphToForceGraph(hypergraph);
-        this.setState({
-            hyperedge,
-            hyperedges,
-            data,
-            input: ""
-        });
-        */
+
+        if (this.state.input.trim().length === 0) {
+            this.setState({
+                input: "",
+                hyperedge: []
+            });
+            return;
+        }
+
+        await window.api.hyperedges.add(this.state.hyperedge, this.state.input);
+
+        this.setState(
+            {
+                input: "",
+                hyperedge: [...this.state.hyperedge, this.state.input]
+            },
+            async () => {
+                await this.reloadData();
+            }
+        );
     }
 
     handleClickNode(node) {
@@ -283,6 +298,12 @@ export default class App extends React.Component {
         return sprite;
     }
 
+    removeIndexFromHyperedge(index) {
+        const hyperedge = this.state.hyperedge;
+        hyperedge.splice(index, 1);
+        this.setState({ hyperedge });
+    }
+
     render() {
         const forceGraph = (
             <ForceGraph3D
@@ -359,6 +380,31 @@ export default class App extends React.Component {
                         {this.state.controlType === "orbit" && Icons.CameraIcon}
                         {this.state.controlType === "fly" && Icons.MouseIcon}
                     </a>
+                </div>
+                <div className="flex text-white mt-8 text-sm gap-2 px-2 absolute z-20 w-full">
+                    {this.state.hyperedge.map((symbol, i) => {
+                        return (
+                            <div className="flex gap-2 items-center" key={i}>
+                                <a
+                                    onClick={(e) => this.removeIndexFromHyperedge(i)}
+                                    className="cursor-pointer"
+                                >
+                                    {symbol}
+                                </a>
+                                →
+                            </div>
+                        );
+                    })}
+
+                    <form onSubmit={this.handleAddInput.bind(this)} className="">
+                        <input
+                            type="text"
+                            ref={this.inputRef}
+                            className="bg-transparent outline-none text-4xl text-center absolute z-30 left-0 right-0 top-4 py-2"
+                            value={this.state.input}
+                            onChange={(e) => this.setState({ input: e.target.value })}
+                        />
+                    </form>
                 </div>
                 {this.state.controlType === "fly" && forceGraph}
                 {this.state.controlType === "orbit" && forceGraph}
