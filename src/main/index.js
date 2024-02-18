@@ -1,6 +1,9 @@
 import { ipcMain } from "electron";
 import fs from "fs";
 
+// save
+// load
+
 import App from "./app.js";
 
 (async function () {
@@ -24,5 +27,14 @@ import App from "./app.js";
         }
 
         return edge.id;
+    });
+
+    ipcMain.handle("hyperedges.all", () => {
+        const hyperedges = hypertype.hyperedges.map((hyperedge) => hyperedge.symbols);
+        return hyperedges;
+    });
+
+    ipcMain.handle("hyperedges.remove", (_, hyperedge) => {
+        hypertype.remove(...hyperedge);
     });
 })();

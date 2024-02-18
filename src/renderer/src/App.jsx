@@ -13,9 +13,9 @@ import Animation from "./Animation";
 import * as Icons from "./Icons";
 
 // TODO
+// Save
+// Load
 // 1. We want to search / filter down hypergraph
-// 2. We want to add / create new
-// 3. We want the console looking good
 // 5. UI for syncing data
 // 4. pagerank node/text size...pagerank stress test large files
 
@@ -28,6 +28,7 @@ export default class App extends React.Component {
     constructor(props) {
         super(props);
         this.inputRef = React.createRef();
+        this.consoleRef = React.createRef();
         this.graphRef = React.createRef();
         this.interwingleRef = React.createRef();
         this.nodeThreeObjectCache = {};
@@ -38,7 +39,7 @@ export default class App extends React.Component {
             height: window.innerHeight,
             hideLabelsThreshold: 1000,
             hideLabels: true,
-            showHistory: false,
+            showConsole: true,
             interwingle: 0,
             isAnimating: false,
             input: "",
@@ -51,38 +52,39 @@ export default class App extends React.Component {
     }
 
     reloadData(controlType = null, zoom = true) {
-        return new Promise((resolve, reject) => {
+        return new Promise(async (resolve, reject) => {
             const start = Date.now();
 
-            const options = {
-                hyperedges: this.state.hyperedges,
-                interwingle: this.state.interwingle
+            const options = { interwingle: this.state.interwingle };
+            const data = await window.api.forceGraph.graphData(options);
+            const hyperedges = await window.api.hyperedges.all();
+
+            console.log(hyperedges);
+
+            const state = {
+                data,
+                hyperedges,
+                hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
             };
 
-            window.api.forceGraph.graphData(options).then((data) => {
-                const state = {
-                    // hyperedges,
-                    data,
-                    hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
-                };
+            if (controlType) {
+                state.controlType = controlType;
+            }
 
-                if (controlType) {
-                    state.controlType = controlType;
-                }
+            const elapsed = Date.now() - start;
+            console.log(`reloaded data in ${elapsed}ms`);
 
-                const elapsed = Date.now() - start;
-                console.log(`reloaded data in ${elapsed}ms`);
-
-                this.setState(state, () => {
-                    if (zoom) {
-                        setTimeout(() => {
-                            this.graphRef.current.zoomToFit(300, 200);
-                            resolve();
-                        }, 250);
-                    } else {
+            this.setState(state, () => {
+                if (zoom) {
+                    setTimeout(() => {
+                        this.graphRef.current.zoomToFit(300, 100, (node) => {
+                            return this.state.hyperedge.indexOf(node.name) > -1;
+                        });
                         resolve();
-                    }
-                });
+                    }, 250);
+                } else {
+                    resolve();
+                }
             });
         });
     }
@@ -97,6 +99,17 @@ export default class App extends React.Component {
         bloomPass.radius = 1;
         bloomPass.threshold = 0;
         this.graphRef.current.postProcessingComposer().addPass(bloomPass);
+
+        // const planeGeometry = new Three.PlaneGeometry(10000, 10000, 1, 1);
+        // const planeMaterial = new Three.MeshLambertMaterial({
+        //     color: 0x030303,
+        //     side: Three.DoubleSide
+        // });
+
+        // const mesh = new Three.Mesh(planeGeometry, planeMaterial);
+        // mesh.position.set(-100, -200, -100);
+        // mesh.rotation.set(0.5 * Math.PI, 0, 0);
+        // this.graphRef.current.scene().add(mesh);
 
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
         document.addEventListener("keyup", this.handleKeyUp.bind(this));
@@ -152,7 +165,7 @@ export default class App extends React.Component {
             this.toggleCamera();
         } else if (e.key === "`") {
             if (!this.isFocusingInput) {
-                this.setState({ showHistory: !this.state.showHistory });
+                this.setState({ showConsole: !this.state.showConsole });
             }
         } else if (e.key === "-") {
             if (!this.isFocusingInput) {
@@ -170,6 +183,8 @@ export default class App extends React.Component {
             if (this.state.input === "") {
                 this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
             }
+        } else if (this.state.controlType === "fly") {
+            return;
         } else {
             this.inputRef.current.focus();
         }
@@ -304,6 +319,12 @@ export default class App extends React.Component {
         this.setState({ hyperedge });
     }
 
+    async removeHyperedge(hyperedge) {
+        console.log("REMOVE HYPEREDGE", hyperedge);
+        await window.api.hyperedges.remove(hyperedge);
+        await this.reloadData();
+    }
+
     render() {
         const forceGraph = (
             <ForceGraph3D
@@ -334,23 +355,48 @@ export default class App extends React.Component {
         return (
             <>
                 <a id="titlebar">HyperTyper</a>
-                {this.state.showHistory && (
-                    <div className="absolute top-0 left-0 right-0 z-20 text-sm p-2 bg-white/50 max-h-[200px] overflow-y-scroll">
-                        {this.state.hyperedges.map((edge, i) => {
-                            return (
-                                <div className="flex gap-3" key={`${edge.join("->")}-${i}}`}>
-                                    {edge
-                                        .map((node, j) => {
-                                            return (
-                                                <div key={`${node}-${j}`} className="w-36 truncate">
-                                                    {node}
-                                                </div>
-                                            );
-                                        })
-                                        .reduce((prev, curr) => [prev, " → ", curr])}
-                                </div>
-                            );
-                        })}
+                {this.state.showConsole && (
+                    <div
+                        id="console"
+                        ref={this.consoleRef}
+                        className="bg-white/10 text-white flex flex-col h-full w-full absolute z-20 max-h-[300px] overflow-y-scroll"
+                    >
+                        <div className="grow"></div>
+                        <div>
+                            <table className="w-auto">
+                                <tbody>
+                                    {this.state.hyperedges.map((edge, i) => {
+                                        console.log(edge.join("->"), i);
+                                        return (
+                                            <tr key={`${edge.join("->")}-${i}}`}>
+                                                {edge.map((node, j) => {
+                                                    return (
+                                                        <React.Fragment key={`${node}-${j}-group`}>
+                                                            <td
+                                                                key={`${node}-${j}`}
+                                                                className="p-2"
+                                                            >
+                                                                <a
+                                                                    onClick={(e) =>
+                                                                        this.removeHyperedge(edge)
+                                                                    }
+                                                                    className="cursor-pointer"
+                                                                >
+                                                                    {node}
+                                                                </a>
+                                                            </td>
+                                                            {j < edge.length - 1 && (
+                                                                <td key={`${node}-${i}-sep`}>→</td>
+                                                            )}
+                                                        </React.Fragment>
+                                                    );
+                                                })}
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
                 <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-10 h-full">
@@ -381,31 +427,33 @@ export default class App extends React.Component {
                         {this.state.controlType === "fly" && Icons.MouseIcon}
                     </a>
                 </div>
-                <div className="flex text-white mt-8 text-sm gap-2 px-2 absolute z-20 w-full">
-                    {this.state.hyperedge.map((symbol, i) => {
-                        return (
-                            <div className="flex gap-2 items-center" key={i}>
-                                <a
-                                    onClick={(e) => this.removeIndexFromHyperedge(i)}
-                                    className="cursor-pointer"
-                                >
-                                    {symbol}
-                                </a>
-                                →
-                            </div>
-                        );
-                    })}
+                {!this.state.showConsole && (
+                    <div className="flex text-white mt-8 text-sm gap-2 px-2 absolute z-20 w-full">
+                        {this.state.hyperedge.map((symbol, i) => {
+                            return (
+                                <div className="flex gap-2 items-center" key={i}>
+                                    <a
+                                        onClick={(e) => this.removeIndexFromHyperedge(i)}
+                                        className="cursor-pointer"
+                                    >
+                                        {symbol}
+                                    </a>
+                                    →
+                                </div>
+                            );
+                        })}
 
-                    <form onSubmit={this.handleAddInput.bind(this)} className="">
-                        <input
-                            type="text"
-                            ref={this.inputRef}
-                            className="bg-transparent outline-none text-4xl text-center absolute z-30 left-0 right-0 top-4 py-2"
-                            value={this.state.input}
-                            onChange={(e) => this.setState({ input: e.target.value })}
-                        />
-                    </form>
-                </div>
+                        <form onSubmit={this.handleAddInput.bind(this)} className="">
+                            <input
+                                type="text"
+                                ref={this.inputRef}
+                                className="bg-transparent outline-none text-4xl text-center absolute z-30 left-0 right-0 top-4 py-2"
+                                value={this.state.input}
+                                onChange={(e) => this.setState({ input: e.target.value })}
+                            />
+                        </form>
+                    </div>
+                )}
                 {this.state.controlType === "fly" && forceGraph}
                 {this.state.controlType === "orbit" && forceGraph}
             </>

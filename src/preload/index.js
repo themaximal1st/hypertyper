@@ -4,6 +4,12 @@ const api = {
     hyperedges: {
         add: (hyperedge, symbol) => {
             return ipcRenderer.invoke("hyperedges.add", hyperedge, symbol);
+        },
+        remove: (hyperedge) => {
+            return ipcRenderer.invoke("hyperedges.remove", hyperedge);
+        },
+        all: () => {
+            return ipcRenderer.invoke("hyperedges.all");
         }
     },
     forceGraph: {
