@@ -1,8 +1,9 @@
-import { app, BrowserWindow, Menu, MenuItem, dialog } from "electron";
-import fs from "fs";
-
 import { join } from "path";
+
+import { app, BrowserWindow, Menu, MenuItem } from "electron";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+
+import { NewMenuItem, LoadMenuItem, SaveMenuItem } from "./menuitems";
 
 // TODO: Make HyperType multi-window
 export default class App {
@@ -17,50 +18,13 @@ export default class App {
         if (!menu) return;
 
         let fileMenu = menu.items.find((m) => m.label === "File");
+        if (!fileMenu) return;
 
-        if (fileMenu) {
-            // separator
-            fileMenu.submenu.insert(
-                0,
-                new MenuItem({
-                    type: "separator"
-                })
-            );
-
-            fileMenu.submenu.insert(
-                0,
-                new MenuItem({
-                    label: "Save HyperType File",
-                    click: () => {
-                        const date = new Date();
-                        const filename = `~/Desktop/hypertype-${date.toISOString().replace(/:/g, "-")}.hypertype`;
-                        const options = {
-                            title: "Save HyperType File",
-                            defaultPath: filename,
-                            buttonLabel: "Save"
-                        };
-
-                        const file = dialog.showSaveDialogSync(this.browserWindow, options);
-
-                        const data = this.hypertype.export();
-                        fs.writeFileSync(file, data);
-                    }
-                })
-            );
-
-            fileMenu.submenu.insert(
-                0,
-                new MenuItem({
-                    label: "New HyperType File",
-                    click: () => {
-                        this.hypertype.reset();
-                        this.browserWindow.reload();
-                    }
-                })
-            );
-
-            Menu.setApplicationMenu(menu);
-        }
+        fileMenu.submenu.insert(0, new MenuItem({ type: "separator" }));
+        fileMenu.submenu.insert(0, SaveMenuItem(this));
+        fileMenu.submenu.insert(0, LoadMenuItem(this));
+        fileMenu.submenu.insert(0, NewMenuItem(this));
+        Menu.setApplicationMenu(menu);
     }
 
     static createWindow() {

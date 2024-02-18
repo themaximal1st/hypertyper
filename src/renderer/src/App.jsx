@@ -13,17 +13,14 @@ import Animation from "./Animation";
 import * as Icons from "./Icons";
 
 // TODO
-// New, confirm user wants to blow away changes
-// Save, reveal file in finder after save
-// Load
-// 1. We want to search / filter down hypergraph
+// 1. We want to search / filter down hypergraph ...then expand back up
 // 5. UI for syncing data
 // 4. pagerank node/text size...pagerank stress test large files
 
 // TODO: click to filter down onto nodes/edges
 // TODO: when creating...scope down context
 // TODO: super sweet console!
-// TODO: should have numerical zoom, plus and minus keys
+// TODO: should have numerical zoom, plus and minus keys (without bugs)
 
 export default class App extends React.Component {
     constructor(props) {

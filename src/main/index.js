@@ -1,8 +1,4 @@
 import { ipcMain } from "electron";
-import fs from "fs";
-
-// save
-// load
 
 import App from "./app.js";
 
