@@ -5,7 +5,6 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 
 import { NewMenuItem, LoadMenuItem, SaveMenuItem } from "./menuitems";
 
-// TODO: Make HyperType multi-window
 export default class App {
     constructor(browserWindow, hypertype) {
         this.app = app;
