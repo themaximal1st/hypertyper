@@ -153,7 +153,9 @@ export default class App extends React.Component {
             this.toggleCamera();
         } else if (e.key === "`") {
             if (!this.isFocusingInput) {
-                this.setState({ showConsole: !this.state.showConsole });
+                this.setState({ showConsole: !this.state.showConsole }, () => {
+                    this.consoleRef.current.scrollTop = this.consoleRef.current.scrollHeight;
+                });
             }
         } else if (e.key === "-") {
             if (!this.isFocusingInput) {
@@ -343,50 +345,45 @@ export default class App extends React.Component {
         return (
             <>
                 <a id="titlebar">HyperTyper</a>
-                {this.state.showConsole && (
-                    <div
-                        id="console"
-                        ref={this.consoleRef}
-                        className="bg-white/10 text-white flex flex-col h-full w-full absolute z-20 max-h-[300px] overflow-y-scroll"
-                    >
-                        <div className="grow"></div>
-                        <div>
-                            <table className="w-auto">
-                                <tbody>
-                                    {this.state.hyperedges.map((edge, i) => {
-                                        console.log(edge.join("->"), i);
-                                        return (
-                                            <tr key={`${edge.join("->")}-${i}}`}>
-                                                {edge.map((node, j) => {
-                                                    return (
-                                                        <React.Fragment key={`${node}-${j}-group`}>
-                                                            <td
-                                                                key={`${node}-${j}`}
-                                                                className="p-2"
+                <div
+                    id="console"
+                    ref={this.consoleRef}
+                    className={`bg-white/10 text-white h-full w-full absolute z-10 max-h-[300px] overflow-y-scroll ${this.state.showConsole ? "flex flex-col" : "hidden"}`}
+                >
+                    <div className="grow"></div>
+                    <div>
+                        <table className="w-auto">
+                            <tbody>
+                                {this.state.hyperedges.map((edge, i) => {
+                                    console.log(edge.join("->"), i);
+                                    return (
+                                        <tr key={`${edge.join("->")}-${i}}`}>
+                                            {edge.map((node, j) => {
+                                                return (
+                                                    <React.Fragment key={`${node}-${j}-group`}>
+                                                        <td key={`${node}-${j}`} className="p-1">
+                                                            <a
+                                                                onClick={(e) =>
+                                                                    this.removeHyperedge(edge)
+                                                                }
+                                                                className="cursor-pointer"
                                                             >
-                                                                <a
-                                                                    onClick={(e) =>
-                                                                        this.removeHyperedge(edge)
-                                                                    }
-                                                                    className="cursor-pointer"
-                                                                >
-                                                                    {node}
-                                                                </a>
-                                                            </td>
-                                                            {j < edge.length - 1 && (
-                                                                <td key={`${node}-${i}-sep`}>→</td>
-                                                            )}
-                                                        </React.Fragment>
-                                                    );
-                                                })}
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                                                                {node}
+                                                            </a>
+                                                        </td>
+                                                        {j < edge.length - 1 && (
+                                                            <td key={`${node}-${i}-sep`}>→</td>
+                                                        )}
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
                     </div>
-                )}
+                </div>
                 <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-10 h-full">
                     <input
                         type="range"
