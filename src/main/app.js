@@ -1,4 +1,6 @@
-import { app, BrowserWindow, Menu, MenuItem } from "electron";
+import { app, BrowserWindow, Menu, MenuItem, dialog } from "electron";
+import fs from "fs";
+
 import { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 
@@ -22,6 +24,27 @@ export default class App {
                 0,
                 new MenuItem({
                     type: "separator"
+                })
+            );
+
+            fileMenu.submenu.insert(
+                0,
+                new MenuItem({
+                    label: "Save HyperType File",
+                    click: () => {
+                        const date = new Date();
+                        const filename = `~/Desktop/hypertype-${date.toISOString().replace(/:/g, "-")}.hypertype`;
+                        const options = {
+                            title: "Save HyperType File",
+                            defaultPath: filename,
+                            buttonLabel: "Save"
+                        };
+
+                        const file = dialog.showSaveDialogSync(this.browserWindow, options);
+
+                        const data = this.hypertype.export();
+                        fs.writeFileSync(file, data);
+                    }
                 })
             );
 

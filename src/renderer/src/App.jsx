@@ -13,7 +13,8 @@ import Animation from "./Animation";
 import * as Icons from "./Icons";
 
 // TODO
-// Save
+// New, confirm user wants to blow away changes
+// Save, reveal file in finder after save
 // Load
 // 1. We want to search / filter down hypergraph
 // 5. UI for syncing data
@@ -39,7 +40,7 @@ export default class App extends React.Component {
             height: window.innerHeight,
             hideLabelsThreshold: 1000,
             hideLabels: true,
-            showConsole: true,
+            showConsole: false,
             interwingle: 0,
             isAnimating: false,
             input: "",
