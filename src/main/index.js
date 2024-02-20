@@ -7,11 +7,18 @@ import App from "./app.js";
     const hypertype = new HyperType();
     const app = await App.launch(hypertype);
 
-    ipcMain.handle("forceGraph.graphData", (_, options) => {
+    ipcMain.handle("forceGraph.graphData", (_, filter = [], options = {}) => {
+        console.log("forceGraph.graphData", filter, options);
+
         if (typeof options.interwingle !== "undefined") {
-            hypertype.options.interwingle = options.interwingle;
+            hypertype.interwingle = options.interwingle;
         }
-        return hypertype.graphData();
+
+        if (typeof options.depth !== "undefined") {
+            hypertype.depth = options.depth;
+        }
+
+        return hypertype.graphData(filter);
     });
 
     ipcMain.handle("hyperedges.add", (_, hyperedge, symbol) => {

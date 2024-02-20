@@ -18,7 +18,7 @@ export default class App extends React.Component {
         this.inputRef = React.createRef();
         this.consoleRef = React.createRef();
         this.graphRef = React.createRef();
-        this.interwingleRef = React.createRef();
+        this.depthRef = React.createRef();
         this.nodeThreeObjectCache = {};
         this.animation = new Animation(this.graphRef);
         this.state = {
@@ -33,8 +33,10 @@ export default class App extends React.Component {
             input: "",
             hyperedge: [],
             hyperedges: [],
+            filters: [["Ted Nelson"], ["WWW"]],
+            depth: 0,
+            maxDepth: 0,
             colors: [],
-
             data: { nodes: [], links: [] }
         };
     }
@@ -43,14 +45,21 @@ export default class App extends React.Component {
         return new Promise(async (resolve, reject) => {
             const start = Date.now();
 
-            const options = { interwingle: this.state.interwingle };
-            const data = await window.api.forceGraph.graphData(options);
-            const hyperedges = await window.api.hyperedges.all();
+            const data = await window.api.forceGraph.graphData(this.state.filters, {
+                interwingle: this.state.interwingle,
+                depth: this.state.depth
+            });
 
-            console.log(hyperedges);
+            let depth = this.state.depth;
+            const maxDepth = data.maxDepth || 0;
+            if (depth > maxDepth) depth = maxDepth;
+
+            const hyperedges = await window.api.hyperedges.all();
 
             const state = {
                 data,
+                depth,
+                maxDepth,
                 hyperedges,
                 hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
             };
@@ -65,9 +74,7 @@ export default class App extends React.Component {
             this.setState(state, () => {
                 if (zoom) {
                     setTimeout(() => {
-                        this.graphRef.current.zoomToFit(300, 100, (node) => {
-                            return this.state.hyperedge.indexOf(node.name) > -1;
-                        });
+                        this.graphRef.current.zoomToFit(300, 100);
                         resolve();
                     }, 250);
                 } else {
@@ -169,6 +176,10 @@ export default class App extends React.Component {
             this.rotate(-10);
         } else if (e.key === "ArrowRight") {
             this.rotate(10);
+        } else if (e.key === "ArrowDown") {
+            this.toggleDepth(this.state.depth - 1);
+        } else if (e.key === "ArrowUp") {
+            this.toggleDepth(this.state.depth + 1);
         } else if (e.key === "Backspace") {
             if (this.state.input === "") {
                 this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
@@ -209,7 +220,14 @@ export default class App extends React.Component {
     }
 
     handleClickNode(node) {
-        console.log("NODE", node);
+        this.setState(
+            {
+                filters: [...this.state.filters, node.name]
+            },
+            () => {
+                this.reloadData();
+            }
+        );
     }
 
     // this doesn't really work
@@ -265,8 +283,24 @@ export default class App extends React.Component {
         if (interwingle > 3) interwingle = 0;
 
         this.setState({ interwingle }, () => {
+            this.reloadData();
+        });
+    }
+
+    toggleDepth(depth) {
+        if (typeof depth === "undefined") {
+            depth = this.state.depth;
+            depth++;
+        }
+
+        if (depth > this.state.maxDepth) depth = this.state.maxDepth;
+        if (depth < 0) depth = 0;
+
+        this.setState({ depth }, () => {
             setTimeout(() => {
-                this.interwingleRef.current.blur();
+                if (this.depthRef.current) {
+                    this.depthRef.current.blur();
+                }
             }, 50);
 
             this.reloadData();
@@ -309,8 +343,15 @@ export default class App extends React.Component {
         this.setState({ hyperedge });
     }
 
+    removeFilterSymbol(symbol) {
+        const filters = this.state.filters;
+        filters.splice(filters.indexOf(symbol), 1);
+        this.setState({ filters }, () => {
+            this.reloadData();
+        });
+    }
+
     async removeHyperedge(hyperedge) {
-        console.log("REMOVE HYPEREDGE", hyperedge);
         await window.api.hyperedges.remove(hyperedge);
         await this.reloadData();
     }
@@ -348,14 +389,13 @@ export default class App extends React.Component {
                 <div
                     id="console"
                     ref={this.consoleRef}
-                    className={`bg-white/10 text-white h-full w-full absolute z-10 max-h-[300px] overflow-y-scroll ${this.state.showConsole ? "flex flex-col" : "hidden"}`}
+                    className={`bg-white/10 text-white h-full w-full absolute z-40 max-h-[300px] overflow-y-scroll ${this.state.showConsole ? "flex flex-col" : "hidden"}`}
                 >
                     <div className="grow"></div>
                     <div>
                         <table className="w-auto">
                             <tbody>
                                 {this.state.hyperedges.map((edge, i) => {
-                                    console.log(edge.join("->"), i);
                                     return (
                                         <tr key={`${edge.join("->")}-${i}}`}>
                                             {edge.map((node, j) => {
@@ -384,18 +424,60 @@ export default class App extends React.Component {
                         </table>
                     </div>
                 </div>
-                <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-10 h-full">
-                    <input
-                        type="range"
-                        ref={this.interwingleRef}
-                        min="0"
-                        max="3"
-                        step="1"
-                        value={this.state.interwingle}
-                        className="interwingle-slider"
-                        onChange={(e) => this.toggleInterwingle(parseInt(e.target.value))}
-                    />
+                <div className="text-white absolute z-40 left-0 right-0 top-8 h-20 flex flex-col gap-1 p-2">
+                    {this.state.filters.map((filter, i) => {
+                        return (
+                            <a
+                                key={`${filter}-${i}`}
+                                className="cursor-pointer"
+                                onClick={(e) => this.removeFilterSymbol(filter)}
+                            >
+                                {filter}
+                            </a>
+                        );
+                    })}
                 </div>
+                <div className="absolute top-0 left-0 bottom-0 z-20 flex justify-center items-center w-12 h-full flex-col gap-8">
+                    <a
+                        onClick={(e) => this.toggleInterwingle(3)}
+                        className={`cursor-pointer ${this.state.interwingle == 3 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
+                    >
+                        <img src="src/assets/interwingle-3.png" className="w-8 h-8" />
+                    </a>
+                    <a
+                        onClick={(e) => this.toggleInterwingle(2)}
+                        className={`cursor-pointer ${this.state.interwingle == 2 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
+                    >
+                        <img src="src/assets/interwingle-2.png" className="w-8 h-8" />
+                    </a>
+                    <a
+                        onClick={(e) => this.toggleInterwingle(1)}
+                        className={`cursor-pointer ${this.state.interwingle == 1 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
+                    >
+                        <img src="src/assets/interwingle-1.png" className="w-8 h-8" />
+                    </a>
+                    <a
+                        onClick={(e) => this.toggleInterwingle(0)}
+                        className={`cursor-pointer ${this.state.interwingle == 0 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
+                    >
+                        <img src="src/assets/interwingle-0.png" className="w-8 h-8" />
+                    </a>
+                </div>
+                {this.state.maxDepth && (
+                    <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-12 h-full text-white">
+                        {this.state.depth}/{this.state.maxDepth}
+                        <input
+                            type="range"
+                            ref={this.depthRef}
+                            min="0"
+                            max={this.state.maxDepth}
+                            step="1"
+                            value={this.state.depth}
+                            className="depth-slider"
+                            onChange={(e) => this.toggleDepth(parseInt(e.target.value))}
+                        />
+                    </div>
+                )}
                 <div className="absolute text-white bottom-2 right-6 z-20 flex gap-4">
                     <a
                         onClick={() => this.toggleAnimation()}

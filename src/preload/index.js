@@ -13,8 +13,8 @@ const api = {
         }
     },
     forceGraph: {
-        graphData: (options = {}) => {
-            return ipcRenderer.invoke("forceGraph.graphData", options);
+        graphData: (filter = [], options = null) => {
+            return ipcRenderer.invoke("forceGraph.graphData", filter, options);
         }
     }
 };

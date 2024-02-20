@@ -20,7 +20,7 @@
     "dependencies": {
         "@electron-toolkit/preload": "^2.0.0",
         "@electron-toolkit/utils": "^2.0.0",
-        "@themaximalist/hypertype": "^0.0.6",
+        "@themaximalist/hypertype": "^0.0.9",
         "electron-updater": "^6.1.1",
         "ldrs": "^1.0.1",
         "react-force-graph-3d": "^1.24.1",
