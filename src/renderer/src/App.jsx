@@ -33,7 +33,7 @@ export default class App extends React.Component {
             input: "",
             hyperedge: [],
             hyperedges: [],
-            filters: [["Ted Nelson"], ["WWW"]],
+            filters: [],
             depth: 0,
             maxDepth: 0,
             colors: [],
@@ -219,15 +219,23 @@ export default class App extends React.Component {
         );
     }
 
-    handleClickNode(node) {
-        this.setState(
-            {
-                filters: [...this.state.filters, node.name]
-            },
-            () => {
-                this.reloadData();
+    handleClickNode(node, e) {
+        const filters = this.state.filters;
+        if (e.shiftKey) {
+            if (filters.length === 0) {
+                filters.push([]);
             }
-        );
+
+            filters[filters.length - 1].push(node.name);
+        } else {
+            filters.push([node.name]);
+        }
+
+        console.log("FILTERS", filters);
+
+        this.setState({ filters }, () => {
+            this.reloadData();
+        });
     }
 
     // this doesn't really work
@@ -343,9 +351,15 @@ export default class App extends React.Component {
         this.setState({ hyperedge });
     }
 
-    removeFilterSymbol(symbol) {
+    removeFilterSymbol(filter, symbol) {
         const filters = this.state.filters;
-        filters.splice(filters.indexOf(symbol), 1);
+        const indexOf = filters.indexOf(filter);
+        filter.splice(filter.indexOf(symbol), 1);
+        if (filter.length === 0) {
+            filters.splice(indexOf, 1);
+        } else {
+            filters[indexOf] = filter;
+        }
         this.setState({ filters }, () => {
             this.reloadData();
         });
@@ -424,48 +438,53 @@ export default class App extends React.Component {
                         </table>
                     </div>
                 </div>
-                <div className="text-white absolute z-40 left-0 right-0 top-8 h-20 flex flex-col gap-1 p-2">
+                <div className="text-white absolute z-40 left-1 right-0 top-8 h-20 flex flex-col gap-1 p-2">
                     {this.state.filters.map((filter, i) => {
                         return (
-                            <a
-                                key={`${filter}-${i}`}
-                                className="cursor-pointer"
-                                onClick={(e) => this.removeFilterSymbol(filter)}
-                            >
-                                {filter}
-                            </a>
+                            <div key={`${filter}-${i}`} className="flex gap-2">
+                                {filter.map((symbol, j) => {
+                                    return (
+                                        <a
+                                            key={`${symbol}-${j}`}
+                                            className="cursor-pointer text-sm opacity-50 hover:opacity-100 transition-all"
+                                            onClick={(e) => this.removeFilterSymbol(filter, symbol)}
+                                        >
+                                            {symbol}
+                                        </a>
+                                    );
+                                })}
+                            </div>
                         );
                     })}
                 </div>
-                <div className="absolute top-0 left-0 bottom-0 z-20 flex justify-center items-center w-12 h-full flex-col gap-8">
+                <div className="absolute top-0 left-1 bottom-0 z-20 flex justify-center items-center w-12 h-full flex-col gap-8 opacity-50 hover:opacity-100 transition-all">
                     <a
                         onClick={(e) => this.toggleInterwingle(3)}
                         className={`cursor-pointer ${this.state.interwingle == 3 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-3.png" className="w-8 h-8" />
+                        <img src="src/assets/interwingle-3.png" className="w-7 h-7" />
                     </a>
                     <a
                         onClick={(e) => this.toggleInterwingle(2)}
                         className={`cursor-pointer ${this.state.interwingle == 2 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-2.png" className="w-8 h-8" />
+                        <img src="src/assets/interwingle-2.png" className="w-7 h-7" />
                     </a>
                     <a
                         onClick={(e) => this.toggleInterwingle(1)}
                         className={`cursor-pointer ${this.state.interwingle == 1 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-1.png" className="w-8 h-8" />
+                        <img src="src/assets/interwingle-1.png" className="w-7 h-7" />
                     </a>
                     <a
                         onClick={(e) => this.toggleInterwingle(0)}
                         className={`cursor-pointer ${this.state.interwingle == 0 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-0.png" className="w-8 h-8" />
+                        <img src="src/assets/interwingle-0.png" className="w-7 h-7" />
                     </a>
                 </div>
                 {this.state.maxDepth && (
                     <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-12 h-full text-white">
-                        {this.state.depth}/{this.state.maxDepth}
                         <input
                             type="range"
                             ref={this.depthRef}
