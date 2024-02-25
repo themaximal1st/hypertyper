@@ -11,6 +11,10 @@ import ForceGraph3D from "react-force-graph-3d";
 import Animation from "./Animation";
 
 import * as Icons from "./Icons";
+import Interwingle0 from "./assets/interwingle-0.png";
+import Interwingle1 from "./assets/interwingle-1.png";
+import Interwingle2 from "./assets/interwingle-2.png";
+import Interwingle3 from "./assets/interwingle-3.png";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -462,25 +466,25 @@ export default class App extends React.Component {
                         onClick={(e) => this.toggleInterwingle(3)}
                         className={`cursor-pointer ${this.state.interwingle == 3 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-3.png" className="w-7 h-7" />
+                        <img src={Interwingle3} className="w-7 h-7" />
                     </a>
                     <a
                         onClick={(e) => this.toggleInterwingle(2)}
                         className={`cursor-pointer ${this.state.interwingle == 2 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-2.png" className="w-7 h-7" />
+                        <img src={Interwingle2} className="w-7 h-7" />
                     </a>
                     <a
                         onClick={(e) => this.toggleInterwingle(1)}
                         className={`cursor-pointer ${this.state.interwingle == 1 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-1.png" className="w-7 h-7" />
+                        <img src={Interwingle1} className="w-7 h-7" />
                     </a>
                     <a
                         onClick={(e) => this.toggleInterwingle(0)}
                         className={`cursor-pointer ${this.state.interwingle == 0 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
                     >
-                        <img src="src/assets/interwingle-0.png" className="w-7 h-7" />
+                        <img src={Interwingle0} className="w-7 h-7" />
                     </a>
                 </div>
                 {this.state.maxDepth > 0 && (

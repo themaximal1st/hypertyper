@@ -1,9 +1,9 @@
 import { ipcMain } from "electron";
+import HyperType from "@themaximalist/hypertype";
 
 import App from "./app.js";
 
 (async function () {
-    const HyperType = (await import("@themaximalist/hypertype")).default;
     const hypertype = new HyperType();
     const app = await App.launch(hypertype);
 

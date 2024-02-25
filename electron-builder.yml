@@ -1,5 +1,5 @@
 appId: com.themaximalist.hypertyper
-productName: hypertyper
+productName: HyperTyper
 directories:
     buildResources: build
 files:

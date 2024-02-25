@@ -23,9 +23,7 @@
         "build:linux": "npm run build && electron-builder --linux --config"
     },
     "dependencies": {
-        "@electron-toolkit/preload": "^3.0.0",
-        "@electron-toolkit/utils": "^3.0.0",
-        "@themaximalist/hypertype": "^0.1.2",
+        "@themaximalist/hypertype": "github:themaximal1st/hypertype#vectorless",
         "electron-updater": "^6.1.8",
         "ldrs": "^1.0.1",
         "react-force-graph-3d": "^1.24.1",
@@ -36,6 +34,8 @@
     "devDependencies": {
         "@electron-toolkit/eslint-config": "^1.0.2",
         "@electron-toolkit/eslint-config-prettier": "^2.0.0",
+        "@electron-toolkit/preload": "^3.0.0",
+        "@electron-toolkit/utils": "^3.0.0",
         "@vitejs/plugin-react": "^4.2.1",
         "autoprefixer": "^10.4.16",
         "electron": "^29.0.1",
