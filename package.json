@@ -1,10 +1,14 @@
 {
     "name": "hypertyper",
-    "version": "1.0.0",
-    "description": "An Electron application with React",
+    "version": "0.0.1",
+    "description": "Multidimensional Mind Mapping",
     "main": "./out/main/index.js",
-    "author": "example.com",
-    "homepage": "https://www.electronjs.org",
+    "author": "The Maximalist",
+    "license": "MIT",
+    "packagerConfig": {
+        "icon": "resources/icon"
+    },
+    "homepage": "https://hypertyper.com",
     "scripts": {
         "format": "prettier --write .",
         "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
@@ -20,7 +24,7 @@
     "dependencies": {
         "@electron-toolkit/preload": "^2.0.0",
         "@electron-toolkit/utils": "^2.0.0",
-        "@themaximalist/hypertype": "^0.1.0",
+        "@themaximalist/hypertype": "^0.1.2",
         "electron-updater": "^6.1.1",
         "ldrs": "^1.0.1",
         "react-force-graph-3d": "^1.24.1",

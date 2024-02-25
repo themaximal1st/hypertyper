@@ -483,7 +483,7 @@ export default class App extends React.Component {
                         <img src="src/assets/interwingle-0.png" className="w-7 h-7" />
                     </a>
                 </div>
-                {this.state.maxDepth && (
+                {this.state.maxDepth > 0 && (
                     <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-12 h-full text-white">
                         <input
                             type="range"
@@ -497,6 +497,7 @@ export default class App extends React.Component {
                         />
                     </div>
                 )}
+
                 <div className="absolute text-white bottom-2 right-6 z-20 flex gap-4">
                     <a
                         onClick={() => this.toggleAnimation()}
