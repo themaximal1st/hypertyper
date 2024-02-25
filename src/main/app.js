@@ -1,4 +1,5 @@
 import { join } from "path";
+import { fileURLToPath } from "url";
 
 import { app, BrowserWindow, Menu, MenuItem } from "electron";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
@@ -35,8 +36,8 @@ export default class App {
             show: false,
             autoHideMenuBar: true,
             webPreferences: {
-                preload: join(__dirname, "../preload/index.js"),
-                sandbox: true
+                preload: fileURLToPath(new URL("../preload/index.mjs", import.meta.url)),
+                sandbox: false
             }
         });
 
