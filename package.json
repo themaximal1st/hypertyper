@@ -6,9 +6,6 @@
     "type": "module",
     "author": "The Maximalist",
     "license": "MIT",
-    "packagerConfig": {
-        "icon": "resources/icon"
-    },
     "homepage": "https://hypertyper.com",
     "scripts": {
         "format": "prettier --write .",
@@ -36,6 +33,7 @@
         "@electron-toolkit/eslint-config-prettier": "^2.0.0",
         "@electron-toolkit/preload": "^3.0.0",
         "@electron-toolkit/utils": "^3.0.0",
+        "@electron/notarize": "^2.3.0",
         "@vitejs/plugin-react": "^4.2.1",
         "autoprefixer": "^10.4.16",
         "electron": "^29.0.1",

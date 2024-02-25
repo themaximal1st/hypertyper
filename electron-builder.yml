@@ -1,5 +1,6 @@
 appId: com.hypertyper.hypertyper
 productName: HyperTyper
+afterSign: "build/notarize.mjs"
 directories:
     buildResources: build
 files:
