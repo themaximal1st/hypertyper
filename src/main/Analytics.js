@@ -26,7 +26,6 @@ export default class Analytics {
             os_version: os.release(),
             app_version
         };
-        console.log(config);
 
         amplitude.identify(identity, config);
     }
