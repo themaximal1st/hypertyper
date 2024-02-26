@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const api = {
+    analytics: {
+        track: (event) => {
+            return ipcRenderer.invoke("analytics.track", event);
+        }
+    },
     hyperedges: {
         add: (hyperedge, symbol) => {
             return ipcRenderer.invoke("hyperedges.add", hyperedge, symbol);

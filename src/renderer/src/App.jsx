@@ -118,6 +118,8 @@ export default class App extends React.Component {
         window.addEventListener("resize", this.handleResize.bind(this));
 
         this.reloadData();
+
+        window.api.analytics.track("app.load");
     }
 
     componentWillUnmount() {
@@ -163,6 +165,7 @@ export default class App extends React.Component {
         } else if (e.key === "F2") {
             this.toggleCamera();
         } else if (e.key === "`") {
+            window.api.analytics.track("app.toggleConsole");
             if (!this.isFocusingInput) {
                 this.setState({ showConsole: !this.state.showConsole }, () => {
                     this.consoleRef.current.scrollTop = this.consoleRef.current.scrollHeight;
@@ -224,6 +227,7 @@ export default class App extends React.Component {
     }
 
     handleClickNode(node, e) {
+        window.api.analytics.track("app.clickNode");
         const filters = this.state.filters;
         if (e.shiftKey) {
             if (filters.length === 0) {
@@ -266,17 +270,20 @@ export default class App extends React.Component {
     }
 
     toggleLabels() {
+        window.api.analytics.track("app.toggleLabels");
         this.setState({ hideLabels: !this.state.hideLabels }, () => {
             this.graphRef.current.refresh();
         });
     }
 
     toggleCamera() {
+        window.api.analytics.track("app.toggleCamera");
         const controlType = this.state.controlType === "orbit" ? "fly" : "orbit";
         this.reloadData(controlType);
     }
 
     toggleAnimation() {
+        window.api.analytics.track("app.toggleAnimation");
         if (this.state.isAnimating) {
             this.animation.stop();
         } else {
@@ -287,6 +294,7 @@ export default class App extends React.Component {
     }
 
     toggleInterwingle(interwingle) {
+        window.api.analytics.track("app.toggleInterwingle");
         if (typeof interwingle === "undefined") {
             interwingle = this.state.interwingle;
             interwingle++;
@@ -300,6 +308,7 @@ export default class App extends React.Component {
     }
 
     toggleDepth(depth) {
+        window.api.analytics.track("app.toggleDepth");
         if (typeof depth === "undefined") {
             depth = this.state.depth;
             depth++;
@@ -356,6 +365,7 @@ export default class App extends React.Component {
     }
 
     removeFilterSymbol(filter, symbol) {
+        window.api.analytics.track("app.removeFilterSymbol");
         const filters = this.state.filters;
         const indexOf = filters.indexOf(filter);
         filter.splice(filter.indexOf(symbol), 1);

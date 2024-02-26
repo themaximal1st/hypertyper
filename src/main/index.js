@@ -1,11 +1,19 @@
 import { ipcMain } from "electron";
 import HyperType from "@themaximalist/hypertype";
+import Analytics from "./Analytics.js";
 
 import App from "./app.js";
 
 (async function () {
+    Analytics.load();
+    Analytics.track("app.init");
+
     const hypertype = new HyperType();
     const app = await App.launch(hypertype);
+
+    ipcMain.handle("analytics.track", (_, event) => {
+        Analytics.track(event);
+    });
 
     ipcMain.handle("forceGraph.graphData", (_, filter = [], options = {}) => {
         console.log("forceGraph.graphData", filter, options);
@@ -29,6 +37,8 @@ import App from "./app.js";
             edge = hypertype.add(...hyperedge, symbol);
         }
 
+        Analytics.track("hyperedges.add");
+
         return edge.id;
     });
 
@@ -38,6 +48,7 @@ import App from "./app.js";
     });
 
     ipcMain.handle("hyperedges.remove", (_, hyperedge) => {
+        Analytics.track("hyperedges.remove");
         hypertype.remove(...hyperedge);
     });
 })();

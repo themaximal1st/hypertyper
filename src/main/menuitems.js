@@ -1,4 +1,5 @@
 import { MenuItem, dialog, shell } from "electron";
+import Analytics from "./Analytics.js";
 import fs from "fs";
 
 async function promptBeforeErase(App) {
@@ -20,6 +21,7 @@ export function NewMenuItem(App) {
         label: "New HyperTyper",
         accelerator: "CmdOrCtrl+N",
         click: async () => {
+            Analytics.track("file.new");
             if (!(await promptBeforeErase(App))) return;
 
             App.hypertype.reset();
@@ -32,6 +34,7 @@ export function SaveMenuItem(App) {
     return new MenuItem({
         label: "Save HyperTyper",
         click: () => {
+            Analytics.track("file.save");
             const date = new Date();
             const filename = `~/Desktop/hypertype-${date.toISOString().replace(/:/g, "-")}.hypertype`;
             const options = {
@@ -55,6 +58,7 @@ export function LoadMenuItem(App) {
     return new MenuItem({
         label: "Load HyperType File",
         click: async () => {
+            Analytics.track("file.load");
             if (!(await promptBeforeErase(App))) return;
 
             const options = {
