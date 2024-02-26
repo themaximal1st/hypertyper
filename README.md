@@ -1,26 +1,28 @@
-# hypertyper
+## HyperTyper
 
-An Electron application with React
+<img src="src/renderer/src/assets/logo.png" alt="HyperTyper — Multidimensional Mind Mapping" class="logo" style="max-width: 500px;" />
 
-## Recommended IDE Setup
+<div class="badges" style="text-align: center; margin-top: -10px;">
+<a href="https://github.com/themaximal1st/hypertyper"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/themaximal1st/hypertyper"></a>
+<a href="https://www.npmjs.com/package/@themaximalist/hypertyper"><img alt="NPM Downloads" src="https://img.shields.io/npm/dt/%40themaximalist%2Fhypertyper"></a>
+<a href="https://github.com/themaximal1st/hypertyper"><img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/themaximal1st/hypertyper"></a>
+<a href="https://github.com/themaximal1st/hypertyper"><img alt="GitHub License" src="https://img.shields.io/github/license/themaximal1st/hypertyper"></a>
+</div>
+<br />
 
-- [VSCode](https://code.visualstudio.com/) + [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) + [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
-
-## Project Setup
-
-### Install
+## Install
 
 ```bash
 $ npm install
 ```
 
-### Development
+## Development
 
 ```bash
 $ npm run dev
 ```
 
-### Build
+## Build
 
 ```bash
 # For windows
