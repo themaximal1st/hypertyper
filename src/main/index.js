@@ -1,11 +1,13 @@
 import { ipcMain } from "electron";
 import HyperType from "@themaximalist/hypertype";
 import Analytics from "./Analytics.js";
+import CrashReporter from "./CrashReporter.js";
 
 import App from "./app.js";
 
 (async function () {
-    Analytics.load();
+    await CrashReporter.load();
+    await Analytics.load();
     Analytics.track("app.init");
 
     const hypertype = new HyperType();
