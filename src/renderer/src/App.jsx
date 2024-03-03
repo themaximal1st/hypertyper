@@ -1,12 +1,4 @@
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-
-import "ldrs/quantum";
-
-import SpriteText from "three-spritetext";
-import * as Three from "three";
-
 import React from "react";
-import ForceGraph3D from "react-force-graph-3d";
 
 import Animation from "./Animation";
 import License from "./components/License";
@@ -18,6 +10,7 @@ import Interwingle from "./components/Interwingle";
 
 import Depth from "./components/Depth";
 import Footer from "./components/Footer";
+import ForceGraph from "./components/ForceGraph";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -103,15 +96,7 @@ export default class App extends React.Component {
     }
 
     componentDidMount() {
-        this.graphRef.current.d3Force("link").distance((link) => {
-            return link.length || 50;
-        });
-
-        const bloomPass = new UnrealBloomPass();
-        bloomPass.strength = 1;
-        bloomPass.radius = 1;
-        bloomPass.threshold = 0;
-        this.graphRef.current.postProcessingComposer().addPass(bloomPass);
+        ForceGraph.load(this.graphRef);
 
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
         document.addEventListener("keyup", this.handleKeyUp.bind(this));
@@ -119,28 +104,33 @@ export default class App extends React.Component {
         document.addEventListener("mouseup", this.handleMouseUp.bind(this));
         document.addEventListener("wheel", this.handleZoom.bind(this));
         window.addEventListener("resize", this.handleResize.bind(this));
-
-        this.reloadData();
+        window.api.messages.receive(
+            "message-from-main",
+            this.handleMessageFromMain.bind(this)
+        );
 
         this.fetchLicenseInfo();
 
+        this.reloadData();
+
         window.api.analytics.track("app.load");
-
-        window.api.messages.receive("message-from-main", (event, message) => {
-            if (event === "show-license-info") {
-                this.setState({ showLicense: true });
-            }
-
-            console.log("MESSAGE", event, message);
-        });
     }
 
     async fetchLicenseInfo() {
         const license = await window.api.licenses.info();
-        console.log("LICENSE", license);
         this.setState(license, async () => {
             await this.validateAccess();
         });
+    }
+
+    handleMessageFromMain(event, message) {
+        switch (event) {
+            case "show-license-info":
+                this.setState({ showLicense: true });
+                break;
+            default:
+                console.log("MESSAGE", event, message);
+        }
     }
 
     componentWillUnmount() {
@@ -362,36 +352,6 @@ export default class App extends React.Component {
         });
     }
 
-    nodeThreeObject(node) {
-        // console.log("NODE THREE OBJECT");
-
-        if (node.bridge) {
-            const mesh = new Three.Mesh(
-                new Three.SphereGeometry(1),
-                new Three.MeshLambertMaterial({
-                    color: "#000000",
-                    transparent: true,
-                    opacity: 0.25,
-                })
-            );
-            return mesh;
-        }
-
-        let name = node.name || "";
-        if (name.length > 30) {
-            name = `${name.substring(0, 27)}...`;
-        }
-        if (!name) {
-            return null;
-        }
-
-        const sprite = new SpriteText(name);
-        sprite.color = node.color;
-        sprite.textHeight = node.textHeight || 8;
-
-        return sprite;
-    }
-
     removeIndexFromHyperedge(index) {
         const hyperedge = this.state.hyperedge;
         hyperedge.splice(index, 1);
@@ -454,33 +414,6 @@ export default class App extends React.Component {
     }
 
     render() {
-        const forceGraph = (
-            <ForceGraph3D
-                ref={this.graphRef}
-                width={this.state.width}
-                controlType={this.state.controlType}
-                backgroundColor="#000000"
-                height={this.state.height}
-                onNodeClick={this.handleClickNode.bind(this)}
-                graphData={this.state.data}
-                showNavInfo={false}
-                linkColor={(link) => {
-                    return link.color || "#333333";
-                }}
-                nodeThreeObject={(node) => {
-                    if (this.state.hideLabels) {
-                        return null;
-                    }
-                    return this.nodeThreeObject(node);
-                }}
-                linkDirectionalArrowLength={(link) => {
-                    return 5;
-                }}
-                linkDirectionalArrowRelPos={1}
-                linkWidth={2}
-            />
-        );
-
         return (
             <>
                 <a id="titlebar">HyperTyper</a>
@@ -537,8 +470,17 @@ export default class App extends React.Component {
                     hyperedge={this.state.hyperedge}
                     show={!this.state.showConsole}
                 />
-                {this.state.controlType === "fly" && forceGraph}
-                {this.state.controlType === "orbit" && forceGraph}
+                <ForceGraph
+                    graphRef={this.graphRef}
+                    data={this.state.data}
+                    width={this.state.width}
+                    height={this.state.height}
+                    controlType={this.state.controlType}
+                    hideLabels={this.state.hideLabels}
+                    onNodeClick={this.handleClickNode.bind(this)}
+                    showLabels={!this.state.hideLabels}
+                />
+
                 <Splash
                     loaded={this.state.loaded}
                     hyperedges={this.state.hyperedges}
