@@ -1,10 +1,18 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const api = {
+    settings: {
+        get: (key) => {
+            return ipcRenderer.invoke("settings.get", key);
+        },
+        set: (key, value) => {
+            return ipcRenderer.invoke("settings.set", key, value);
+        },
+    },
     analytics: {
         track: (event) => {
             return ipcRenderer.invoke("analytics.track", event);
-        }
+        },
     },
     hyperedges: {
         add: (hyperedge, symbol) => {
@@ -15,13 +23,29 @@ const api = {
         },
         all: () => {
             return ipcRenderer.invoke("hyperedges.all");
-        }
+        },
     },
     forceGraph: {
         graphData: (filter = [], options = null) => {
             return ipcRenderer.invoke("forceGraph.graphData", filter, options);
-        }
-    }
+        },
+    },
+    licenses: {
+        validate: (license) => {
+            return ipcRenderer.invoke("license.validate", license);
+        },
+        trialDurationRemaining: () => {
+            return ipcRenderer.invoke("license.trialDurationRemaining");
+        },
+    },
+    messages: {
+        receive: (channel, func) => {
+            const validChannels = ["message-from-main"];
+            if (validChannels.includes(channel)) {
+                ipcRenderer.on(channel, (event, ...args) => func(...args));
+            }
+        },
+    },
 };
 
 try {

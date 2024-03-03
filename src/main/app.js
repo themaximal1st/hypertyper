@@ -1,10 +1,15 @@
 import { join } from "path";
 import { fileURLToPath } from "url";
 
-import { app, BrowserWindow, Menu, MenuItem } from "electron";
+import { app, BrowserWindow, Menu, MenuItem, shell } from "electron";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 
-import { NewMenuItem, LoadMenuItem, SaveMenuItem } from "./menuitems";
+import {
+    NewMenuItem,
+    LoadMenuItem,
+    SaveMenuItem,
+    LicenseMenuItem,
+} from "./menuitems";
 
 export default class App {
     constructor(browserWindow, hypertype) {
@@ -21,10 +26,20 @@ export default class App {
         if (!fileMenu) return;
 
         fileMenu.submenu.insert(0, new MenuItem({ type: "separator" }));
+        fileMenu.submenu.insert(0, LicenseMenuItem(this));
+        fileMenu.submenu.insert(0, new MenuItem({ type: "separator" }));
         fileMenu.submenu.insert(0, SaveMenuItem(this));
         fileMenu.submenu.insert(0, LoadMenuItem(this));
         fileMenu.submenu.insert(0, NewMenuItem(this));
         Menu.setApplicationMenu(menu);
+    }
+
+    static titleBarStyle() {
+        if (process.platform === "darwin") {
+            return "hiddenInset";
+        }
+
+        return "default";
     }
 
     static createWindow() {
@@ -32,19 +47,31 @@ export default class App {
             width: 900,
             height: 670,
             // frame: false,
-            titleBarStyle: "hidden",
+            titleBarStyle: App.titleBarStyle(),
             show: false,
-            autoHideMenuBar: true,
+            // autoHideMenuBar: true,
             webPreferences: {
-                preload: fileURLToPath(new URL("../preload/index.mjs", import.meta.url)),
-                sandbox: false
-            }
+                preload: fileURLToPath(
+                    new URL("../preload/index.mjs", import.meta.url)
+                ),
+                sandbox: false,
+            },
         });
 
         browserWindow.webContents.setFrameRate(60);
 
         browserWindow.on("ready-to-show", () => {
             browserWindow.show();
+        });
+
+        browserWindow.webContents.setWindowOpenHandler(({ url }) => {
+            // config.fileProtocol is my custom file protocol
+            // if (url.startsWith(config.fileProtocol)) {
+            //     return { action: "allow" };
+            // }
+            // open url in a browser and prevent default
+            shell.openExternal(url);
+            return { action: "deny" };
         });
 
         // browserWindow.webContents.setWindowOpenHandler((details) => {
@@ -79,9 +106,7 @@ export default class App {
         // })
 
         app.on("window-all-closed", () => {
-            if (process.platform !== "darwin") {
-                app.quit();
-            }
+            app.quit();
         });
 
         const hyperTyper = new App(browserWindow, hypertype);

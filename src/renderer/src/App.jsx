@@ -10,11 +10,15 @@ import ForceGraph3D from "react-force-graph-3d";
 
 import Animation from "./Animation";
 
+// TODO: we need to simplify licensing...if you enter an invalid license. it says it's valid because trial is still going
+// TODO: refactor some of this into separate components
+
 import * as Icons from "./Icons";
 import Interwingle0 from "./assets/interwingle-0.png";
 import Interwingle1 from "./assets/interwingle-1.png";
 import Interwingle2 from "./assets/interwingle-2.png";
 import Interwingle3 from "./assets/interwingle-3.png";
+import Logo from "./assets/plain-logo.png";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -22,10 +26,17 @@ export default class App extends React.Component {
         this.inputRef = React.createRef();
         this.consoleRef = React.createRef();
         this.graphRef = React.createRef();
+        this.licenseRef = React.createRef();
         this.depthRef = React.createRef();
         this.nodeThreeObjectCache = {};
         this.animation = new Animation(this.graphRef);
         this.state = {
+            error: null,
+            showLicense: false,
+            trialDurationRemaining: 0,
+            expired: false,
+            license: "",
+            loaded: false,
             width: window.innerWidth,
             controlType: "orbit",
             height: window.innerHeight,
@@ -41,7 +52,7 @@ export default class App extends React.Component {
             depth: 0,
             maxDepth: 0,
             colors: [],
-            data: { nodes: [], links: [] }
+            data: { nodes: [], links: [] },
         };
     }
 
@@ -49,10 +60,13 @@ export default class App extends React.Component {
         return new Promise(async (resolve, reject) => {
             const start = Date.now();
 
-            const data = await window.api.forceGraph.graphData(this.state.filters, {
-                interwingle: this.state.interwingle,
-                depth: this.state.depth
-            });
+            const data = await window.api.forceGraph.graphData(
+                this.state.filters,
+                {
+                    interwingle: this.state.interwingle,
+                    depth: this.state.depth,
+                }
+            );
 
             let depth = this.state.depth;
             const maxDepth = data.maxDepth || 0;
@@ -64,8 +78,9 @@ export default class App extends React.Component {
                 data,
                 depth,
                 maxDepth,
+                loaded: true,
                 hyperedges,
-                hideLabels: data.nodes.length >= this.state.hideLabelsThreshold
+                hideLabels: data.nodes.length >= this.state.hideLabelsThreshold,
             };
 
             if (controlType) {
@@ -99,17 +114,6 @@ export default class App extends React.Component {
         bloomPass.threshold = 0;
         this.graphRef.current.postProcessingComposer().addPass(bloomPass);
 
-        // const planeGeometry = new Three.PlaneGeometry(10000, 10000, 1, 1);
-        // const planeMaterial = new Three.MeshLambertMaterial({
-        //     color: 0x030303,
-        //     side: Three.DoubleSide
-        // });
-
-        // const mesh = new Three.Mesh(planeGeometry, planeMaterial);
-        // mesh.position.set(-100, -200, -100);
-        // mesh.rotation.set(0.5 * Math.PI, 0, 0);
-        // this.graphRef.current.scene().add(mesh);
-
         document.addEventListener("keydown", this.handleKeyDown.bind(this));
         document.addEventListener("keyup", this.handleKeyUp.bind(this));
         document.addEventListener("mousedown", this.handleMouseDown.bind(this));
@@ -120,13 +124,30 @@ export default class App extends React.Component {
         this.reloadData();
 
         window.api.analytics.track("app.load");
+
+        window.api.settings.get("license").then(async (license) => {
+            this.setState({ license }, () => {
+                this.validateLicense();
+            });
+        });
+
+        window.api.messages.receive("message-from-main", (event, message) => {
+            if (event === "show-license-info") {
+                this.setState({ showLicense: true });
+            }
+
+            console.log("MESSAGE", event, message);
+        });
     }
 
     componentWillUnmount() {
         this.animation.stop();
         document.removeEventListener("keydown", this.handleKeyDown.bind(this));
         document.removeEventListener("keyup", this.handleKeyUp.bind(this));
-        document.removeEventListener("mousedown", this.handleMouseDown.bind(this));
+        document.removeEventListener(
+            "mousedown",
+            this.handleMouseDown.bind(this)
+        );
         document.removeEventListener("mouseup", this.handleMouseUp.bind(this));
         document.removeEventListener("wheel", this.handleZoom.bind(this));
         window.removeEventListener("resize", this.handleResize.bind(this));
@@ -139,7 +160,7 @@ export default class App extends React.Component {
     handleResize() {
         this.setState({
             width: window.innerWidth,
-            height: window.innerHeight
+            height: window.innerHeight,
         });
     }
 
@@ -168,7 +189,8 @@ export default class App extends React.Component {
             window.api.analytics.track("app.toggleConsole");
             if (!this.isFocusingInput) {
                 this.setState({ showConsole: !this.state.showConsole }, () => {
-                    this.consoleRef.current.scrollTop = this.consoleRef.current.scrollHeight;
+                    this.consoleRef.current.scrollTop =
+                        this.consoleRef.current.scrollHeight;
                 });
             }
         } else if (e.key === "-") {
@@ -193,6 +215,8 @@ export default class App extends React.Component {
             }
         } else if (this.state.controlType === "fly") {
             return;
+        } else if (this.state.expired || this.state.showLicense) {
+            return;
         } else {
             this.inputRef.current.focus();
         }
@@ -208,7 +232,7 @@ export default class App extends React.Component {
         if (this.state.input.trim().length === 0) {
             this.setState({
                 input: "",
-                hyperedge: []
+                hyperedge: [],
             });
             return;
         }
@@ -218,7 +242,7 @@ export default class App extends React.Component {
         this.setState(
             {
                 input: "",
-                hyperedge: [...this.state.hyperedge, this.state.input]
+                hyperedge: [...this.state.hyperedge, this.state.input],
             },
             async () => {
                 await this.reloadData();
@@ -256,7 +280,9 @@ export default class App extends React.Component {
     rotate(angleDegrees) {
         const cameraPosition = this.graphRef.current.cameraPosition();
 
-        const distance = Math.sqrt(cameraPosition.x ** 2 + cameraPosition.z ** 2);
+        const distance = Math.sqrt(
+            cameraPosition.x ** 2 + cameraPosition.z ** 2
+        );
 
         const initialAngle = Math.atan2(cameraPosition.x, cameraPosition.z);
 
@@ -266,7 +292,11 @@ export default class App extends React.Component {
         const x = distance * Math.sin(newAngle);
         const z = distance * Math.cos(newAngle);
 
-        this.graphRef.current.cameraPosition({ x, y: cameraPosition.y, z }, null, 100);
+        this.graphRef.current.cameraPosition(
+            { x, y: cameraPosition.y, z },
+            null,
+            100
+        );
     }
 
     toggleLabels() {
@@ -278,7 +308,8 @@ export default class App extends React.Component {
 
     toggleCamera() {
         window.api.analytics.track("app.toggleCamera");
-        const controlType = this.state.controlType === "orbit" ? "fly" : "orbit";
+        const controlType =
+            this.state.controlType === "orbit" ? "fly" : "orbit";
         this.reloadData(controlType);
     }
 
@@ -337,7 +368,7 @@ export default class App extends React.Component {
                 new Three.MeshLambertMaterial({
                     color: "#000000",
                     transparent: true,
-                    opacity: 0.25
+                    opacity: 0.25,
                 })
             );
             return mesh;
@@ -384,6 +415,32 @@ export default class App extends React.Component {
         await this.reloadData();
     }
 
+    async validateLicense() {
+        const license = this.state.license;
+        const valid = await window.api.licenses.validate(license);
+        const trialDurationRemaining =
+            await window.api.licenses.trialDurationRemaining();
+        if (valid) {
+            console.log("HyperTyper is valid");
+            this.setState(
+                { expired: false, license, trialDurationRemaining },
+                async () => {
+                    await window.api.settings.set("license", license);
+                }
+            );
+        } else {
+            let error = "";
+            if (license && license.length > 0) error = "Invalid license";
+            console.log("HyperTyper is not valid");
+            this.setState({ expired: true, error, trialDurationRemaining });
+        }
+    }
+
+    async handleLicense(e) {
+        e.preventDefault();
+        await this.validateLicense();
+    }
+
     render() {
         const forceGraph = (
             <ForceGraph3D
@@ -411,9 +468,104 @@ export default class App extends React.Component {
                 linkWidth={2}
             />
         );
+
         return (
             <>
                 <a id="titlebar">HyperTyper</a>
+                {(this.state.expired || this.state.showLicense) && (
+                    <div className="bg-black/90 text-white absolute z-50 inset-0 flex flex-col gap-4 justify-center items-center r">
+                        <div className="relative">
+                            {this.state.showLicense && (
+                                <a
+                                    className="cursor-pointer absolute -top-4 -right-4 font-bold opacity-50 hover:opacity-100 transition-all"
+                                    onClick={(e) =>
+                                        this.setState({ showLicense: false })
+                                    }
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth="1.5"
+                                        stroke="currentColor"
+                                        className="w-6 h-6"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M6 18 18 6M6 6l12 12"
+                                        />
+                                    </svg>
+                                </a>
+                            )}
+                            <div>
+                                <img
+                                    src={Logo}
+                                    className="w-full max-w-sm mb-4"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-2 max-w-md w-full">
+                                {!this.state.expired && this.state.license && (
+                                    <div>Your HyperTyper license is valid.</div>
+                                )}
+                                {!this.state.expired && !this.state.license && (
+                                    <div>
+                                        Your HyperTyper trial is still going.
+                                        Enter your license below to register
+                                        HyperTyper.
+                                    </div>
+                                )}
+                                {this.state.expired && (
+                                    <>
+                                        <p>HyperTyper has expired.</p>
+                                        <p>
+                                            Please{" "}
+                                            <a
+                                                target="_blank"
+                                                href="https://hypertyper.com"
+                                                className="underline"
+                                            >
+                                                purchase a license
+                                            </a>{" "}
+                                            or enter your license below to
+                                            continue.
+                                        </p>
+                                    </>
+                                )}
+                                <div>
+                                    <form
+                                        className="flex flex-col gap-2 mt-2"
+                                        onSubmit={this.handleLicense.bind(this)}
+                                    >
+                                        {this.state.error && (
+                                            <p className="text-red-400">
+                                                {this.state.error}
+                                            </p>
+                                        )}
+                                        <input
+                                            type="text"
+                                            ref={this.licenseRef}
+                                            value={this.state.license}
+                                            onChange={(e) => {
+                                                this.setState({
+                                                    license: e.target.value,
+                                                });
+                                            }}
+                                            name="license"
+                                            className="w-full p-2 rounded-md text-lg focus:outline-none text-black"
+                                            placeholder="47D2E0-0E3BC5-25E4D7-4E3BA7-8B61C0-V3"
+                                        />
+                                        <input
+                                            type="submit"
+                                            className="w-full p-2 rounded-md text-white cursor-pointer border-2 border-white hover:bg-white hover:text-black transition-all"
+                                            value="Activate"
+                                        />
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 <div
                     id="console"
                     ref={this.consoleRef}
@@ -428,19 +580,31 @@ export default class App extends React.Component {
                                         <tr key={`${edge.join("->")}-${i}}`}>
                                             {edge.map((node, j) => {
                                                 return (
-                                                    <React.Fragment key={`${node}-${j}-group`}>
-                                                        <td key={`${node}-${j}`} className="p-1">
+                                                    <React.Fragment
+                                                        key={`${node}-${j}-group`}
+                                                    >
+                                                        <td
+                                                            key={`${node}-${j}`}
+                                                            className="p-1"
+                                                        >
                                                             <a
                                                                 onClick={(e) =>
-                                                                    this.removeHyperedge(edge)
+                                                                    this.removeHyperedge(
+                                                                        edge
+                                                                    )
                                                                 }
                                                                 className="cursor-pointer"
                                                             >
                                                                 {node}
                                                             </a>
                                                         </td>
-                                                        {j < edge.length - 1 && (
-                                                            <td key={`${node}-${i}-sep`}>→</td>
+                                                        {j <
+                                                            edge.length - 1 && (
+                                                            <td
+                                                                key={`${node}-${i}-sep`}
+                                                            >
+                                                                →
+                                                            </td>
                                                         )}
                                                     </React.Fragment>
                                                 );
@@ -461,7 +625,12 @@ export default class App extends React.Component {
                                         <a
                                             key={`${symbol}-${j}`}
                                             className="cursor-pointer text-sm opacity-50 hover:opacity-100 transition-all"
-                                            onClick={(e) => this.removeFilterSymbol(filter, symbol)}
+                                            onClick={(e) =>
+                                                this.removeFilterSymbol(
+                                                    filter,
+                                                    symbol
+                                                )
+                                            }
                                         >
                                             {symbol}
                                         </a>
@@ -507,11 +676,12 @@ export default class App extends React.Component {
                             step="1"
                             value={this.state.depth}
                             className="depth-slider"
-                            onChange={(e) => this.toggleDepth(parseInt(e.target.value))}
+                            onChange={(e) =>
+                                this.toggleDepth(parseInt(e.target.value))
+                            }
                         />
                     </div>
                 )}
-
                 <div className="absolute text-white bottom-2 right-6 z-20 flex gap-4">
                     <a
                         onClick={() => this.toggleAnimation()}
@@ -532,9 +702,14 @@ export default class App extends React.Component {
                     <div className="flex text-white mt-8 text-sm gap-2 px-2 absolute z-20 w-full">
                         {this.state.hyperedge.map((symbol, i) => {
                             return (
-                                <div className="flex gap-2 items-center" key={i}>
+                                <div
+                                    className="flex gap-2 items-center"
+                                    key={i}
+                                >
                                     <a
-                                        onClick={(e) => this.removeIndexFromHyperedge(i)}
+                                        onClick={(e) =>
+                                            this.removeIndexFromHyperedge(i)
+                                        }
                                         className="cursor-pointer"
                                     >
                                         {symbol}
@@ -544,19 +719,56 @@ export default class App extends React.Component {
                             );
                         })}
 
-                        <form onSubmit={this.handleAddInput.bind(this)} className="">
+                        <form
+                            onSubmit={this.handleAddInput.bind(this)}
+                            className=""
+                        >
                             <input
                                 type="text"
+                                tabIndex={-1}
                                 ref={this.inputRef}
                                 className="bg-transparent outline-none text-4xl text-center absolute z-30 left-0 right-0 top-4 py-2"
                                 value={this.state.input}
-                                onChange={(e) => this.setState({ input: e.target.value })}
+                                onChange={(e) =>
+                                    this.setState({ input: e.target.value })
+                                }
                             />
                         </form>
                     </div>
                 )}
                 {this.state.controlType === "fly" && forceGraph}
                 {this.state.controlType === "orbit" && forceGraph}
+                {this.state.loaded &&
+                    this.state.hyperedges.length === 0 &&
+                    this.state.input.length === 0 && (
+                        <div className="absolute inset-0 z-40 text-gray-300 flex flex-col justify-center items-center pointer-events-none">
+                            <div className="max-w-xl mx-auto gap-4 flex flex-col italic text-center">
+                                HyperTyper
+                                {!this.state.expired && !this.state.license && (
+                                    <div className="text-sm">
+                                        {this.state.trialDurationRemaining >
+                                            0 && (
+                                            <a
+                                                className="pointer-events-auto cursor-pointer"
+                                                onClick={(e) =>
+                                                    this.setState({
+                                                        showLicense: true,
+                                                    })
+                                                }
+                                            >
+                                                {Math.ceil(
+                                                    this.state
+                                                        .trialDurationRemaining /
+                                                        86400
+                                                )}{" "}
+                                                days left on trial
+                                            </a>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
             </>
         );
     }
