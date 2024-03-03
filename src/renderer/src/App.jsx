@@ -10,8 +10,8 @@ import ForceGraph3D from "react-force-graph-3d";
 
 import Animation from "./Animation";
 import License from "./components/License";
+import Console from "./components/Console";
 
-// TODO: we need to simplify licensing...if you enter an invalid license. it says it's valid because trial is still going
 // TODO: refactor some of this into separate components
 
 import * as Icons from "./Icons";
@@ -19,6 +19,7 @@ import Interwingle0 from "./assets/interwingle-0.png";
 import Interwingle1 from "./assets/interwingle-1.png";
 import Interwingle2 from "./assets/interwingle-2.png";
 import Interwingle3 from "./assets/interwingle-3.png";
+import Splash from "./components/Splash";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -502,56 +503,12 @@ export default class App extends React.Component {
                         }
                     />
                 )}
-                <div
-                    id="console"
-                    ref={this.consoleRef}
-                    className={`bg-white/10 text-white h-full w-full absolute z-40 max-h-[300px] overflow-y-scroll ${this.state.showConsole ? "flex flex-col" : "hidden"}`}
-                >
-                    <div className="grow"></div>
-                    <div>
-                        <table className="w-auto">
-                            <tbody>
-                                {this.state.hyperedges.map((edge, i) => {
-                                    return (
-                                        <tr key={`${edge.join("->")}-${i}}`}>
-                                            {edge.map((node, j) => {
-                                                return (
-                                                    <React.Fragment
-                                                        key={`${node}-${j}-group`}
-                                                    >
-                                                        <td
-                                                            key={`${node}-${j}`}
-                                                            className="p-1"
-                                                        >
-                                                            <a
-                                                                onClick={(e) =>
-                                                                    this.removeHyperedge(
-                                                                        edge
-                                                                    )
-                                                                }
-                                                                className="cursor-pointer"
-                                                            >
-                                                                {node}
-                                                            </a>
-                                                        </td>
-                                                        {j <
-                                                            edge.length - 1 && (
-                                                            <td
-                                                                key={`${node}-${i}-sep`}
-                                                            >
-                                                                →
-                                                            </td>
-                                                        )}
-                                                    </React.Fragment>
-                                                );
-                                            })}
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                <Console
+                    consoleRef={this.consoleRef}
+                    showConsole={this.state.showConsole}
+                    hyperedges={this.state.hyperedges}
+                    removeHyperedge={this.removeHyperedge.bind(this)}
+                />
                 <div className="text-white absolute z-40 left-1 right-0 top-8 h-20 flex flex-col gap-1 p-2">
                     {this.state.filters.map((filter, i) => {
                         return (
@@ -674,34 +631,14 @@ export default class App extends React.Component {
                 )}
                 {this.state.controlType === "fly" && forceGraph}
                 {this.state.controlType === "orbit" && forceGraph}
-                {this.state.loaded &&
-                    this.state.hyperedges.length === 0 &&
-                    this.state.input.length === 0 && (
-                        <div className="absolute inset-0 z-40 text-gray-300 flex flex-col justify-center items-center pointer-events-none">
-                            <div className="max-w-xl mx-auto gap-4 flex flex-col italic text-center">
-                                HyperTyper
-                                {this.state.trialRemaining > 0 &&
-                                    !this.state.licenseValid && (
-                                        <div className="text-sm">
-                                            <a
-                                                className="pointer-events-auto cursor-pointer"
-                                                onClick={(e) =>
-                                                    this.setState({
-                                                        showLicense: true,
-                                                    })
-                                                }
-                                            >
-                                                {Math.ceil(
-                                                    this.state.trialRemaining /
-                                                        86400
-                                                )}{" "}
-                                                days left on trial
-                                            </a>
-                                        </div>
-                                    )}
-                            </div>
-                        </div>
-                    )}
+                <Splash
+                    loaded={this.state.loaded}
+                    hyperedges={this.state.hyperedges}
+                    licenseValid={this.state.licenseValid}
+                    input={this.state.input}
+                    trialRemaining={this.state.trialRemaining}
+                    showLicense={() => this.setState({ showLicense: true })}
+                />
             </>
         );
     }
