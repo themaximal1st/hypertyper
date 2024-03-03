@@ -4,8 +4,8 @@ import { dialog, shell } from "electron";
 
 const account_id = "2fba6ee6-267b-481a-aeb3-af3fdfa7b6cd";
 
-const MAX_TRIAL_DURATION = 7 * 86400; // 7 days in seconds
-// const MAX_TRIAL_DURATION =
+// const MAX_TRIAL_DURATION = 7 * 86400; // 7 days in seconds
+const MAX_TRIAL_DURATION = 15;
 // const MAX_VALIDATION_DURATION = 86400 * 30; // 30 days
 const MAX_VALIDATION_DURATION = 15;
 

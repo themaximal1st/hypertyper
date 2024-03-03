@@ -219,7 +219,7 @@ export default class App extends React.Component {
             }
         } else if (this.state.controlType === "fly") {
             return;
-        } else if (this.state.expired || this.state.showLicense) {
+        } else if (this.state.trialExpired || this.state.showLicense) {
             return;
         } else {
             this.inputRef.current.focus();
@@ -484,7 +484,8 @@ export default class App extends React.Component {
         return (
             <>
                 <a id="titlebar">HyperTyper</a>
-                {(this.state.expired || this.state.showLicense) && (
+                {((this.state.trialExpired && !this.state.licenseValid) ||
+                    this.state.showLicense) && (
                     <License
                         licenseKey={this.state.licenseKey}
                         licenseValid={this.state.licenseValid}
@@ -679,10 +680,9 @@ export default class App extends React.Component {
                         <div className="absolute inset-0 z-40 text-gray-300 flex flex-col justify-center items-center pointer-events-none">
                             <div className="max-w-xl mx-auto gap-4 flex flex-col italic text-center">
                                 HyperTyper
-                                {!this.state.expired && !this.state.license && (
-                                    <div className="text-sm">
-                                        {this.state.trialDurationRemaining >
-                                            0 && (
+                                {this.state.trialRemaining > 0 &&
+                                    !this.state.licenseValid && (
+                                        <div className="text-sm">
                                             <a
                                                 className="pointer-events-auto cursor-pointer"
                                                 onClick={(e) =>
@@ -692,15 +692,13 @@ export default class App extends React.Component {
                                                 }
                                             >
                                                 {Math.ceil(
-                                                    this.state
-                                                        .trialDurationRemaining /
+                                                    this.state.trialRemaining /
                                                         86400
                                                 )}{" "}
                                                 days left on trial
                                             </a>
-                                        )}
-                                    </div>
-                                )}
+                                        </div>
+                                    )}
                             </div>
                         </div>
                     )}
