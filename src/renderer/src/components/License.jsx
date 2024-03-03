@@ -1,6 +1,18 @@
 import Logo from "../assets/plain-logo.png";
 
 export default function License(params) {
+    let showLicense = false;
+
+    if (params.trialExpired && params.licenseValid === false) {
+        showLicense = true;
+    }
+
+    if (params.showLicense) {
+        showLicense = true;
+    }
+
+    if (!showLicense) return;
+
     return (
         <div className="bg-black/90 text-white absolute z-50 inset-0 flex flex-col gap-4 justify-center items-center">
             <div className="relative w-full max-w-lg mx-auto">

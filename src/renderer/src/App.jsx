@@ -11,15 +11,13 @@ import ForceGraph3D from "react-force-graph-3d";
 import Animation from "./Animation";
 import License from "./components/License";
 import Console from "./components/Console";
-
-// TODO: refactor some of this into separate components
-
-import * as Icons from "./Icons";
-import Interwingle0 from "./assets/interwingle-0.png";
-import Interwingle1 from "./assets/interwingle-1.png";
-import Interwingle2 from "./assets/interwingle-2.png";
-import Interwingle3 from "./assets/interwingle-3.png";
+import Filters from "./components/Filters";
 import Splash from "./components/Splash";
+import Typer from "./components/Typer";
+import Interwingle from "./components/Interwingle";
+
+import Depth from "./components/Depth";
+import Footer from "./components/Footer";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -35,7 +33,7 @@ export default class App extends React.Component {
             loaded: false,
             showLicense: false,
             licenseKey: "",
-            licenseValid: false,
+            licenseValid: undefined,
             trialExpired: false,
             trialRemaining: 0,
             width: window.innerWidth,
@@ -430,6 +428,7 @@ export default class App extends React.Component {
             state.licenseValid = await window.api.licenses.validate(
                 this.state.licenseKey
             );
+
             if (state.licenseValid) {
                 await window.api.settings.set("license", this.state.licenseKey);
                 state.error = null;
@@ -485,150 +484,59 @@ export default class App extends React.Component {
         return (
             <>
                 <a id="titlebar">HyperTyper</a>
-                {((this.state.trialExpired && !this.state.licenseValid) ||
-                    this.state.showLicense) && (
-                    <License
-                        licenseKey={this.state.licenseKey}
-                        licenseValid={this.state.licenseValid}
-                        trialExpired={this.state.trialExpired}
-                        trialRemaining={this.state.trialRemaining}
-                        activateLicense={this.activateLicense.bind(this)}
-                        deactivateLicense={this.deactivateLicense.bind(this)}
-                        error={this.state.error}
-                        updateLicenseKey={(licenseKey) =>
-                            this.setState({ licenseKey })
-                        }
-                        closeLicense={() =>
-                            this.setState({ showLicense: false })
-                        }
-                    />
-                )}
+                <License
+                    licenseKey={this.state.licenseKey}
+                    licenseValid={this.state.licenseValid}
+                    trialExpired={this.state.trialExpired}
+                    trialRemaining={this.state.trialRemaining}
+                    showLicense={this.state.showLicense}
+                    activateLicense={this.activateLicense.bind(this)}
+                    deactivateLicense={this.deactivateLicense.bind(this)}
+                    error={this.state.error}
+                    updateLicenseKey={(licenseKey) =>
+                        this.setState({ licenseKey })
+                    }
+                    closeLicense={() => this.setState({ showLicense: false })}
+                />
                 <Console
                     consoleRef={this.consoleRef}
                     showConsole={this.state.showConsole}
                     hyperedges={this.state.hyperedges}
                     removeHyperedge={this.removeHyperedge.bind(this)}
                 />
-                <div className="text-white absolute z-40 left-1 right-0 top-8 h-20 flex flex-col gap-1 p-2">
-                    {this.state.filters.map((filter, i) => {
-                        return (
-                            <div key={`${filter}-${i}`} className="flex gap-2">
-                                {filter.map((symbol, j) => {
-                                    return (
-                                        <a
-                                            key={`${symbol}-${j}`}
-                                            className="cursor-pointer text-sm opacity-50 hover:opacity-100 transition-all"
-                                            onClick={(e) =>
-                                                this.removeFilterSymbol(
-                                                    filter,
-                                                    symbol
-                                                )
-                                            }
-                                        >
-                                            {symbol}
-                                        </a>
-                                    );
-                                })}
-                            </div>
-                        );
-                    })}
-                </div>
-                <div className="absolute top-0 left-1 bottom-0 z-20 flex justify-center items-center w-12 h-full flex-col gap-8 opacity-50 hover:opacity-100 transition-all">
-                    <a
-                        onClick={(e) => this.toggleInterwingle(3)}
-                        className={`cursor-pointer ${this.state.interwingle == 3 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
-                    >
-                        <img src={Interwingle3} className="w-7 h-7" />
-                    </a>
-                    <a
-                        onClick={(e) => this.toggleInterwingle(2)}
-                        className={`cursor-pointer ${this.state.interwingle == 2 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
-                    >
-                        <img src={Interwingle2} className="w-7 h-7" />
-                    </a>
-                    <a
-                        onClick={(e) => this.toggleInterwingle(1)}
-                        className={`cursor-pointer ${this.state.interwingle == 1 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
-                    >
-                        <img src={Interwingle1} className="w-7 h-7" />
-                    </a>
-                    <a
-                        onClick={(e) => this.toggleInterwingle(0)}
-                        className={`cursor-pointer ${this.state.interwingle == 0 ? "opacity-100" : "opacity-50"} hover:opacity-100 transition-all`}
-                    >
-                        <img src={Interwingle0} className="w-7 h-7" />
-                    </a>
-                </div>
-                {this.state.maxDepth > 0 && (
-                    <div className="absolute top-0 right-0 bottom-0 z-20 flex justify-center items-center w-12 h-full text-white">
-                        <input
-                            type="range"
-                            ref={this.depthRef}
-                            min="0"
-                            max={this.state.maxDepth}
-                            step="1"
-                            value={this.state.depth}
-                            className="depth-slider"
-                            onChange={(e) =>
-                                this.toggleDepth(parseInt(e.target.value))
-                            }
-                        />
-                    </div>
-                )}
-                <div className="absolute text-white bottom-2 right-6 z-20 flex gap-4">
-                    <a
-                        onClick={() => this.toggleAnimation()}
-                        className="opacity-20 hover:opacity-100 transition-all cursor-pointer"
-                    >
-                        {!this.state.isAnimating && Icons.PauseIcon}
-                        {this.state.isAnimating && Icons.RotateIcon}
-                    </a>
-                    <a
-                        onClick={() => this.toggleCamera()}
-                        className="opacity-20 hover:opacity-100 transition-all cursor-pointer"
-                    >
-                        {this.state.controlType === "orbit" && Icons.CameraIcon}
-                        {this.state.controlType === "fly" && Icons.MouseIcon}
-                    </a>
-                </div>
-                {!this.state.showConsole && (
-                    <div className="flex text-white mt-8 text-sm gap-2 px-2 absolute z-20 w-full">
-                        {this.state.hyperedge.map((symbol, i) => {
-                            return (
-                                <div
-                                    className="flex gap-2 items-center"
-                                    key={i}
-                                >
-                                    <a
-                                        onClick={(e) =>
-                                            this.removeIndexFromHyperedge(i)
-                                        }
-                                        className="cursor-pointer"
-                                    >
-                                        {symbol}
-                                    </a>
-                                    →
-                                </div>
-                            );
-                        })}
+                <Filters
+                    filters={this.state.filters}
+                    removeFilter={this.removeFilterSymbol.bind(this)}
+                />
+                <Interwingle
+                    interwingle={this.state.interwingle}
+                    toggleInterwingle={this.toggleInterwingle.bind(this)}
+                />
+                <Depth
+                    depthRef={this.depthRef}
+                    depth={this.state.depth}
+                    maxDepth={this.state.maxDepth}
+                    toggleDepth={this.toggleDepth.bind(this)}
+                />
 
-                        <form
-                            onSubmit={this.handleAddInput.bind(this)}
-                            className=""
-                        >
-                            <input
-                                type="text"
-                                tabIndex={-1}
-                                ref={this.inputRef}
-                                className="bg-transparent outline-none text-4xl text-center absolute z-30 left-0 right-0 top-4 py-2"
-                                value={this.state.input}
-                                onChange={(e) =>
-                                    this.setState({ input: e.target.value })
-                                }
-                            />
-                        </form>
-                    </div>
-                )}
+                <Footer
+                    isAnimating={this.state.isAnimating}
+                    controlType={this.state.controlType}
+                    toggleCamera={this.toggleCamera.bind(this)}
+                    toggleAnimation={this.toggleAnimation.bind(this)}
+                />
+
+                <Typer
+                    inputRef={this.inputRef}
+                    input={this.state.input}
+                    addInput={this.handleAddInput.bind(this)}
+                    removeIndex={this.removeIndexFromHyperedge.bind(this)}
+                    changeInput={(e) =>
+                        this.setState({ input: e.target.value })
+                    }
+                    hyperedge={this.state.hyperedge}
+                    show={!this.state.showConsole}
+                />
                 {this.state.controlType === "fly" && forceGraph}
                 {this.state.controlType === "orbit" && forceGraph}
                 <Splash
