@@ -32,10 +32,10 @@ const api = {
     },
     licenses: {
         validate: (license) => {
-            return ipcRenderer.invoke("license.validate", license);
+            return ipcRenderer.invoke("licenses.validate", license);
         },
-        trialDurationRemaining: () => {
-            return ipcRenderer.invoke("license.trialDurationRemaining");
+        info: () => {
+            return ipcRenderer.invoke("licenses.info");
         },
     },
     messages: {

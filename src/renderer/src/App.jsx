@@ -9,6 +9,7 @@ import React from "react";
 import ForceGraph3D from "react-force-graph-3d";
 
 import Animation from "./Animation";
+import License from "./components/License";
 
 // TODO: we need to simplify licensing...if you enter an invalid license. it says it's valid because trial is still going
 // TODO: refactor some of this into separate components
@@ -18,7 +19,6 @@ import Interwingle0 from "./assets/interwingle-0.png";
 import Interwingle1 from "./assets/interwingle-1.png";
 import Interwingle2 from "./assets/interwingle-2.png";
 import Interwingle3 from "./assets/interwingle-3.png";
-import Logo from "./assets/plain-logo.png";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -26,17 +26,17 @@ export default class App extends React.Component {
         this.inputRef = React.createRef();
         this.consoleRef = React.createRef();
         this.graphRef = React.createRef();
-        this.licenseRef = React.createRef();
         this.depthRef = React.createRef();
         this.nodeThreeObjectCache = {};
         this.animation = new Animation(this.graphRef);
         this.state = {
             error: null,
-            showLicense: false,
-            trialDurationRemaining: 0,
-            expired: false,
-            license: "",
             loaded: false,
+            showLicense: false,
+            licenseKey: "",
+            licenseValid: false,
+            trialExpired: false,
+            trialRemaining: 0,
             width: window.innerWidth,
             controlType: "orbit",
             height: window.innerHeight,
@@ -123,13 +123,9 @@ export default class App extends React.Component {
 
         this.reloadData();
 
-        window.api.analytics.track("app.load");
+        this.fetchLicenseInfo();
 
-        window.api.settings.get("license").then(async (license) => {
-            this.setState({ license }, () => {
-                this.validateLicense();
-            });
-        });
+        window.api.analytics.track("app.load");
 
         window.api.messages.receive("message-from-main", (event, message) => {
             if (event === "show-license-info") {
@@ -137,6 +133,14 @@ export default class App extends React.Component {
             }
 
             console.log("MESSAGE", event, message);
+        });
+    }
+
+    async fetchLicenseInfo() {
+        const license = await window.api.licenses.info();
+        console.log("LICENSE", license);
+        this.setState(license, async () => {
+            await this.validateAccess();
         });
     }
 
@@ -415,30 +419,38 @@ export default class App extends React.Component {
         await this.reloadData();
     }
 
-    async validateLicense() {
-        const license = this.state.license;
-        const valid = await window.api.licenses.validate(license);
-        const trialDurationRemaining =
-            await window.api.licenses.trialDurationRemaining();
-        if (valid) {
-            console.log("HyperTyper is valid");
-            this.setState(
-                { expired: false, license, trialDurationRemaining },
-                async () => {
-                    await window.api.settings.set("license", license);
-                }
+    async validateAccess() {
+        const state = {
+            licenseValid: false,
+            trialExpired: this.state.trialRemaining <= 0,
+        };
+
+        if (this.state.licenseKey) {
+            state.licenseValid = await window.api.licenses.validate(
+                this.state.licenseKey
             );
-        } else {
-            let error = "";
-            if (license && license.length > 0) error = "Invalid license";
-            console.log("HyperTyper is not valid");
-            this.setState({ expired: true, error, trialDurationRemaining });
+            if (state.licenseValid) {
+                await window.api.settings.set("license", this.state.licenseKey);
+                state.error = null;
+            } else {
+                state.error = "License is not valid";
+            }
         }
+
+        this.setState(state);
     }
 
-    async handleLicense(e) {
+    async activateLicense(e) {
         e.preventDefault();
-        await this.validateLicense();
+        await this.validateAccess();
+    }
+
+    async deactivateLicense() {
+        await window.api.settings.set("license", null);
+        await window.api.settings.set("lastValidated", null);
+        this.setState({ licenseKey: "", licenseValid: false }, async () => {
+            await this.fetchLicenseInfo();
+        });
     }
 
     render() {
@@ -473,98 +485,21 @@ export default class App extends React.Component {
             <>
                 <a id="titlebar">HyperTyper</a>
                 {(this.state.expired || this.state.showLicense) && (
-                    <div className="bg-black/90 text-white absolute z-50 inset-0 flex flex-col gap-4 justify-center items-center r">
-                        <div className="relative">
-                            {this.state.showLicense && (
-                                <a
-                                    className="cursor-pointer absolute -top-4 -right-4 font-bold opacity-50 hover:opacity-100 transition-all"
-                                    onClick={(e) =>
-                                        this.setState({ showLicense: false })
-                                    }
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth="1.5"
-                                        stroke="currentColor"
-                                        className="w-6 h-6"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M6 18 18 6M6 6l12 12"
-                                        />
-                                    </svg>
-                                </a>
-                            )}
-                            <div>
-                                <img
-                                    src={Logo}
-                                    className="w-full max-w-sm mb-4"
-                                />
-                            </div>
-                            <div className="flex flex-col gap-2 max-w-md w-full">
-                                {!this.state.expired && this.state.license && (
-                                    <div>Your HyperTyper license is valid.</div>
-                                )}
-                                {!this.state.expired && !this.state.license && (
-                                    <div>
-                                        Your HyperTyper trial is still going.
-                                        Enter your license below to register
-                                        HyperTyper.
-                                    </div>
-                                )}
-                                {this.state.expired && (
-                                    <>
-                                        <p>HyperTyper has expired.</p>
-                                        <p>
-                                            Please{" "}
-                                            <a
-                                                target="_blank"
-                                                href="https://hypertyper.com"
-                                                className="underline"
-                                            >
-                                                purchase a license
-                                            </a>{" "}
-                                            or enter your license below to
-                                            continue.
-                                        </p>
-                                    </>
-                                )}
-                                <div>
-                                    <form
-                                        className="flex flex-col gap-2 mt-2"
-                                        onSubmit={this.handleLicense.bind(this)}
-                                    >
-                                        {this.state.error && (
-                                            <p className="text-red-400">
-                                                {this.state.error}
-                                            </p>
-                                        )}
-                                        <input
-                                            type="text"
-                                            ref={this.licenseRef}
-                                            value={this.state.license}
-                                            onChange={(e) => {
-                                                this.setState({
-                                                    license: e.target.value,
-                                                });
-                                            }}
-                                            name="license"
-                                            className="w-full p-2 rounded-md text-lg focus:outline-none text-black"
-                                            placeholder="47D2E0-0E3BC5-25E4D7-4E3BA7-8B61C0-V3"
-                                        />
-                                        <input
-                                            type="submit"
-                                            className="w-full p-2 rounded-md text-white cursor-pointer border-2 border-white hover:bg-white hover:text-black transition-all"
-                                            value="Activate"
-                                        />
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <License
+                        licenseKey={this.state.licenseKey}
+                        licenseValid={this.state.licenseValid}
+                        trialExpired={this.state.trialExpired}
+                        trialRemaining={this.state.trialRemaining}
+                        activateLicense={this.activateLicense.bind(this)}
+                        deactivateLicense={this.deactivateLicense.bind(this)}
+                        error={this.state.error}
+                        updateLicenseKey={(licenseKey) =>
+                            this.setState({ licenseKey })
+                        }
+                        closeLicense={() =>
+                            this.setState({ showLicense: false })
+                        }
+                    />
                 )}
                 <div
                     id="console"

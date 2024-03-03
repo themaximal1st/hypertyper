@@ -13,11 +13,8 @@ export default class Bridge {
         ipcMain.handle("hyperedges.remove", this.removeHyperedges.bind(this));
         ipcMain.handle("settings.get", this.getSetting.bind(this));
         ipcMain.handle("settings.set", this.setSetting.bind(this));
-        ipcMain.handle("license.validate", this.validateLicense.bind(this));
-        ipcMain.handle(
-            "license.trialDurationRemaining",
-            this.trialDurationRemaining.bind(this)
-        );
+        ipcMain.handle("licenses.info", this.licenseInfo.bind(this));
+        ipcMain.handle("licenses.validate", this.validateLicense.bind(this));
     }
 
     trackAnalytics(_, event) {
@@ -73,8 +70,16 @@ export default class Bridge {
         return await License.check(license);
     }
 
-    async trialDurationRemaining() {
-        return License.trialDurationRemaining;
+    async licenseInfo() {
+        const info = {};
+        if (License.license) {
+            info.licenseKey = License.license;
+        }
+
+        info.trialExpired = License.trialExpired;
+        info.trialRemaining = License.trialDurationRemaining;
+
+        return info;
     }
 
     static async load(hypertype) {

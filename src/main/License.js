@@ -5,9 +5,9 @@ import { dialog, shell } from "electron";
 const account_id = "2fba6ee6-267b-481a-aeb3-af3fdfa7b6cd";
 
 const MAX_TRIAL_DURATION = 7 * 86400; // 7 days in seconds
-// const MAX_TRIAL_DURATION = 15;
-const MAX_VALIDATION_DURATION = 86400 * 30; // 30 days
-// const MAX_VALIDATION_DURATION = 15;
+// const MAX_TRIAL_DURATION =
+// const MAX_VALIDATION_DURATION = 86400 * 30; // 30 days
+const MAX_VALIDATION_DURATION = 15;
 
 const keygen = new Keygen({
     base_url: "https://k.cac.app",
@@ -17,6 +17,10 @@ const keygen = new Keygen({
 export default class License {
     static get installDate() {
         return settings.get("d");
+    }
+
+    static get license() {
+        return settings.get("license");
     }
 
     static get trialDuration() {
