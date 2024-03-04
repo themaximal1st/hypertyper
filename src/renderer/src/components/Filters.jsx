@@ -1,6 +1,6 @@
 export default function Filters(params) {
     return (
-        <div className="text-white absolute z-40 left-1 right-0 top-8 h-20 flex flex-col gap-1 p-2">
+        <div className="text-white absolute z-30 w-6/12 right-1 top-8 h-20 flex flex-col gap-1 p-2 items-end">
             {params.filters.map((filter, i) => {
                 return (
                     <div key={`${filter}-${i}`} className="flex gap-2">

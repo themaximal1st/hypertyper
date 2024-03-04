@@ -6,7 +6,12 @@ export default function Splash(params) {
     return (
         <div className="absolute inset-0 z-40 text-gray-300 flex flex-col justify-center items-center pointer-events-none">
             <div className="max-w-xl mx-auto gap-4 flex flex-col italic text-center">
-                HyperTyper
+                <a
+                    onClick={params.createTutorial}
+                    className="pointer-events-auto cursor-pointer"
+                >
+                    HyperTyper
+                </a>
                 {params.trialRemaining > 0 && !params.licenseValid && (
                     <div className="text-sm">
                         <a

@@ -19,31 +19,35 @@ export default class App extends React.Component {
         this.consoleRef = React.createRef();
         this.graphRef = React.createRef();
         this.depthRef = React.createRef();
-        this.nodeThreeObjectCache = {};
         this.animation = new Animation(this.graphRef);
         this.state = {
-            error: null,
             loaded: false,
+            error: null,
+
+            showConsole: false,
             showLicense: false,
+
             licenseKey: "",
             licenseValid: undefined,
             trialExpired: false,
             trialRemaining: 0,
+
             width: window.innerWidth,
-            controlType: "orbit",
             height: window.innerHeight,
+
+            controlType: "orbit",
+
             hideLabelsThreshold: 1000,
             hideLabels: true,
-            showConsole: false,
-            interwingle: 0,
             isAnimating: false,
+
+            interwingle: 0,
             input: "",
             hyperedge: [],
             hyperedges: [],
             filters: [],
             depth: 0,
             maxDepth: 0,
-            colors: [],
             data: { nodes: [], links: [] },
         };
     }
@@ -51,6 +55,9 @@ export default class App extends React.Component {
     reloadData(controlType = null, zoom = true) {
         return new Promise(async (resolve, reject) => {
             const start = Date.now();
+
+            console.log("INTERWINGLE", this.state.interwingle);
+            console.log("DEPTH", this.state.depth);
 
             const data = await window.api.forceGraph.graphData(
                 this.state.filters,
@@ -116,6 +123,19 @@ export default class App extends React.Component {
         window.api.analytics.track("app.load");
     }
 
+    componentWillUnmount() {
+        this.animation.stop();
+        document.removeEventListener("keydown", this.handleKeyDown.bind(this));
+        document.removeEventListener("keyup", this.handleKeyUp.bind(this));
+        document.removeEventListener(
+            "mousedown",
+            this.handleMouseDown.bind(this)
+        );
+        document.removeEventListener("mouseup", this.handleMouseUp.bind(this));
+        document.removeEventListener("wheel", this.handleZoom.bind(this));
+        window.removeEventListener("resize", this.handleResize.bind(this));
+    }
+
     async fetchLicenseInfo() {
         const license = await window.api.licenses.info();
         this.setState(license, async () => {
@@ -131,19 +151,6 @@ export default class App extends React.Component {
             default:
                 console.log("MESSAGE", event, message);
         }
-    }
-
-    componentWillUnmount() {
-        this.animation.stop();
-        document.removeEventListener("keydown", this.handleKeyDown.bind(this));
-        document.removeEventListener("keyup", this.handleKeyUp.bind(this));
-        document.removeEventListener(
-            "mousedown",
-            this.handleMouseDown.bind(this)
-        );
-        document.removeEventListener("mouseup", this.handleMouseUp.bind(this));
-        document.removeEventListener("wheel", this.handleZoom.bind(this));
-        window.removeEventListener("resize", this.handleResize.bind(this));
     }
 
     get isFocusingInput() {
@@ -180,12 +187,12 @@ export default class App extends React.Component {
             this.toggleCamera();
         } else if (e.key === "`") {
             window.api.analytics.track("app.toggleConsole");
-            if (!this.isFocusingInput) {
-                this.setState({ showConsole: !this.state.showConsole }, () => {
-                    this.consoleRef.current.scrollTop =
-                        this.consoleRef.current.scrollHeight;
-                });
-            }
+            // if (!this.isFocusingInput) {
+            this.setState({ showConsole: !this.state.showConsole }, () => {
+                this.consoleRef.current.scrollTop =
+                    this.consoleRef.current.scrollHeight;
+            });
+            // }
         } else if (e.key === "-") {
             if (!this.isFocusingInput) {
                 this.zoom(30);
@@ -205,6 +212,8 @@ export default class App extends React.Component {
         } else if (e.key === "Backspace") {
             if (this.state.input === "") {
                 this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
+            } else {
+                this.inputRef.current.focus();
             }
         } else if (this.state.controlType === "fly") {
             return;
@@ -244,6 +253,7 @@ export default class App extends React.Component {
     }
 
     handleClickNode(node, e) {
+        console.log("CLICK NODE", node);
         window.api.analytics.track("app.clickNode");
         const filters = this.state.filters;
         if (e.shiftKey) {
@@ -413,9 +423,44 @@ export default class App extends React.Component {
         });
     }
 
+    async createHyperTyperTutorial() {
+        if (this.state.hyperedges.length > 0) return;
+
+        const tutorial = [
+            ["HyperTyper", "is a", "Mind Mapper"],
+            ["HyperTyper", "is a", "knowledge graph"],
+            ["HyperTyper", "connects", "ideas"],
+            ["HyperTyper", "let's you", "create"],
+            ["HyperTyper", "let's you", "explore"],
+            ["ideas", "press tab"],
+            ["create", "type anything and press enter"],
+            ["explore", "click any text"],
+            ["knowledge graph", "press `"],
+        ];
+
+        for (const hyperedge of tutorial) {
+            const last = hyperedge.pop();
+            await window.api.hyperedges.add(hyperedge, last);
+        }
+        this.setState({ interwingle: 3, depth: -1 }, async () => {
+            await this.reloadData();
+            console.log(this.state.hyperedges);
+        });
+        console.log("CREATING TUTORIAL");
+    }
+
     render() {
         return (
             <>
+                <Splash
+                    loaded={this.state.loaded}
+                    hyperedges={this.state.hyperedges}
+                    createTutorial={this.createHyperTyperTutorial.bind(this)}
+                    licenseValid={this.state.licenseValid}
+                    input={this.state.input}
+                    trialRemaining={this.state.trialRemaining}
+                    showLicense={() => this.setState({ showLicense: true })}
+                />
                 <a id="titlebar">HyperTyper</a>
                 <License
                     licenseKey={this.state.licenseKey}
@@ -451,14 +496,6 @@ export default class App extends React.Component {
                     maxDepth={this.state.maxDepth}
                     toggleDepth={this.toggleDepth.bind(this)}
                 />
-
-                <Footer
-                    isAnimating={this.state.isAnimating}
-                    controlType={this.state.controlType}
-                    toggleCamera={this.toggleCamera.bind(this)}
-                    toggleAnimation={this.toggleAnimation.bind(this)}
-                />
-
                 <Typer
                     inputRef={this.inputRef}
                     input={this.state.input}
@@ -480,14 +517,11 @@ export default class App extends React.Component {
                     onNodeClick={this.handleClickNode.bind(this)}
                     showLabels={!this.state.hideLabels}
                 />
-
-                <Splash
-                    loaded={this.state.loaded}
-                    hyperedges={this.state.hyperedges}
-                    licenseValid={this.state.licenseValid}
-                    input={this.state.input}
-                    trialRemaining={this.state.trialRemaining}
-                    showLicense={() => this.setState({ showLicense: true })}
+                <Footer
+                    isAnimating={this.state.isAnimating}
+                    controlType={this.state.controlType}
+                    toggleCamera={this.toggleCamera.bind(this)}
+                    toggleAnimation={this.toggleAnimation.bind(this)}
                 />
             </>
         );

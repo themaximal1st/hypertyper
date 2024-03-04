@@ -12,7 +12,7 @@ export default function ForceGraph(params) {
             height={params.height}
             controlType={params.controlType}
             backgroundColor="#000000"
-            onNodeClick={params.handleClickNode}
+            onNodeClick={params.onNodeClick}
             graphData={params.data}
             showNavInfo={false}
             linkColor={(link) => {
