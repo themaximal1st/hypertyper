@@ -56,9 +56,6 @@ export default class App extends React.Component {
         return new Promise(async (resolve, reject) => {
             const start = Date.now();
 
-            console.log("INTERWINGLE", this.state.interwingle);
-            console.log("DEPTH", this.state.depth);
-
             const data = await window.api.forceGraph.graphData(
                 this.state.filters,
                 {
@@ -187,12 +184,7 @@ export default class App extends React.Component {
             this.toggleCamera();
         } else if (e.key === "`") {
             window.api.analytics.track("app.toggleConsole");
-            // if (!this.isFocusingInput) {
-            this.setState({ showConsole: !this.state.showConsole }, () => {
-                this.consoleRef.current.scrollTop =
-                    this.consoleRef.current.scrollHeight;
-            });
-            // }
+            this.setState({ showConsole: !this.state.showConsole });
         } else if (e.key === "-") {
             if (!this.isFocusingInput) {
                 this.zoom(30);
@@ -253,7 +245,6 @@ export default class App extends React.Component {
     }
 
     handleClickNode(node, e) {
-        console.log("CLICK NODE", node);
         window.api.analytics.track("app.clickNode");
         const filters = this.state.filters;
         if (e.shiftKey) {
@@ -265,8 +256,6 @@ export default class App extends React.Component {
         } else {
             filters.push([node.name]);
         }
-
-        console.log("FILTERS", filters);
 
         this.setState({ filters }, () => {
             this.reloadData();
@@ -444,9 +433,7 @@ export default class App extends React.Component {
         }
         this.setState({ interwingle: 3, depth: -1 }, async () => {
             await this.reloadData();
-            console.log(this.state.hyperedges);
         });
-        console.log("CREATING TUTORIAL");
     }
 
     render() {

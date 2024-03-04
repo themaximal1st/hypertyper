@@ -19,21 +19,19 @@ export default function Typer(params) {
                 })}
             </div>
 
-            <div className="relative h-40 max-w-xl mx-auto pointer-events-none">
-                <form
-                    onSubmit={params.addInput}
-                    className="pointer-events-auto"
-                >
-                    <input
-                        type="text"
-                        tabIndex={-1}
-                        ref={params.inputRef}
-                        className="bg-transparent outline-none text-4xl text-center absolute z-30 left-0 right-0 top-10 py-2 text-white"
-                        value={params.input}
-                        onChange={params.changeInput}
-                    />
-                </form>
-            </div>
+            <form
+                onSubmit={params.addInput}
+                className="absolute inset-0 flex flex-col z-30 pointer-events-none"
+            >
+                <input
+                    type="text"
+                    tabIndex={-1}
+                    ref={params.inputRef}
+                    className="text-4xl bg-transparent text-center text-white mx-auto outline-none mt-10 py-2 w-full max-w-sm pointer-events-auto"
+                    value={params.input}
+                    onChange={params.changeInput}
+                />
+            </form>
         </>
     );
 }
