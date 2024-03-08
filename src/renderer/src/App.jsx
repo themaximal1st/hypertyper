@@ -43,6 +43,7 @@ export default class App extends React.Component {
 
             interwingle: 0,
             input: "",
+            inputMode: "add",
             hyperedge: [],
             hyperedges: [],
             filters: [],
@@ -69,6 +70,11 @@ export default class App extends React.Component {
             if (depth > maxDepth) depth = maxDepth;
 
             const hyperedges = await window.api.hyperedges.all();
+
+            // data.nodes = data.nodes.map((node) => {
+            //     node.name = "";
+            //     return node;
+            // });
 
             const state = {
                 data,
@@ -154,6 +160,17 @@ export default class App extends React.Component {
         return document.activeElement == this.inputRef.current;
     }
 
+    get uniqueSymbols() {
+        const symbols = new Set();
+        for (const hyperedge of this.state.hyperedges) {
+            for (const symbol of hyperedge) {
+                symbols.add(symbol);
+            }
+        }
+
+        return Array.from(symbols);
+    }
+
     handleResize() {
         this.setState({
             width: window.innerWidth,
@@ -197,23 +214,32 @@ export default class App extends React.Component {
             this.rotate(-10);
         } else if (e.key === "ArrowRight") {
             this.rotate(10);
-        } else if (e.key === "ArrowDown") {
-            this.toggleDepth(this.state.depth - 1);
-        } else if (e.key === "ArrowUp") {
-            this.toggleDepth(this.state.depth + 1);
+            // } else if (e.key === "ArrowDown") {
+            //     this.toggleDepth(this.state.depth - 1);
+            // } else if (e.key === "ArrowUp") {
+            //     this.toggleDepth(this.state.depth + 1);
         } else if (e.key === "Backspace") {
             if (this.state.input === "") {
                 this.setState({ hyperedge: this.state.hyperedge.slice(0, -1) });
             } else {
-                this.inputRef.current.focus();
+                this.inputReference.focus();
             }
         } else if (this.state.controlType === "fly") {
             return;
         } else if (this.state.trialExpired || this.state.showLicense) {
             return;
         } else {
-            this.inputRef.current.focus();
+            console.log("FOCUS");
+            this.inputReference.focus();
         }
+    }
+
+    get inputReference() {
+        if (!this.inputRef) return {};
+        if (!this.inputRef.current) return {};
+        if (!this.inputRef.current.firstChild) return {}; // so hacky...but we grab the parent because downshift takes over reference
+        const reference = this.inputRef.current.firstChild;
+        return reference;
     }
 
     handleKeyUp(e) {
@@ -486,11 +512,16 @@ export default class App extends React.Component {
                 <Typer
                     inputRef={this.inputRef}
                     input={this.state.input}
+                    inputMode={this.state.inputMode}
+                    setInputMode={(inputMode) => this.setState({ inputMode })}
+                    loaded={this.state.loaded}
+                    hyperedges={this.state.hyperedges}
+                    symbols={this.uniqueSymbols}
                     addInput={this.handleAddInput.bind(this)}
                     removeIndex={this.removeIndexFromHyperedge.bind(this)}
-                    changeInput={(e) =>
-                        this.setState({ input: e.target.value })
-                    }
+                    changeInput={(input) => {
+                        this.setState({ input });
+                    }}
                     hyperedge={this.state.hyperedge}
                     show={!this.state.showConsole}
                 />

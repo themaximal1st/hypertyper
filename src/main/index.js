@@ -4,6 +4,7 @@ import App from "./app.js";
 import Analytics from "./Analytics.js";
 import CrashReporter from "./CrashReporter.js";
 import updater from "electron-updater";
+import colors from "./colors.js";
 
 (async function () {
     await CrashReporter.load();
@@ -12,7 +13,7 @@ import updater from "electron-updater";
 
     updater.autoUpdater.checkForUpdatesAndNotify();
 
-    const hypertype = new HyperType();
+    const hypertype = new HyperType({ colors });
     await Bridge.load(hypertype);
     await App.launch(hypertype);
 })();

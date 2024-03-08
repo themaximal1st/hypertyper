@@ -46,7 +46,7 @@ ForceGraph.load = function (graphRef) {
     });
 
     const bloomPass = new UnrealBloomPass();
-    bloomPass.strength = 1;
+    bloomPass.strength = 2;
     bloomPass.radius = 1;
     bloomPass.threshold = 0;
     graphRef.current.postProcessingComposer().addPass(bloomPass);
