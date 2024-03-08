@@ -40,6 +40,7 @@ export default class App extends React.Component {
             hideLabelsThreshold: 1000,
             hideLabels: true,
             isAnimating: false,
+            isShiftDown: false,
 
             interwingle: 0,
             input: "",
@@ -193,6 +194,10 @@ export default class App extends React.Component {
 
     handleKeyDown(e) {
         this.animation.interact();
+        if (e.key === "Shift") {
+            this.setState({ isShiftDown: true });
+        }
+
         if (e.key === "Tab") {
             this.toggleInterwingle();
         } else if (e.key === "F1") {
@@ -244,11 +249,34 @@ export default class App extends React.Component {
 
     handleKeyUp(e) {
         this.animation.stopInteracting();
+
+        if (e.key === "Shift") {
+            this.setState({ isShiftDown: false });
+        }
+    }
+
+    async handleInput(e) {
+        e.preventDefault();
+
+        if (this.state.inputMode === "add") {
+            await this.handleAddInput(e);
+        } else if (this.state.inputMode === "generate") {
+            await this.handleGenerateInput(e);
+        } else if (this.state.inputMode === "search") {
+            await this.handleSearchInput(e);
+        }
+    }
+
+    async handleGenerateInput(e) {
+        console.log("GENERATE INPUT", this.state.input);
+    }
+
+    async handleSearchInput(e) {
+        console.log("SHIFT", this.state.isShiftDown);
+        this.searchText(this.state.input, this.state.isShiftDown);
     }
 
     async handleAddInput(e) {
-        e.preventDefault();
-
         if (this.state.input.trim().length === 0) {
             this.setState({
                 input: "",
@@ -256,7 +284,6 @@ export default class App extends React.Component {
             });
             return;
         }
-
         await window.api.hyperedges.add(this.state.hyperedge, this.state.input);
 
         this.setState(
@@ -272,15 +299,19 @@ export default class App extends React.Component {
 
     handleClickNode(node, e) {
         window.api.analytics.track("app.clickNode");
+        this.searchText(node.name, e.shiftKey);
+    }
+
+    searchText(text, append = false) {
         const filters = this.state.filters;
-        if (e.shiftKey) {
+        if (append) {
             if (filters.length === 0) {
                 filters.push([]);
             }
 
-            filters[filters.length - 1].push(node.name);
+            filters[filters.length - 1].push(text);
         } else {
-            filters.push([node.name]);
+            filters.push([text]);
         }
 
         this.setState({ filters }, () => {
@@ -517,7 +548,7 @@ export default class App extends React.Component {
                     loaded={this.state.loaded}
                     hyperedges={this.state.hyperedges}
                     symbols={this.uniqueSymbols}
-                    addInput={this.handleAddInput.bind(this)}
+                    handleInput={this.handleInput.bind(this)}
                     removeIndex={this.removeIndexFromHyperedge.bind(this)}
                     changeInput={(input) => {
                         this.setState({ input });

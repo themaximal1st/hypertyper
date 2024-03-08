@@ -38,6 +38,18 @@ export default function Typer(params) {
         inputValue: params.input,
     });
 
+    let placeholder = "";
+    if (params.loaded) {
+        if (params.inputMode === "add" && params.hyperedges.length === 0) {
+            placeholder = "Add anything to knowledge graph";
+        } else if (params.inputMode === "generate") {
+            placeholder = "Generate knowledge graph";
+        } else if (params.inputMode === "search") {
+            placeholder = "Search knowledge graph";
+        }
+    }
+    console.log(placeholder);
+
     return (
         <>
             <div className="flex text-white mt-10 text-sm gap-2 px-2 w-6/12 absolute z-20">
@@ -57,9 +69,9 @@ export default function Typer(params) {
             </div>
 
             <div className="absolute inset-0 mt-12  flex flex-col gap-2 pointer-events-none z-40 items-center">
-                <div className="flex text-white gap-4">
+                <div className="flex text-white gap-3">
                     <a
-                        className={`select-none text-sm pointer-events-auto flex items-center gap-[6px] py-1 px-2 rounded-lg hover:cursor-pointer transition-all ${params.inputMode === "add" ? "bg-gray-800 opacity-100" : "opacity-60 hover:opacity-80"}`}
+                        className={`select-none text-sm pointer-events-auto flex items-center gap-[6px] py-1 px-2 rounded-lg hover:cursor-pointer transition-all ${params.inputMode === "add" ? "bg-gray-800/80 opacity-100" : "opacity-60 hover:opacity-80"}`}
                         onClick={() => params.setInputMode("add")}
                     >
                         <svg
@@ -78,7 +90,7 @@ export default function Typer(params) {
                     </a>
 
                     <a
-                        className={`select-none text-sm pointer-events-auto flex items-center gap-[6px] py-1 px-2 rounded-lg hover:cursor-pointer transition-all ${params.inputMode === "generate" ? "bg-gray-800 opacity-100" : "opacity-60 hover:opacity-80"}`}
+                        className={`select-none text-sm pointer-events-auto flex items-center gap-[6px] py-1 px-2 rounded-lg hover:cursor-pointer transition-all ${params.inputMode === "generate" ? "bg-gray-800/80 opacity-100" : "opacity-60 hover:opacity-80"}`}
                         onClick={() => params.setInputMode("generate")}
                     >
                         <svg
@@ -97,7 +109,7 @@ export default function Typer(params) {
                     </a>
 
                     <a
-                        className={`select-none text-sm pointer-events-auto flex items-center gap-[6px] py-1 px-2 rounded-lg hover:cursor-pointer transition-all ${params.inputMode === "search" ? "bg-gray-800 opacity-100" : "opacity-60 hover:opacity-80"}`}
+                        className={`select-none text-sm pointer-events-auto flex items-center gap-[6px] py-1 px-2 rounded-lg hover:cursor-pointer transition-all ${params.inputMode === "search" ? "bg-gray-800/80 opacity-100" : "opacity-60 hover:opacity-80"}`}
                         onClick={() => params.setInputMode("search")}
                     >
                         <svg
@@ -118,25 +130,24 @@ export default function Typer(params) {
                 </div>
 
                 <form
-                    onSubmit={async (e) => {
-                        await params.addInput(e);
+                    onSubmit={async (e, a, z) => {
+                        console.log(e);
+                        console.log(a);
+                        console.log(z);
+                        await params.handleInput(e);
                         reset();
                     }}
-                    className=""
+                    className="w-full"
                 >
                     <div
-                        className="mx-auto w-full max-w-md flex flex-col"
+                        className="mx-auto w-full max-w-lg flex flex-col"
                         ref={params.inputRef}
                     >
                         <input
                             type="text"
                             tabIndex={-1}
                             autoComplete="off"
-                            placeholder={
-                                params.loaded && params.hyperedges.length
-                                    ? ""
-                                    : "Start typing..."
-                            }
+                            placeholder={placeholder}
                             className="text-3xl bg-transparent w-full text-center text-white outline-none py-2 pointer-events-auto border border-white/20 hover:border-white/50 focus:border-white/80 transition-all rounded-xl"
                             {...getInputProps({
                                 onKeyDown: (event) => {
