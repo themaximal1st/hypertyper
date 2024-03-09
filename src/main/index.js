@@ -14,6 +14,6 @@ import colors from "./colors.js";
     updater.autoUpdater.checkForUpdatesAndNotify();
 
     const hypertype = new HyperType({ colors });
-    await Bridge.load(hypertype);
-    await App.launch(hypertype);
+    const hypertyper = await App.launch(hypertype);
+    await Bridge.load(hypertype, hypertyper);
 })();

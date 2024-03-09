@@ -1,4 +1,5 @@
 import React from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 import Animation from "./Animation";
 import License from "./components/License";
@@ -6,8 +7,8 @@ import Console from "./components/Console";
 import Filters from "./components/Filters";
 import Splash from "./components/Splash";
 import Typer from "./components/Typer";
+import Settings from "./components/Settings";
 import Interwingle from "./components/Interwingle";
-
 import Depth from "./components/Depth";
 import Footer from "./components/Footer";
 import ForceGraph from "./components/ForceGraph";
@@ -26,11 +27,17 @@ export default class App extends React.Component {
 
             showConsole: false,
             showLicense: false,
+            showSettings: false,
 
             licenseKey: "",
             licenseValid: undefined,
             trialExpired: false,
-            trialRemaining: 0,
+            openaiAPIKey: "",
+            llm: "llamafile",
+            // service: "llamafile",
+            // model: "llamafile",
+            // apikey: "",
+            llms: {},
 
             width: window.innerWidth,
             height: window.innerHeight,
@@ -41,6 +48,7 @@ export default class App extends React.Component {
             hideLabels: true,
             isAnimating: false,
             isShiftDown: false,
+            isGenerating: false,
 
             interwingle: 0,
             input: "",
@@ -51,6 +59,7 @@ export default class App extends React.Component {
             depth: 0,
             maxDepth: 0,
             data: { nodes: [], links: [] },
+            lastReloadedDate: new Date(),
         };
     }
 
@@ -83,6 +92,7 @@ export default class App extends React.Component {
                 maxDepth,
                 loaded: true,
                 hyperedges,
+                lastReloadedDate: new Date(),
                 hideLabels: data.nodes.length >= this.state.hideLabelsThreshold,
             };
 
@@ -120,7 +130,7 @@ export default class App extends React.Component {
             this.handleMessageFromMain.bind(this)
         );
 
-        this.fetchLicenseInfo();
+        this.loadSettings();
 
         this.reloadData();
 
@@ -140,6 +150,20 @@ export default class App extends React.Component {
         window.removeEventListener("resize", this.handleResize.bind(this));
     }
 
+    async loadSettings() {
+        const settings = {};
+
+        const llms = await window.api.settings.get("llms");
+        if (llms) settings.llms = llms;
+
+        const llm = await window.api.settings.get("llm");
+        if (llm) settings.llm = llm;
+
+        this.setState(settings, async () => {
+            await this.fetchLicenseInfo();
+        });
+    }
+
     async fetchLicenseInfo() {
         const license = await window.api.licenses.info();
         this.setState(license, async () => {
@@ -147,13 +171,42 @@ export default class App extends React.Component {
         });
     }
 
+    maybeReloadData(duration = 1000) {
+        const now = new Date();
+        const elapsed = now - this.state.lastReloadedDate;
+        if (elapsed > duration) {
+            this.reloadData();
+        }
+    }
+
     handleMessageFromMain(event, message) {
         switch (event) {
             case "show-license-info":
                 this.setState({ showLicense: true });
                 break;
+            case "show-settings":
+                this.setState({ showSettings: true });
+                break;
+            case "hyperedges.generate.result":
+                // toast.success(`Created ${message}`);
+                this.maybeReloadData();
+                break;
+            case "hyperedges.generate.start":
+                this.setState({ isGenerating: true });
+                break;
+            case "hyperedges.generate.stop":
+                this.setState({ isGenerating: false });
+                this.reloadData();
+                break;
+            case "success":
+                toast.success(message);
+                break;
+            case "error":
+                toast.error(message);
+                break;
             default:
-                console.log("MESSAGE", event, message);
+                console.log("UNKNOWN MESSAGE", message);
+                break;
         }
     }
 
@@ -198,7 +251,13 @@ export default class App extends React.Component {
             this.setState({ isShiftDown: true });
         }
 
-        if (e.key === "Tab") {
+        if (e.key === "1" && e.metaKey) {
+            this.setState({ inputMode: "add" });
+        } else if (e.key === "2" && e.metaKey) {
+            this.setState({ inputMode: "generate" });
+        } else if (e.key === "3" && e.metaKey) {
+            this.setState({ inputMode: "search" });
+        } else if (e.key === "Tab") {
             this.toggleInterwingle();
         } else if (e.key === "F1") {
             this.toggleLabels();
@@ -231,10 +290,13 @@ export default class App extends React.Component {
             }
         } else if (this.state.controlType === "fly") {
             return;
-        } else if (this.state.trialExpired || this.state.showLicense) {
+        } else if (
+            this.state.trialExpired ||
+            this.state.showLicense ||
+            this.state.showSettings
+        ) {
             return;
         } else {
-            console.log("FOCUS");
             this.inputReference.focus();
         }
     }
@@ -268,7 +330,18 @@ export default class App extends React.Component {
     }
 
     async handleGenerateInput(e) {
-        console.log("GENERATE INPUT", this.state.input);
+        const llm = this.state.llms[this.state.llm] || {};
+        llm.service = this.state.llm;
+
+        if (!llm.apikey) {
+            toast.error("LLM API Key is required for generate");
+            this.setState({ showSettings: true });
+            return;
+        }
+
+        const options = { llm };
+
+        await window.api.hyperedges.generate(this.state.input, options);
     }
 
     async handleSearchInput(e) {
@@ -469,6 +542,39 @@ export default class App extends React.Component {
         });
     }
 
+    async updateLLMService(llm) {
+        this.setState({ llm }, async () => {
+            await this.updateSettings();
+        });
+    }
+
+    async updateLLMKey(apikey, llm) {
+        const llms = this.state.llms;
+        const obj = llms[llm] || {};
+        obj.apikey = apikey;
+        llms[llm] = obj;
+
+        this.setState({ llm }, async () => {
+            await this.updateSettings();
+        });
+    }
+
+    async updateLLMModel(model, llm) {
+        const llms = this.state.llms;
+        const obj = llms[llm] || {};
+        obj.model = model;
+        llms[llm] = obj;
+
+        this.setState({ llm }, async () => {
+            await this.updateSettings();
+        });
+    }
+
+    async updateSettings() {
+        await window.api.settings.set("llm", this.state.llm);
+        await window.api.settings.set("llms", this.state.llms);
+    }
+
     async createHyperTyperTutorial() {
         if (this.state.hyperedges.length > 0) return;
 
@@ -496,6 +602,18 @@ export default class App extends React.Component {
     render() {
         return (
             <>
+                <div className="absolute inset-0 z-50 pointer-events-none">
+                    <Toaster
+                        position="bottom-center"
+                        containerStyle={{ zIndex: 60 }}
+                        toastOptions={{
+                            style: {
+                                background: "#000",
+                                color: "#fff",
+                            },
+                        }}
+                    />
+                </div>
                 <Splash
                     loaded={this.state.loaded}
                     hyperedges={this.state.hyperedges}
@@ -545,6 +663,7 @@ export default class App extends React.Component {
                     input={this.state.input}
                     inputMode={this.state.inputMode}
                     setInputMode={(inputMode) => this.setState({ inputMode })}
+                    isGenerating={this.state.isGenerating}
                     loaded={this.state.loaded}
                     hyperedges={this.state.hyperedges}
                     symbols={this.uniqueSymbols}
@@ -565,6 +684,15 @@ export default class App extends React.Component {
                     hideLabels={this.state.hideLabels}
                     onNodeClick={this.handleClickNode.bind(this)}
                     showLabels={!this.state.hideLabels}
+                />
+                <Settings
+                    showSettings={this.state.showSettings}
+                    llm={this.state.llm}
+                    llms={this.state.llms}
+                    updateService={this.updateLLMService.bind(this)}
+                    updateKey={this.updateLLMKey.bind(this)}
+                    updateModel={this.updateLLMModel.bind(this)}
+                    closeSettings={() => this.setState({ showSettings: false })}
                 />
                 <Footer
                     isAnimating={this.state.isAnimating}

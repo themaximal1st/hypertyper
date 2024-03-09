@@ -1,3 +1,6 @@
+import { bouncy } from "ldrs";
+bouncy.register();
+
 import React, { useState } from "react";
 import { useCombobox } from "downshift";
 import cx from "classnames";
@@ -48,7 +51,6 @@ export default function Typer(params) {
             placeholder = "Search knowledge graph";
         }
     }
-    console.log(placeholder);
 
     return (
         <>
@@ -130,10 +132,7 @@ export default function Typer(params) {
                 </div>
 
                 <form
-                    onSubmit={async (e, a, z) => {
-                        console.log(e);
-                        console.log(a);
-                        console.log(z);
+                    onSubmit={async (e) => {
                         await params.handleInput(e);
                         reset();
                     }}
@@ -147,8 +146,9 @@ export default function Typer(params) {
                             type="text"
                             tabIndex={-1}
                             autoComplete="off"
+                            disabled={params.isGenerating}
                             placeholder={placeholder}
-                            className="text-3xl bg-transparent w-full text-center text-white outline-none py-2 pointer-events-auto border border-white/20 hover:border-white/50 focus:border-white/80 transition-all rounded-xl"
+                            className="text-3xl w-full text-center text-white outline-none py-2 pointer-events-auto transition-all rounded-xl bg-gray-1000/50 focus:bg-gray-1000"
                             {...getInputProps({
                                 onKeyDown: (event) => {
                                     if (event.key === "Enter") {
@@ -159,6 +159,15 @@ export default function Typer(params) {
                                 },
                             })}
                         />
+                        {params.isGenerating && (
+                            <div className="text-center mt-2">
+                                <l-bouncy
+                                    size="25"
+                                    speed="1.75"
+                                    color="white"
+                                ></l-bouncy>
+                            </div>
+                        )}
                     </div>
                     <ul
                         className={`pointer-events-auto max-w-md mx-auto ${

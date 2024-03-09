@@ -6,3 +6,4 @@ out
 .embeddings.cache.json
 TODO
 electron-builder.env
+.env

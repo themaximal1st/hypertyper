@@ -24,6 +24,9 @@ const api = {
         all: () => {
             return ipcRenderer.invoke("hyperedges.all");
         },
+        generate: (input, options = {}) => {
+            return ipcRenderer.invoke("hyperedges.generate", input, options);
+        },
     },
     forceGraph: {
         graphData: (filter = [], options = null) => {

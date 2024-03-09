@@ -9,6 +9,7 @@ import {
     LoadMenuItem,
     SaveMenuItem,
     LicenseMenuItem,
+    SettingsMenuItem,
 } from "./menuitems";
 
 export default class App {
@@ -27,6 +28,8 @@ export default class App {
 
         fileMenu.submenu.insert(0, new MenuItem({ type: "separator" }));
         fileMenu.submenu.insert(0, LicenseMenuItem(this));
+        fileMenu.submenu.insert(0, new MenuItem({ type: "separator" }));
+        fileMenu.submenu.insert(0, SettingsMenuItem(this));
         fileMenu.submenu.insert(0, new MenuItem({ type: "separator" }));
         fileMenu.submenu.insert(0, SaveMenuItem(this));
         fileMenu.submenu.insert(0, LoadMenuItem(this));

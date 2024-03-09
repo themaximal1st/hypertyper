@@ -8,6 +8,7 @@
     "license": "MIT",
     "homepage": "https://hypertyper.com",
     "scripts": {
+        "install": "npm link @themaximalist/hypertype",
         "format": "prettier --write .",
         "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
         "start": "electron-vite preview",
@@ -29,12 +30,15 @@
         "debug": "^4.3.4",
         "downshift": "^8.4.0",
         "electron-updater": "^6.1.8",
+        "ldrs": "^1.0.1",
         "public-ip": "^6.0.1",
         "react-autosuggest": "^10.1.0",
         "react-force-graph-3d": "^1.24.1",
+        "react-hot-toast": "^2.4.1",
         "three": "^0.160.0",
         "three-spritetext": "^1.8.1",
-        "troika-three-text": "^0.49.0"
+        "troika-three-text": "^0.49.0",
+        "uuid": "^9.0.1"
     },
     "devDependencies": {
         "@electron-toolkit/eslint-config": "^1.0.2",

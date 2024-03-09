@@ -12,6 +12,7 @@ export function NewMenuItem(App) {
 export function SaveMenuItem(App) {
     return new MenuItem({
         label: "Save HyperTyper",
+        accelerator: "CmdOrCtrl+S",
         click: services.saveFile.bind(null, App),
     });
 }
@@ -19,7 +20,21 @@ export function SaveMenuItem(App) {
 export function LoadMenuItem(App) {
     return new MenuItem({
         label: "Load HyperType File",
+        accelerator: "CmdOrCtrl+O",
         click: services.openFile.bind(null, App),
+    });
+}
+
+export function SettingsMenuItem(App) {
+    return new MenuItem({
+        label: "Settings",
+        accelerator: "CmdOrCtrl+,",
+        click: () => {
+            App.browserWindow.webContents.send(
+                "message-from-main",
+                "show-settings"
+            );
+        },
     });
 }
 
