@@ -13,6 +13,8 @@ HyperTyper is a multidimensional mind mapper for Mac, Windows and Linux.
 
 It creates a 3D interface for exploring your ideas.
 
+Learn more at https://hypertyper.com
+
 ## Install
 
 ```bash
