@@ -16,14 +16,22 @@ export default class Animation {
             if (this.isPausing || this.isInteracting) {
                 // Store the current position when starting to drag
                 const currentPos = this.graphRef.current.cameraPosition();
-                this.dragEndPosition = { x: currentPos.x, y: currentPos.y, z: currentPos.z };
+                this.dragEndPosition = {
+                    x: currentPos.x,
+                    y: currentPos.y,
+                    z: currentPos.z,
+                };
                 return;
             } else if (this.dragEndPosition) {
                 // Recalculate the angle and distance based on the position when dragging stopped
                 this.distance = Math.sqrt(
-                    Math.pow(this.dragEndPosition.x, 2) + Math.pow(this.dragEndPosition.z, 2)
+                    Math.pow(this.dragEndPosition.x, 2) +
+                        Math.pow(this.dragEndPosition.z, 2)
                 );
-                this.angle = Math.atan2(this.dragEndPosition.x, this.dragEndPosition.z);
+                this.angle = Math.atan2(
+                    this.dragEndPosition.x,
+                    this.dragEndPosition.z
+                );
                 this.initialY = this.dragEndPosition.y; // Update the Y-coordinate
                 this.dragEndPosition = null; // Reset the stored position
             }
@@ -36,7 +44,7 @@ export default class Animation {
             this.graphRef.current.cameraPosition({
                 x: this.distance * Math.sin(this.angle),
                 y: this.initialY, // Use the updated Y-coordinate
-                z: this.distance * Math.cos(this.angle)
+                z: this.distance * Math.cos(this.angle),
             });
         };
 

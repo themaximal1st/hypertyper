@@ -34,9 +34,6 @@ export default class App extends React.Component {
             trialExpired: false,
             openaiAPIKey: "",
             llm: "llamafile",
-            // service: "llamafile",
-            // model: "llamafile",
-            // apikey: "",
             llms: {},
 
             width: window.innerWidth,
@@ -74,6 +71,8 @@ export default class App extends React.Component {
                     depth: this.state.depth,
                 }
             );
+
+            // console.log("DATA", data);
 
             let depth = this.state.depth;
             const maxDepth = data.maxDepth || 0;
@@ -259,25 +258,20 @@ export default class App extends React.Component {
             this.setState({ inputMode: "search" });
         } else if (e.key === "Tab") {
             this.toggleInterwingle();
-        } else if (e.key === "F1") {
-            this.toggleLabels();
-        } else if (e.key === "F2") {
-            this.toggleCamera();
         } else if (e.key === "`") {
-            window.api.analytics.track("app.toggleConsole");
             this.setState({ showConsole: !this.state.showConsole });
-        } else if (e.key === "-") {
-            if (!this.isFocusingInput) {
-                this.zoom(30);
-            }
-        } else if (e.key === "=") {
-            if (!this.isFocusingInput) {
-                this.zoom(-30);
-            }
+        } else if (e.key === "-" && !this.isFocusingInput) {
+            this.zoom(5);
+        } else if (e.key === "=" && !this.isFocusingInput) {
+            this.zoom(-5);
+        } else if (e.key === "+" && !this.isFocusingInput) {
+            this.zoom(-50);
+        } else if (e.key === "_" && !this.isFocusingInput) {
+            this.zoom(50);
         } else if (e.key === "ArrowLeft") {
-            this.rotate(-10);
+            this.rotate(-1);
         } else if (e.key === "ArrowRight") {
-            this.rotate(10);
+            this.rotate(1);
             // } else if (e.key === "ArrowDown") {
             //     this.toggleDepth(this.state.depth - 1);
             // } else if (e.key === "ArrowUp") {
@@ -291,13 +285,16 @@ export default class App extends React.Component {
         } else if (this.state.controlType === "fly") {
             return;
         } else if (
-            this.state.trialExpired ||
+            (this.state.trialExpired && !this.state.licenseValid) ||
             this.state.showLicense ||
             this.state.showSettings
         ) {
             return;
         } else {
-            this.inputReference.focus();
+            console.log(e.key);
+            if (e.key !== "Shift") {
+                this.inputReference.focus();
+            }
         }
     }
 
@@ -651,11 +648,13 @@ export default class App extends React.Component {
                 <Interwingle
                     interwingle={this.state.interwingle}
                     toggleInterwingle={this.toggleInterwingle.bind(this)}
+                    show={!this.state.isAnimating}
                 />
                 <Depth
                     depthRef={this.depthRef}
                     depth={this.state.depth}
                     maxDepth={this.state.maxDepth}
+                    show={!this.state.isAnimating}
                     toggleDepth={this.toggleDepth.bind(this)}
                 />
                 <Typer
@@ -673,7 +672,7 @@ export default class App extends React.Component {
                         this.setState({ input });
                     }}
                     hyperedge={this.state.hyperedge}
-                    show={!this.state.showConsole}
+                    show={!this.state.showConsole && !this.state.isAnimating}
                 />
                 <ForceGraph
                     graphRef={this.graphRef}

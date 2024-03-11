@@ -71,7 +71,7 @@ export default function Typer(params) {
             </div>
 
             <div className="absolute inset-0 mt-12  flex flex-col gap-2 pointer-events-none z-40 items-center">
-                <div className="flex text-white gap-3">
+                <div className="flex text-white gap-2">
                     <a
                         className={`select-none text-sm pointer-events-auto flex items-center gap-[6px] py-1 px-2 rounded-lg hover:cursor-pointer transition-all ${params.inputMode === "add" ? "bg-gray-800/80 opacity-100" : "opacity-60 hover:opacity-80"}`}
                         onClick={() => params.setInputMode("add")}
@@ -148,7 +148,7 @@ export default function Typer(params) {
                             autoComplete="off"
                             disabled={params.isGenerating}
                             placeholder={placeholder}
-                            className="text-3xl w-full text-center text-white outline-none py-2 pointer-events-auto transition-all rounded-xl bg-gray-1000/50 focus:bg-gray-1000"
+                            className="text-2xl w-full text-center text-white outline-none py-2 pointer-events-auto transition-all rounded-xl bg-gray-1000/50 focus:bg-gray-1000"
                             {...getInputProps({
                                 onKeyDown: (event) => {
                                     if (event.key === "Enter") {

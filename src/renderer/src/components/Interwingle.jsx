@@ -4,6 +4,8 @@ import Interwingle2 from "../assets/interwingle-2.png";
 import Interwingle3 from "../assets/interwingle-3.png";
 
 export default function Interwingle(params) {
+    if (!params.show) return;
+
     return (
         <div className="absolute top-0 left-1 bottom-0 z-20 flex justify-center items-center w-12 h-full">
             <div className="flex flex-col gap-8 w-full justify-center items-center py-4 opacity-50 hover:opacity-70 transition-all">

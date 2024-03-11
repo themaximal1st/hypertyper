@@ -5,37 +5,64 @@ import SpriteText from "three-spritetext";
 import * as Three from "three";
 
 export default function ForceGraph(params) {
-    const forceGraph = (
-        <ForceGraph3D
-            ref={params.graphRef}
-            width={params.width}
-            height={params.height}
-            controlType={params.controlType}
-            backgroundColor="#000000"
-            onNodeClick={params.onNodeClick}
-            graphData={params.data}
-            showNavInfo={false}
-            linkColor={(link) => {
-                return link.color || "#333333";
-            }}
-            nodeThreeObject={(node) => {
-                if (params.hideLabels) {
-                    return null;
-                }
-                return nodeThreeObject(node);
-            }}
-            linkDirectionalArrowLength={(link) => {
-                return 5;
-            }}
-            linkDirectionalArrowRelPos={1}
-            linkWidth={2}
-        />
-    );
-
     if (params.controlType === "fly") {
-        return forceGraph;
+        console.log("FLY");
+        return (
+            <ForceGraph3D
+                nodeLabel={(node) => ""}
+                ref={params.graphRef}
+                width={params.width}
+                height={params.height}
+                controlType="fly"
+                backgroundColor="#000000"
+                onNodeClick={params.onNodeClick}
+                graphData={params.data}
+                showNavInfo={false}
+                linkColor={(link) => {
+                    return link.color || "#333333";
+                }}
+                nodeThreeObject={(node) => {
+                    if (params.hideLabels) {
+                        return null;
+                    }
+                    return nodeThreeObject(node);
+                }}
+                linkDirectionalArrowLength={(link) => {
+                    return 5;
+                }}
+                linkDirectionalArrowRelPos={1}
+                linkWidth={2}
+            />
+        );
     } else if (params.controlType === "orbit") {
-        return forceGraph;
+        console.log("ORBIT");
+        return (
+            <ForceGraph3D
+                nodeLabel={(node) => ""}
+                ref={params.graphRef}
+                width={params.width}
+                height={params.height}
+                controlType="orbit"
+                backgroundColor="#000000"
+                onNodeClick={params.onNodeClick}
+                graphData={params.data}
+                showNavInfo={false}
+                linkColor={(link) => {
+                    return link.color || "#333333";
+                }}
+                nodeThreeObject={(node) => {
+                    if (params.hideLabels) {
+                        return null;
+                    }
+                    return nodeThreeObject(node);
+                }}
+                linkDirectionalArrowLength={(link) => {
+                    return 5;
+                }}
+                linkDirectionalArrowRelPos={1}
+                linkWidth={2}
+            />
+        );
     }
     return null;
 }

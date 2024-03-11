@@ -1,4 +1,5 @@
 export default function Depth(params) {
+    if (!params.show) return;
     if (params.maxDepth === 0) return;
 
     return (

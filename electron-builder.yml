@@ -13,6 +13,11 @@ asarUnpack:
     - resources/**
 win:
     executableName: hypertyper
+    target:
+        - target: nsis
+          arch:
+              - x64
+              - ia32
 nsis:
     artifactName: ${name}-${version}-setup.${ext}
     shortcutName: ${productName}
@@ -24,6 +29,10 @@ mac:
         - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
         - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
     notarize: true
+    target:
+        - dmg
+        - zip
+        - pkg
 dmg:
     artifactName: ${name}-${version}.${ext}
 linux:
