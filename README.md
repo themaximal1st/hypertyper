@@ -1,6 +1,6 @@
 ## HyperTyper
 
-<img src="src/renderer/src/assets/plain-logo.png" alt="HyperTyper — Multidimensional Mind Mapping" class="logo" style="max-width: 500px;" />
+<img src="src/renderer/src/assets/plain-logo.png" alt="HyperTyper — Multidimensional Mind Mapping" class="logo" style="max-width: 250px;" />
 
 <div class="badges" style="text-align: center; margin-top: -10px;">
 <a href="https://github.com/themaximal1st/hypertyper"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/themaximal1st/hypertyper"></a>
