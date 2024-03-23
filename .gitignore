@@ -1,7 +1,9 @@
 .DS_Store
 node_modules
 dist
-out
+out/main
+out/preload
+out/renderer/assets/*
 *.log*
 .embeddings.cache.json
 TODO
