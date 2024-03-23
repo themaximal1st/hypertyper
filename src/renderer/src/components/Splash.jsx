@@ -10,7 +10,7 @@ export default function Splash(params) {
                     onClick={params.createTutorial}
                     className="pointer-events-auto cursor-pointer"
                 >
-                    HyperTyper
+                    Think Machine
                 </a>
                 {params.trialRemaining > 0 && !params.licenseValid && (
                     <div className="text-sm">

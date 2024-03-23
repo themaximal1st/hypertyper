@@ -3,7 +3,7 @@ import * as services from "./services.js";
 
 export function NewMenuItem(App) {
     return new MenuItem({
-        label: "New HyperTyper",
+        label: "New Think Machine",
         accelerator: "CmdOrCtrl+N",
         click: services.newFile.bind(null, App),
     });
@@ -11,7 +11,7 @@ export function NewMenuItem(App) {
 
 export function SaveMenuItem(App) {
     return new MenuItem({
-        label: "Save HyperTyper",
+        label: "Save Think Machine",
         accelerator: "CmdOrCtrl+S",
         click: services.saveFile.bind(null, App),
     });
@@ -19,7 +19,7 @@ export function SaveMenuItem(App) {
 
 export function LoadMenuItem(App) {
     return new MenuItem({
-        label: "Load HyperType File",
+        label: "Load ThinkableType File",
         accelerator: "CmdOrCtrl+O",
         click: services.openFile.bind(null, App),
     });

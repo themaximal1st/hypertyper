@@ -4,9 +4,9 @@ import * as settings from "./settings";
 import License from "./License.js";
 
 export default class Bridge {
-    constructor(hypertype, hypertyper) {
-        this.hypertype = hypertype;
-        this.hypertyper = hypertyper;
+    constructor(thinkabletype, thinkmachine) {
+        this.thinkabletype = thinkabletype;
+        this.thinkmachine = thinkmachine;
 
         ipcMain.handle("analytics.track", this.trackAnalytics.bind(this));
         ipcMain.handle("forceGraph.graphData", this.graphData.bind(this));
@@ -29,22 +29,22 @@ export default class Bridge {
 
     graphData(_, filter = [], options = {}) {
         if (typeof options.interwingle !== "undefined") {
-            this.hypertype.interwingle = options.interwingle;
+            this.thinkabletype.interwingle = options.interwingle;
         }
 
         if (typeof options.depth !== "undefined") {
-            this.hypertype.depth = options.depth;
+            this.thinkabletype.depth = options.depth;
         }
 
-        return this.hypertype.graphData(filter);
+        return this.thinkabletype.graphData(filter);
     }
 
     addHyperedges(_, hyperedge, symbol) {
-        let edge = this.hypertype.get(...hyperedge);
+        let edge = this.thinkabletype.get(...hyperedge);
         if (edge) {
             edge.add(symbol);
         } else {
-            edge = this.hypertype.add(...hyperedge, symbol);
+            edge = this.thinkabletype.add(...hyperedge, symbol);
         }
 
         Analytics.track("hyperedges.add");
@@ -53,7 +53,7 @@ export default class Bridge {
     }
 
     allHyperedges() {
-        const hyperedges = this.hypertype.hyperedges.map(
+        const hyperedges = this.thinkabletype.hyperedges.map(
             (hyperedge) => hyperedge.symbols
         );
         return hyperedges;
@@ -61,11 +61,11 @@ export default class Bridge {
 
     removeHyperedges(_, hyperedge) {
         Analytics.track("hyperedges.remove");
-        this.hypertype.remove(...hyperedge);
+        this.thinkabletype.remove(...hyperedge);
     }
 
     send(message, object = null) {
-        this.hypertyper.browserWindow.webContents.send(
+        this.thinkmachine.browserWindow.webContents.send(
             "message-from-main",
             message,
             object
@@ -76,20 +76,20 @@ export default class Bridge {
         Analytics.track("hyperedges.generate");
 
         if (options.llm) {
-            if (!this.hypertype.options.llm) {
-                this.hypertype.options.llm = {};
+            if (!this.thinkabletype.options.llm) {
+                this.thinkabletype.options.llm = {};
             }
 
             if (options.llm.service) {
-                this.hypertype.options.llm.service = options.llm.service;
+                this.thinkabletype.options.llm.service = options.llm.service;
             }
 
             if (options.llm.model) {
-                this.hypertype.options.llm.model = options.llm.model;
+                this.thinkabletype.options.llm.model = options.llm.model;
             }
 
             if (options.llm.apikey) {
-                this.hypertype.options.llm.apikey = options.llm.apikey;
+                this.thinkabletype.options.llm.apikey = options.llm.apikey;
             }
         }
 
@@ -97,10 +97,10 @@ export default class Bridge {
             console.log("FETCHING", input, options);
 
             this.send("hyperedges.generate.start");
-            const response = await this.hypertype.generate(input, options);
+            const response = await this.thinkabletype.generate(input, options);
 
             for await (const hyperedges of response) {
-                this.hypertype.addHyperedges(hyperedges);
+                this.thinkabletype.addHyperedges(hyperedges);
                 for (const hyperedge of hyperedges) {
                     console.log("hyperedge", hyperedge);
                     this.send("hyperedges.generate.result", hyperedge);
@@ -139,7 +139,7 @@ export default class Bridge {
         return info;
     }
 
-    static async load(hypertype, hypertyper) {
-        return new Bridge(hypertype, hypertyper);
+    static async load(thinkabletype, thinkmachine) {
+        return new Bridge(thinkabletype, thinkmachine);
     }
 }

@@ -1,4 +1,4 @@
-import HyperType from "@themaximalist/hypertype";
+import ThinkableType from "@themaximalist/thinkabletype";
 import Bridge from "./bridge.js";
 import App from "./app.js";
 import Analytics from "./Analytics.js";
@@ -13,7 +13,7 @@ import colors from "./colors.js";
 
     updater.autoUpdater.checkForUpdatesAndNotify();
 
-    const hypertype = new HyperType({ colors });
-    const hypertyper = await App.launch(hypertype);
-    await Bridge.load(hypertype, hypertyper);
+    const thinkabletype = new ThinkableType({ colors });
+    const thinkmachine = await App.launch(thinkabletype);
+    await Bridge.load(thinkabletype, thinkmachine);
 })();

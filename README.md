@@ -1,19 +1,19 @@
-## HyperTyper
+## Think Machine
 
-<img src="src/renderer/src/assets/plain-logo.png" alt="HyperTyper — Multidimensional Mind Mapping" class="logo" style="max-width: 250px;" />
+<img src="src/renderer/src/assets/logo.png" alt="Think Machine — Multidimensional Mind Mapping" class="logo" style="max-width: 250px;" />
 
 <div class="badges" style="text-align: center; margin-top: -10px;">
-<a href="https://github.com/themaximal1st/hypertyper"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/themaximal1st/hypertyper"></a>
-<a href="https://github.com/themaximal1st/hypertyper"><img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/themaximal1st/hypertyper"></a>
-<a href="https://github.com/themaximal1st/hypertyper"><img alt="GitHub License" src="https://img.shields.io/github/license/themaximal1st/hypertyper"></a>
+<a href="https://github.com/themaximal1st/thinkmachine"><img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/themaximal1st/thinkmachine"></a>
+<a href="https://github.com/themaximal1st/thinkmachine"><img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/themaximal1st/thinkmachine"></a>
+<a href="https://github.com/themaximal1st/thinkmachine"><img alt="GitHub License" src="https://img.shields.io/github/license/themaximal1st/thinkmachine"></a>
 </div>
 <br />
 
-HyperTyper is a multidimensional mind mapper for Mac, Windows and Linux.
+Think Machine is a multidimensional mind mapper for Mac, Windows and Linux.
 
 It creates a 3D interface for exploring your ideas.
 
-Learn more at https://hypertyper.com
+Learn more at https://thinkmachine.com
 
 ## Install
 
@@ -42,18 +42,14 @@ npm run build:linux
 
 ## Projects
 
-HyperType is currently used in the following projects:
+ThinkableType is currently used in the following projects:
 
--   [HyperType](https://hypertypelang.com)
-
-
+-   [ThinkableType](https://thinkabletype.com)
 
 ## Author
 
 -   [The Maximalist](https://themaximalist.com/)
 -   [@themaximal1st](https://twitter.com/themaximal1st)
-
-
 
 ## License
 

@@ -1,4 +1,4 @@
-import Logo from "../assets/plain-logo.png";
+import Logo from "../assets/logo.png";
 
 export default function License(params) {
     let showLicense = false;
@@ -41,44 +41,44 @@ export default function License(params) {
                 <div className="flex flex-col gap-2 max-w-xl w-full">
                     {params.trialExpired && !params.licenseValid && (
                         <>
-                            <p>HyperTyper has expired.</p>
+                            <p>Think Machine has expired.</p>
                             <p>
                                 Please{" "}
                                 <a
                                     target="_blank"
-                                    href="https://hypertyper.com"
+                                    href="https://thinkmachine.com"
                                     className="underline"
                                 >
                                     purchase a license
                                 </a>{" "}
-                                to continue using HyperTyper.
+                                to continue using Think Machine.
                             </p>
                         </>
                     )}
                     {!params.trialExpired && !params.licenseValid && (
                         <>
                             <p>
-                                HyperTyper has{" "}
+                                Think Machine has{" "}
                                 {Math.ceil(params.trialRemaining / 86400)} days
                                 left on the trial.
                             </p>
                             <p>
                                 <a
                                     target="_blank"
-                                    href="https://hypertyper.com"
+                                    href="https://thinkmachine.com"
                                     className="underline"
                                 >
                                     Purchase a license
                                 </a>{" "}
-                                now to register HyperTyper.
+                                now to register Think Machine.
                             </p>
                         </>
                     )}
                     {params.licenseValid && (
                         <>
                             <p>
-                                Your HyperTyper license is valid. Thank you for
-                                your support!
+                                Your Think Machine license is valid. Thank you
+                                for your support!
                             </p>
                         </>
                     )}

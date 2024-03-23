@@ -13,10 +13,10 @@ import {
 } from "./menuitems";
 
 export default class App {
-    constructor(browserWindow, hypertype) {
+    constructor(browserWindow, thinkabletype) {
         this.app = app;
         this.browserWindow = browserWindow;
-        this.hypertype = hypertype;
+        this.thinkabletype = thinkabletype;
     }
 
     async load() {
@@ -92,7 +92,7 @@ export default class App {
         return browserWindow;
     }
 
-    static async launch(hypertype) {
+    static async launch(thinkabletype) {
         await app.whenReady();
 
         electronApp.setAppUserModelId(app.name);
@@ -112,7 +112,7 @@ export default class App {
             app.quit();
         });
 
-        const hyperTyper = new App(browserWindow, hypertype);
+        const hyperTyper = new App(browserWindow, thinkabletype);
         await hyperTyper.load();
         return hyperTyper;
     }

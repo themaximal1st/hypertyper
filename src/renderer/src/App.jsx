@@ -572,15 +572,15 @@ export default class App extends React.Component {
         await window.api.settings.set("llms", this.state.llms);
     }
 
-    async createHyperTyperTutorial() {
+    async createThinkMachineTutorial() {
         if (this.state.hyperedges.length > 0) return;
 
         const tutorial = [
-            ["HyperTyper", "is a", "Mind Mapper"],
-            ["HyperTyper", "is a", "knowledge graph"],
-            ["HyperTyper", "connects", "ideas"],
-            ["HyperTyper", "let's you", "create"],
-            ["HyperTyper", "let's you", "explore"],
+            ["Think Machine", "is a", "Mind Mapper"],
+            ["Think Machine", "is a", "knowledge graph"],
+            ["Think Machine", "connects", "ideas"],
+            ["Think Machine", "let's you", "create"],
+            ["Think Machine", "let's you", "explore"],
             ["ideas", "press tab"],
             ["create", "type anything and press enter"],
             ["explore", "click any text"],
@@ -614,13 +614,13 @@ export default class App extends React.Component {
                 <Splash
                     loaded={this.state.loaded}
                     hyperedges={this.state.hyperedges}
-                    createTutorial={this.createHyperTyperTutorial.bind(this)}
+                    createTutorial={this.createThinkMachineTutorial.bind(this)}
                     licenseValid={this.state.licenseValid}
                     input={this.state.input}
                     trialRemaining={this.state.trialRemaining}
                     showLicense={() => this.setState({ showLicense: true })}
                 />
-                <a id="titlebar">HyperTyper</a>
+                <a id="titlebar">Think Machine</a>
                 <License
                     licenseKey={this.state.licenseKey}
                     licenseValid={this.state.licenseValid}

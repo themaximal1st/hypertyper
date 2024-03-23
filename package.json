@@ -1,14 +1,13 @@
 {
-    "name": "hypertyper",
+    "name": "thinkmachine",
     "version": "0.0.1",
     "description": "Multidimensional Mind Mapping",
     "main": "./out/main/index.js",
     "type": "module",
     "author": "The Maximalist",
     "license": "MIT",
-    "homepage": "https://hypertyper.com",
+    "homepage": "https://thinkmachine.com",
     "scripts": {
-        "install": "npm link @themaximalist/hypertype",
         "format": "prettier --write .",
         "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
         "start": "electron-vite preview",
@@ -25,7 +24,7 @@
     },
     "dependencies": {
         "@amplitude/analytics-node": "^1.3.5",
-        "@themaximalist/hypertype": "^0.1.3",
+        "@themaximalist/thinkabletype": "^0.1.5",
         "@themaximalist/keygen.js": "^0.0.4",
         "classnames": "^2.5.1",
         "debug": "^4.3.4",

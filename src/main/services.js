@@ -6,7 +6,7 @@ export async function newFile(App) {
     Analytics.track("file.new");
     if (!(await promptBeforeErase(App))) return;
 
-    App.hypertype.reset();
+    App.thinkabletype.reset();
     App.browserWindow.reload();
 }
 
@@ -15,11 +15,14 @@ export async function openFile(App) {
     if (!(await promptBeforeErase(App))) return;
 
     const options = {
-        title: "Load HyperType File",
+        title: "Load ThinkableType File",
         buttonLabel: "Open",
         accelerator: "CmdOrCtrl+O",
         filters: [
-            { name: "hypertype", extensions: ["hypertype", "ht"] },
+            {
+                name: "thinkabletype",
+                extensions: ["hypertype"],
+            },
             { name: "csv", extensions: ["csv"] },
             { name: "text", extensions: ["txt"] },
         ],
@@ -36,16 +39,16 @@ export async function openFile(App) {
     if (!filePath) return;
 
     const contents = fs.readFileSync(filePath, "utf-8");
-    App.hypertype.parse(contents);
+    App.thinkabletype.parse(contents);
     App.browserWindow.reload();
 }
 
 export function saveFile(App) {
     Analytics.track("file.save");
     const date = new Date();
-    const filename = `~/Desktop/hypertype-${date.toISOString().replace(/:/g, "-")}.hypertype`;
+    const filename = `~/Desktop/thinkabletype-${date.toISOString().replace(/:/g, "-")}.thinkabletype`;
     const options = {
-        title: "Save HyperType File",
+        title: "Save ThinkableType File",
         accelerator: "CmdOrCtrl+S",
         defaultPath: filename,
         buttonLabel: "Save",
@@ -53,20 +56,20 @@ export function saveFile(App) {
 
     const filepath = dialog.showSaveDialogSync(App.browserWindow, options);
 
-    const data = App.hypertype.export();
+    const data = App.thinkabletype.export();
     fs.writeFileSync(filepath, data);
 
     shell.showItemInFolder(filepath);
 }
 
 async function promptBeforeErase(App) {
-    if (App.hypertype.hyperedges.length === 0) return true;
+    if (App.thinkabletype.hyperedges.length === 0) return true;
 
     const { response } = await dialog.showMessageBox(App.browserWindow, {
         type: "question",
         title: "Confirmation",
         message:
-            "Delete current HyperType file and start a new one? All unsaved changes will be lost.",
+            "Delete current ThinkableType file and start a new one? All unsaved changes will be lost.",
         buttons: ["No", "Yes"],
     });
 
