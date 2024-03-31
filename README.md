@@ -13,6 +13,7 @@ Think Machine is a multidimensional mind mapper for Mac, Windows and Linux.  It 
 
 <img src="thinkmachine.png" alt="Think Machine — Multidimensional Mind Mapping" />
 
+Features
 * 3d and 2d mind mapping
 * Learn ideas inside and out
 * AI brainstorming
