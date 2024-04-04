@@ -25,6 +25,8 @@ Features
 
 Learn more at [https://thinkmachine.com](https://thinkmachine.com) or [Download Now](https://thinkmachine.com/download).
 
+Think Machine also has a [web version](https://github.com/themaximalist/thinkmachine-web).
+
 ## Install
 
 ```bash
@@ -55,6 +57,8 @@ npm run build:linux
 Think Machine is currently used in the following projects:
 
 -   [ThinkableType](https://thinkabletype.com)
+-   [Think Machine](https://thinkmachine.com)
+-   [Think Machine Web](https://github.com/themaximalist/thinkmachine-web)
 
 ## Author
 
